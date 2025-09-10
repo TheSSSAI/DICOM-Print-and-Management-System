@@ -1,0 +1,92 @@
+<UserControl x:Class="DMPS.Client.Presentation.Views.Pages.QueryRetrieveView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:DMPS.Client.Presentation.ViewModels.Pages"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=viewModels:QueryRetrieveViewModel}"
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Query Form -->
+        <materialDesign:Card Grid.Row="0" Margin="0,0,0,8" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <ComboBox Grid.Column="0"
+                          materialDesign:HintAssist.Hint="PACS Server"
+                          ItemsSource="{Binding ConfiguredPacsServers}"
+                          SelectedItem="{Binding SelectedPacsServer}"
+                          DisplayMemberPath="AETitle"
+                          Margin="0,0,8,0"/>
+                
+                <TextBox Grid.Column="1"
+                         materialDesign:HintAssist.Hint="Patient ID"
+                         Text="{Binding PatientIdSearch, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="8,0"/>
+
+                <DatePicker Grid.Column="2"
+                            materialDesign:HintAssist.Hint="Study Date"
+                            SelectedDate="{Binding StudyDateSearch}"
+                            Margin="8,0"/>
+
+                <Button Grid.Column="3"
+                        Content="Query"
+                        Command="{Binding QueryPacsCommand}"
+                        IsEnabled="{Binding IsNotBusy}"
+                        Margin="16,0,0,0"
+                        Style="{StaticResource MaterialDesignRaisedButton}"/>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Results Grid -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding QueryResults}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  SelectionMode="Extended">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Binding="{Binding IsSelected}" Width="Auto"/>
+                <DataGridTextColumn Header="Patient Name" Binding="{Binding PatientName}" Width="2*"/>
+                <DataGridTextColumn Header="Patient ID" Binding="{Binding PatientId}" Width="1.5*"/>
+                <DataGridTextColumn Header="Study Date" Binding="{Binding StudyDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="1.5*"/>
+                <DataGridTextColumn Header="Study Description" Binding="{Binding StudyDescription}" Width="3*"/>
+                <DataGridTextColumn Header="Modalities" Binding="{Binding Modalities}" Width="1*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Action Bar and Progress -->
+        <materialDesign:Card Grid.Row="2" Margin="0,8,0,0" Padding="8">
+            <DockPanel>
+                <Button Content="Retrieve Selected"
+                        Command="{Binding RetrieveSelectedStudiesCommand}"
+                        IsEnabled="{Binding IsNotBusy}"
+                        DockPanel.Dock="Left"/>
+
+                <ProgressBar Value="{Binding ProgressValue}" Maximum="100" 
+                             Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+                             Margin="16,0"
+                             MinWidth="200"/>
+
+                <TextBlock Text="{Binding ProgressText}"
+                           VerticalAlignment="Center"
+                           Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            </DockPanel>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

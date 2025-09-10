@@ -1,0 +1,36 @@
+-- ========= PostgreSQL Schema for AuditLog =========
+
+-- This table is designed for a relational or time-series database like PostgreSQL/TimescaleDB.
+-- It records a comprehensive trail of all significant actions.
+CREATE TABLE AuditLog (
+    auditLogId BIGINT PRIMARY KEY,
+    userId UUID NULL,
+    eventTimestamp TIMESTAMPTZ NOT NULL,
+    eventType VARCHAR(100) NOT NULL,
+    entityName VARCHAR(100) NULL,
+    entityId VARCHAR(128) NULL,
+    details JSONB NULL,
+    correlationId UUID NULL
+);
+
+COMMENT ON TABLE AuditLog IS 'Records a comprehensive trail of all significant actions. Optimized for high-volume, append-only writes and time-series queries. (REQ-1-047, REQ-1-048, REQ-1-049)';
+
+-- Indexes to optimize common query patterns on the AuditLog table.
+CREATE INDEX idx_auditlog_timestamp_event ON AuditLog (eventTimestamp DESC, eventType);
+CREATE INDEX idx_auditlog_user_timestamp ON AuditLog (userId, eventTimestamp DESC);
+
+
+-- ========= Redis Commands for UserSession =========
+
+-- The 'UserSession' entity is designed for a fast in-memory key-value store like Redis, not a relational table.
+-- The following are example Redis CLI commands to manage session data.
+
+-- To create or update a user session with a specific Time-To-Live (TTL).
+-- 'userSessionId' becomes the key, 'sessionData' is stored as a hash, and 'ttl' sets the expiration.
+
+-- Example: Store session data as a hash with a 30-minute (1800 seconds) expiration.
+-- HSET "UserSession:some-unique-session-id" key1 "value1" key2 "value2"
+-- EXPIRE "UserSession:some-unique-session-id" 1800
+
+-- To retrieve all data for a session:
+-- HGETALL "UserSession:some-unique-session-id"

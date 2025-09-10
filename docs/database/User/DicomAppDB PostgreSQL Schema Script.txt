@@ -1,0 +1,201 @@
+-- DicomAppDB PostgreSQL Schema Script
+-- Generated from JSON schema definition
+
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- Table Definitions
+
+CREATE TABLE "Role" (
+    "roleId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "roleName" VARCHAR(50) NOT NULL,
+    "description" TEXT,
+    CONSTRAINT uq_role_rolename UNIQUE ("roleName")
+);
+
+CREATE TABLE "User" (
+    "userId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "username" VARCHAR(100) NOT NULL,
+    "passwordHash" VARCHAR(255) NOT NULL,
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "roleId" UUID NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isTemporaryPassword" BOOLEAN NOT NULL DEFAULT false,
+    "passwordLastChangedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_user_username UNIQUE ("username")
+);
+
+CREATE TABLE "PasswordHistory" (
+    "passwordHistoryId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "userId" UUID NOT NULL,
+    "passwordHash" VARCHAR(255) NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE "Patient" (
+    "patientId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "dicomPatientId" TEXT NOT NULL,
+    "patientName" TEXT,
+    "patientBirthDate" TEXT,
+    "patientSex" TEXT,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE "Study" (
+    "studyId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "patientId" UUID NOT NULL,
+    "originalStudyId" UUID,
+    "studyInstanceUid" VARCHAR(128) NOT NULL,
+    "studyDate" TIMESTAMPTZ,
+    "studyDescription" TEXT,
+    "accessionNumber" TEXT,
+    "referringPhysicianName" TEXT,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE "Series" (
+    "seriesId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "studyId" UUID NOT NULL,
+    "seriesInstanceUid" VARCHAR(128) NOT NULL,
+    "modality" VARCHAR(16),
+    "seriesNumber" INT,
+    "seriesDescription" TEXT,
+    "bodyPartExamined" VARCHAR(64),
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_series_seriesinstanceuid UNIQUE ("seriesInstanceUid")
+);
+
+CREATE TABLE "Image" (
+    "imageId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "seriesId" UUID NOT NULL,
+    "sopInstanceUid" VARCHAR(128) NOT NULL,
+    "instanceNumber" INT,
+    "filePath" TEXT NOT NULL,
+    "fileSize" BIGINT NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_image_sopinstanceuid UNIQUE ("sopInstanceUid")
+);
+
+CREATE TABLE "PresentationState" (
+    "presentationStateId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "seriesId" UUID NOT NULL,
+    "sopInstanceUid" VARCHAR(128) NOT NULL,
+    "filePath" TEXT NOT NULL,
+    "createdByUserId" UUID NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_presentationstate_sopinstanceuid UNIQUE ("sopInstanceUid")
+);
+
+CREATE TABLE "SystemSetting" (
+    "settingKey" VARCHAR(100) PRIMARY KEY,
+    "settingValue" TEXT NOT NULL,
+    "description" TEXT,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE "PacsConfiguration" (
+    "pacsConfigurationId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "aeTitle" VARCHAR(16) NOT NULL,
+    "hostname" VARCHAR(255) NOT NULL,
+    "port" INT NOT NULL,
+    "supportsCFind" BOOLEAN NOT NULL DEFAULT false,
+    "supportsCMove" BOOLEAN NOT NULL DEFAULT false,
+    "supportsCStore" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE "AutoRoutingRule" (
+    "autoRoutingRuleId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "ruleName" VARCHAR(100) NOT NULL,
+    "criteria" JSONB NOT NULL,
+    "destinationPath" TEXT NOT NULL,
+    "priority" INT NOT NULL DEFAULT 0,
+    "isEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE "PrintJob" (
+    "printJobId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "submittedByUserId" UUID NOT NULL,
+    "jobPayload" JSONB NOT NULL,
+    "status" VARCHAR(20) NOT NULL,
+    "printerName" VARCHAR(255) NOT NULL,
+    "failureReason" TEXT,
+    "priority" INT NOT NULL DEFAULT 0,
+    "correlationId" UUID,
+    "submittedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "processedAt" TIMESTAMPTZ
+);
+
+CREATE TABLE "HangingProtocol" (
+    "hangingProtocolId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "protocolName" VARCHAR(100) NOT NULL,
+    "userId" UUID,
+    "layoutDefinition" JSONB NOT NULL,
+    "criteria" JSONB,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE "UserPreference" (
+    "userId" UUID NOT NULL,
+    "preferenceKey" VARCHAR(100) NOT NULL,
+    "preferenceValue" TEXT NOT NULL,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY ("userId", "preferenceKey")
+);
+
+
+-- Foreign Key Constraints
+ALTER TABLE "User" ADD CONSTRAINT "fk_user_role" FOREIGN KEY ("roleId") REFERENCES "Role" ("roleId");
+ALTER TABLE "PasswordHistory" ADD CONSTRAINT "fk_passwordhistory_user" FOREIGN KEY ("userId") REFERENCES "User" ("userId");
+ALTER TABLE "Study" ADD CONSTRAINT "fk_study_patient" FOREIGN KEY ("patientId") REFERENCES "Patient" ("patientId");
+ALTER TABLE "Study" ADD CONSTRAINT "fk_study_original_study" FOREIGN KEY ("originalStudyId") REFERENCES "Study" ("studyId");
+ALTER TABLE "Series" ADD CONSTRAINT "fk_series_study" FOREIGN KEY ("studyId") REFERENCES "Study" ("studyId");
+ALTER TABLE "Image" ADD CONSTRAINT "fk_image_series" FOREIGN KEY ("seriesId") REFERENCES "Series" ("seriesId");
+ALTER TABLE "PresentationState" ADD CONSTRAINT "fk_presentationstate_series" FOREIGN KEY ("seriesId") REFERENCES "Series" ("seriesId");
+ALTER TABLE "PresentationState" ADD CONSTRAINT "fk_presentationstate_user" FOREIGN KEY ("createdByUserId") REFERENCES "User" ("userId");
+ALTER TABLE "PrintJob" ADD CONSTRAINT "fk_printjob_user" FOREIGN KEY ("submittedByUserId") REFERENCES "User" ("userId");
+ALTER TABLE "HangingProtocol" ADD CONSTRAINT "fk_hangingprotocol_user" FOREIGN KEY ("userId") REFERENCES "User" ("userId");
+ALTER TABLE "UserPreference" ADD CONSTRAINT "fk_userpreference_user" FOREIGN KEY ("userId") REFERENCES "User" ("userId");
+
+
+-- Indexes
+CREATE INDEX "idx_passwordhistory_user_created" ON "PasswordHistory" ("userId", "createdAt" DESC);
+CREATE INDEX "idx_patient_name_gin_trgm" ON "Patient" USING GIN ("patientName" gin_trgm_ops);
+CREATE INDEX "idx_patient_dicompatientid_gin_trgm" ON "Patient" USING GIN ("dicomPatientId" gin_trgm_ops);
+CREATE INDEX "idx_study_studyinstanceuid" ON "Study" ("studyInstanceUid");
+CREATE INDEX "idx_study_patient_date" ON "Study" ("patientId", "studyDate" DESC);
+CREATE INDEX "idx_study_originalstudyid" ON "Study" ("originalStudyId");
+CREATE INDEX "idx_study_active_patient" ON "Study" ("patientId");
+CREATE INDEX "idx_series_modality" ON "Series" ("modality");
+CREATE INDEX "idx_image_series_instance" ON "Image" ("seriesId", "instanceNumber" ASC);
+CREATE INDEX "idx_autoroutingrule_criteria_gin" ON "AutoRoutingRule" USING GIN ("criteria");
+CREATE INDEX "idx_printjob_polling" ON "PrintJob" ("status", "priority" DESC, "submittedAt" ASC);
+
+
+-- Table Comments
+COMMENT ON TABLE "User" IS 'Represents system users with authentication, role, and profile information. Complies with REQ-1-014, REQ-1-067.';
+COMMENT ON TABLE "Role" IS 'Defines the roles available in the system, such as ''Technician'' and ''Administrator''. This is read-heavy, rarely modified data, ideal for cache-aside strategy on application startup. (REQ-1-014)';
+COMMENT ON TABLE "PasswordHistory" IS 'Stores a history of a user''s previous password hashes to enforce reuse policy. (REQ-1-042)';
+COMMENT ON TABLE "Patient" IS 'Stores patient demographic information. All PHI fields must be encrypted using pgcrypto. (REQ-1-010, REQ-1-083)';
+COMMENT ON TABLE "Study" IS 'Stores study-level DICOM metadata. Includes support for ''Working Copy'' functionality and data retention policies. (REQ-1-010, REQ-NFR-003, REQ-1-018)';
+COMMENT ON TABLE "Series" IS 'Stores series-level DICOM metadata.';
+COMMENT ON TABLE "Image" IS 'Stores instance-level DICOM metadata and the path to the physical file. (REQ-1-056)';
+COMMENT ON TABLE "PresentationState" IS 'Represents a DICOM Grayscale Softcopy Presentation State (GSPS) object. (REQ-1-061)';
+COMMENT ON TABLE "SystemSetting" IS 'A key-value store for global application settings. This is read-heavy, rarely modified data, ideal for cache-aside strategy on application startup. (e.g., REQ-1-018, REQ-1-042, REQ-1-059)';
+COMMENT ON TABLE "PacsConfiguration" IS 'Stores connection details for remote PACS servers. This is read-heavy, rarely modified data, ideal for cache-aside strategy on application startup. (REQ-1-038)';
+COMMENT ON TABLE "AutoRoutingRule" IS 'Defines rules for automatically routing incoming C-STORE studies. (REQ-1-037)';
+COMMENT ON TABLE "PrintJob" IS 'Represents a print job in the processing queue. (REQ-1-033)';
+COMMENT ON TABLE "HangingProtocol" IS 'Stores user-defined or system-wide display layouts (hanging protocols). (REQ-1-062, REQ-1-063)';
+COMMENT ON TABLE "UserPreference" IS 'A key-value store for user-specific preferences, such as custom WW/WL presets or UI settings. (REQ-1-069)';

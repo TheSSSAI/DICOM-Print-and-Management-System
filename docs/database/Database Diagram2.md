@@ -1,0 +1,153 @@
+erDiagram
+
+    User {
+        Guid userId PK
+        VARCHAR username UK
+        VARCHAR passwordHash
+        TEXT firstName
+        TEXT lastName
+        Guid roleId FK
+        BOOLEAN isActive
+        BOOLEAN isTemporaryPassword
+        DateTime passwordLastChangedAt
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Role {
+        Guid roleId PK
+        VARCHAR roleName UK
+        TEXT description
+    }
+
+    PasswordHistory {
+        Guid passwordHistoryId PK
+        Guid userId FK
+        VARCHAR passwordHash
+        DateTime createdAt
+    }
+
+    Patient {
+        Guid patientId PK
+        TEXT dicomPatientId
+        TEXT patientName
+        TEXT patientBirthDate
+        TEXT patientSex
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Study {
+        Guid studyId PK
+        Guid patientId FK
+        Guid originalStudyId FK
+        VARCHAR studyInstanceUid
+        DateTime studyDate
+        TEXT studyDescription
+        TEXT accessionNumber
+        BOOLEAN isDeleted
+        DateTime createdAt
+    }
+
+    Series {
+        Guid seriesId PK
+        Guid studyId FK
+        VARCHAR seriesInstanceUid UK
+        VARCHAR modality
+        INT seriesNumber
+        TEXT seriesDescription
+        VARCHAR bodyPartExamined
+        DateTime createdAt
+    }
+
+    Image {
+        Guid imageId PK
+        Guid seriesId FK
+        VARCHAR sopInstanceUid UK
+        INT instanceNumber
+        TEXT filePath
+        BIGINT fileSize
+        DateTime createdAt
+    }
+
+    PresentationState {
+        Guid presentationStateId PK
+        Guid seriesId FK
+        VARCHAR sopInstanceUid UK
+        TEXT filePath
+        Guid createdByUserId FK
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    HangingProtocol {
+        Guid hangingProtocolId PK
+        VARCHAR protocolName
+        Guid userId FK
+        JSONB layoutDefinition
+        JSONB criteria
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    UserPreference {
+        Guid userId PK, FK
+        VARCHAR preferenceKey PK
+        TEXT preferenceValue
+        DateTime updatedAt
+    }
+
+    PrintJob {
+        Guid printJobId PK
+        Guid submittedByUserId FK
+        JSONB jobPayload
+        VARCHAR status
+        VARCHAR printerName
+        TEXT failureReason
+        INT priority
+        DateTime submittedAt
+        DateTime processedAt
+    }
+
+    SystemSetting {
+        VARCHAR settingKey PK
+        TEXT settingValue
+        TEXT description
+        DateTime updatedAt
+    }
+
+    PacsConfiguration {
+        Guid pacsConfigurationId PK
+        VARCHAR aeTitle
+        VARCHAR hostname
+        INT port
+        BOOLEAN supportsCFind
+        BOOLEAN supportsCMove
+        BOOLEAN supportsCStore
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    AutoRoutingRule {
+        Guid autoRoutingRuleId PK
+        VARCHAR ruleName
+        JSONB criteria
+        TEXT destinationPath
+        INT priority
+        BOOLEAN isEnabled
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    // Relationships
+    Role ||--o{ User : has
+    User ||--o{ PasswordHistory : stores
+    User ||--o{ PrintJob : submits
+    User }o--o{ HangingProtocol : defines
+    User ||--o{ UserPreference : has
+    User ||--o{ PresentationState : creates
+    Patient ||--o{ Study : has
+    Study }o--o{ Study : "is working copy of"
+    Study ||--o{ Series : contains
+    Series ||--o{ Image : contains
+    Series ||--o{ PresentationState : applies_to

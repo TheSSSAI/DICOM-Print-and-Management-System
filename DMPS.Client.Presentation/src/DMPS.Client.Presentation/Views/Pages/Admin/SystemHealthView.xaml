@@ -1,0 +1,109 @@
+<UserControl x:Class="DMPS.Client.Presentation.Views.Pages.Admin.SystemHealthView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:DMPS.Client.Presentation.ViewModels.Pages.Admin"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=viewModels:SystemHealthViewModel}"
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <UserControl.Resources>
+        <Style TargetType="materialDesign:Card" x:Key="HealthStatusCard">
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="UniformCornerRadius" Value="8"/>
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="StatusTitle" BasedOn="{StaticResource MaterialDesignSubtitle1TextBlock}">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        
+        <Style TargetType="TextBlock" x:Key="StatusValue" BasedOn="{StaticResource MaterialDesignBody1TextBlock}">
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+    </UserControl.Resources>
+    
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <WrapPanel HorizontalAlignment="Center">
+                <!-- Windows Service Status -->
+                <materialDesign:Card Style="{StaticResource HealthStatusCard}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Cog" Width="48" Height="48" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource StatusTitle}" Text="Background Service"/>
+                            <TextBlock Style="{StaticResource StatusValue}" Text="{Binding ServiceStatus.StatusText}" Foreground="{Binding ServiceStatus.StatusColor}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- PostgreSQL Status -->
+                <materialDesign:Card Style="{StaticResource HealthStatusCard}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Database" Width="48" Height="48" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource StatusTitle}" Text="PostgreSQL DB"/>
+                            <TextBlock Style="{StaticResource StatusValue}" Text="{Binding DatabaseStatus.StatusText}" Foreground="{Binding DatabaseStatus.StatusColor}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- RabbitMQ Status -->
+                <materialDesign:Card Style="{StaticResource HealthStatusCard}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Rabbit" Width="48" Height="48" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource StatusTitle}" Text="RabbitMQ Broker"/>
+                            <TextBlock Style="{StaticResource StatusValue}" Text="{Binding RabbitMqStatus.StatusText}" Foreground="{Binding RabbitMqStatus.StatusColor}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Disk Space -->
+                <materialDesign:Card Style="{StaticResource HealthStatusCard}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Harddisk" Width="48" Height="48" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource StatusTitle}" Text="DICOM Storage"/>
+                            <TextBlock Style="{StaticResource StatusValue}" Text="{Binding DiskSpaceStatus.StatusText}" Foreground="{Binding DiskSpaceStatus.StatusColor}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Processing Queue -->
+                <materialDesign:Card Style="{StaticResource HealthStatusCard}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Queue" Width="48" Height="48" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource StatusTitle}" Text="Processing Queue"/>
+                            <TextBlock Style="{StaticResource StatusValue}" Text="{Binding MainQueueStatus.StatusText}" Foreground="{Binding MainQueueStatus.StatusColor}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Dead-Letter Queue -->
+                <materialDesign:Card Style="{StaticResource HealthStatusCard}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AlertOctagon" Width="48" Height="48" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource StatusTitle}" Text="Dead-Letter Queue"/>
+                            <TextBlock Style="{StaticResource StatusValue}" Text="{Binding DeadLetterQueueStatus.StatusText}" Foreground="{Binding DeadLetterQueueStatus.StatusColor}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+            </WrapPanel>
+
+            <Button Content="Refresh Status" 
+                    Command="{Binding RefreshStatusCommand}" 
+                    IsEnabled="{Binding IsNotLoading}"
+                    HorizontalAlignment="Center" 
+                    Margin="0,24,0,0"/>
+
+            <ProgressBar IsIndeterminate="True" 
+                         Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                         Margin="0,16,0,0" Width="300" HorizontalAlignment="Center"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

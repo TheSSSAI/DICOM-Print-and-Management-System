@@ -1,0 +1,81 @@
+<UserControl x:Class="DMPS.Client.Presentation.Views.Pages.Admin.UserManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:DMPS.Client.Presentation.ViewModels.Pages.Admin"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=viewModels:UserManagementViewModel}"
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Toolbar -->
+        <materialDesign:Card Grid.Row="0" Margin="0,0,0,8" Padding="8">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Add User"
+                        Command="{Binding AddUserCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Icon="{materialDesign:PackIcon Kind=AccountPlus}"/>
+                <Button Content="Refresh"
+                        Command="{Binding LoadUsersCommand}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Margin="16,0,0,0"
+                        Icon="{materialDesign:PackIcon Kind=Refresh}"/>
+            </StackPanel>
+        </materialDesign:Card>
+        
+        <!-- User List -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Users}"
+                  SelectedItem="{Binding SelectedUser}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="2*"/>
+                <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="2*"/>
+                <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="2*"/>
+                <DataGridTextColumn Header="Role" Binding="{Binding RoleName}" Width="1*"/>
+                <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="1*"/>
+                <DataGridTemplateColumn Header="Actions" Width="2*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button ToolTip="Edit User"
+                                        Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}">
+                                    <materialDesign:PackIcon Kind="Pencil"/>
+                                </Button>
+                                <Button ToolTip="Reset Password"
+                                        Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Margin="8,0,0,0"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}">
+                                    <materialDesign:PackIcon Kind="KeyVariant"/>
+                                </Button>
+                                <Button ToolTip="Delete User"
+                                        Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Margin="8,0,0,0"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}">
+                                    <materialDesign:PackIcon Kind="Delete"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="1" Background="#80FFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ProgressBar IsIndeterminate="True" Style="{StaticResource MaterialDesignCircularProgressBar}" Width="50" Height="50"/>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,94 @@
+<Window x:Class="DMPS.Client.Presentation.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:DMPS.Client.Presentation.ViewModels"
+        xmlns:pages="clr-namespace:DMPS.Client.Presentation.Views.Pages"
+        xmlns:adminPages="clr-namespace:DMPS.Client.Presentation.Views.Pages.Admin"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel}"
+        Title="{Binding Title}" Height="800" Width="1280" WindowStartupLocation="CenterScreen"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+    <Window.Resources>
+        <!-- DataTemplates to map ViewModels to Views for the main content area -->
+        <DataTemplate DataType="{x:Type viewModels:StudyBrowserViewModel}">
+            <pages:StudyBrowserView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:PrintPreviewViewModel}">
+            <pages:PrintPreviewView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:QueryRetrieveViewModel}">
+            <pages:QueryRetrieveView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:UserManagementViewModel}">
+            <adminPages:UserManagementView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:AuditTrailViewModel}">
+            <adminPages:AuditTrailView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:SystemHealthViewModel}">
+            <adminPages:SystemHealthView />
+        </DataTemplate>
+    </Window.Resources>
+
+    <materialDesign:DialogHost Identifier="RootDialogHost"
+                               DialogTheme="Inherit"
+                               SnackbarMessageQueue="{Binding SnackbarMessageQueue}">
+        <Grid>
+            <!-- Lock Screen Overlay -->
+            <ContentControl Content="{Binding LockScreenViewModel}" 
+                            Visibility="{Binding IsSessionLocked, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Panel.ZIndex="9999"/>
+
+            <!-- Main Application Layout -->
+            <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}">
+                <materialDesign:DrawerHost.LeftDrawerContent>
+                    <DockPanel MinWidth="220">
+                        <ToggleButton Style="{StaticResource MaterialDesignHamburgerToggleButton}" 
+                                      DockPanel.Dock="Top"
+                                      HorizontalAlignment="Right" Margin="16"
+                                      IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}" />
+                        <ListBox ItemsSource="{Binding MenuItems}"
+                                 SelectedItem="{Binding SelectedMenuItem}"
+                                 Style="{StaticResource MaterialDesignNavigationListBox}"
+                                 Margin="0,16,0,16">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="{Binding Icon}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Title}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </materialDesign:DrawerHost.LeftDrawerContent>
+
+                <DockPanel>
+                    <materialDesign:ColorZone Padding="16" DockPanel.Dock="Top" Mode="PrimaryMid" materialDesign:ShadowAssist.ShadowDepth="Depth2">
+                        <DockPanel>
+                            <ToggleButton Style="{StaticResource MaterialDesignHamburgerToggleButton}" x:Name="MenuToggleButton" IsChecked="False" />
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="22" Text="{Binding Title}" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <TextBlock Text="{Binding CurrentUser.Username}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <Button Content="{materialDesign:PackIcon Kind=Logout}" 
+                                        ToolTip="Log Out"
+                                        Command="{Binding LogoutCommand}"
+                                        Style="{StaticResource MaterialDesignIconButton}"/>
+                                <materialDesign:ToggleButton Style="{StaticResource MaterialDesignSwitchDarkToggleButton}"
+                                                             IsChecked="{Binding IsDarkTheme}"
+                                                             ToolTip="Toggle Dark/Light Theme"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </materialDesign:ColorZone>
+                    
+                    <ContentControl Content="{Binding CurrentViewModel}" Margin="16"/>
+                </DockPanel>
+            </materialDesign:DrawerHost>
+        </Grid>
+    </materialDesign:DialogHost>
+</Window>

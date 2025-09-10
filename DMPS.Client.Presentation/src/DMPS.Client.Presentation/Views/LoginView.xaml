@@ -1,0 +1,94 @@
+<Window x:Class="DMPS.Client.Presentation.Views.LoginView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:DMPS.Client.Presentation.ViewModels"
+        xmlns:behaviors="clr-namespace:DMPS.Client.Presentation.Infrastructure.Behaviors"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=viewModels:LoginViewModel}"
+        Title="DICOM Management and Printing System - Login"
+        Height="450" Width="400"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        FontFamily="{materialDesign:MaterialDesignFont}">
+
+    <Grid>
+        <materialDesign:Card UniformCornerRadius="10" 
+                             materialDesign:ShadowAssist.ShadowDepth="Depth4"
+                             Background="{DynamicResource MaterialDesignPaper}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <materialDesign:ColorZone Mode="PrimaryMid" Padding="16" UniformCornerRadius="10 10 0 0">
+                    <TextBlock Text="System Login" Style="{StaticResource MaterialDesignHeadline5TextBlock}" HorizontalAlignment="Center"/>
+                </materialDesign:ColorZone>
+
+                <!-- Login Form -->
+                <StackPanel Grid.Row="1" Margin="24">
+                    <TextBlock Text="Welcome. Please enter your credentials." 
+                               Style="{StaticResource MaterialDesignBody1TextBlock}"
+                               HorizontalAlignment="Center" Margin="0,0,0,24"/>
+
+                    <TextBox x:Name="UsernameTextBox"
+                             materialDesign:HintAssist.Hint="Username"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Margin="0,0,0,16"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=PasswordBox}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <PasswordBox x:Name="PasswordBox"
+                                 materialDesign:HintAssist.Hint="Password"
+                                 Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                                 behaviors:PasswordBoxBindingBehavior.IsPasswordBindingEnabled="True"
+                                 behaviors:PasswordBoxBindingBehavior.BoundPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <PasswordBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=PasswordBox}"/>
+                        </PasswordBox.InputBindings>
+                    </PasswordBox>
+                    
+                    <ProgressBar IsIndeterminate="True"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                 Margin="0,16,0,0" />
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
+                               Margin="0,8,0,0"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Center"
+                               Visibility="{Binding ErrorMessage, Converter={StaticResource NullOrEmptyStringToVisibilityConverter}, ConverterParameter=invert}"/>
+                </StackPanel>
+
+                <!-- Footer -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="16">
+                    <Button Content="Exit"
+                            Style="{StaticResource MaterialDesignTextButton}"
+                            Command="{Binding ExitCommand}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="Login"
+                            IsDefault="True"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding LoginCommand}"
+                            CommandParameter="{Binding ElementName=PasswordBox}"
+                            IsEnabled="{Binding IsNotBusy}"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</Window>

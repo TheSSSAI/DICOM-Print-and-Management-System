@@ -1,0 +1,74 @@
+<UserControl x:Class="DMPS.Client.Presentation.Views.Pages.StudyBrowserView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:DMPS.Client.Presentation.ViewModels.Pages"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=viewModels:StudyBrowserViewModel}"
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Filter and Actions Toolbar -->
+        <materialDesign:Card Grid.Row="0" Padding="8" Margin="0,0,0,8">
+            <DockPanel>
+                <Button Command="{Binding RefreshStudiesCommand}" 
+                        Style="{StaticResource MaterialDesignToolButton}"
+                        ToolTip="Refresh Study List"
+                        DockPanel.Dock="Left">
+                    <materialDesign:PackIcon Kind="Refresh" />
+                </Button>
+                
+                <Button Command="{Binding ImportStudiesCommand}" 
+                        Style="{StaticResource MaterialDesignToolButton}"
+                        ToolTip="Import Studies from File"
+                        DockPanel.Dock="Left">
+                    <materialDesign:PackIcon Kind="FileImport" />
+                </Button>
+
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Search by Patient Name or ID..."
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         materialDesign:TextFieldAssist.HasClearButton="True"
+                         Margin="16,0"
+                         VerticalAlignment="Center"/>
+            </DockPanel>
+        </materialDesign:Card>
+
+        <!-- Study List DataGrid -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Studies}"
+                  SelectedItem="{Binding SelectedStudy}"
+                  IsReadOnly="True"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  SelectionMode="Single"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  materialDesign:DataGridAssist.CellPadding="13 8 8 8"
+                  materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+            <DataGrid.InputBindings>
+                <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding OpenStudyCommand}" CommandParameter="{Binding SelectedStudy}"/>
+            </DataGrid.InputBindings>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Patient Name" Binding="{Binding PatientName}" Width="2*"/>
+                <DataGridTextColumn Header="Patient ID" Binding="{Binding DicomPatientId}" Width="1.5*"/>
+                <DataGridTextColumn Header="Study Date" Binding="{Binding StudyDate, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="1.5*"/>
+                <DataGridTextColumn Header="Study Description" Binding="{Binding StudyDescription}" Width="3*"/>
+                <DataGridTextColumn Header="Accession #" Binding="{Binding AccessionNumber}" Width="1*"/>
+                <DataGridTextColumn Header="Modalities" Binding="{Binding Modalities}" Width="1*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Loading Indicator -->
+        <Grid Grid.Row="1" Background="#80FFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ProgressBar IsIndeterminate="True" Style="{StaticResource MaterialDesignCircularProgressBar}" Width="50" Height="50"/>
+        </Grid>
+    </Grid>
+</UserControl>
