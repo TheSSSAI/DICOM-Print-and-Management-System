@@ -1,0 +1,129 @@
+test_id,feature_area,test_type,test_level,priority,automation_candidate,test_description,preconditions,test_steps,expected_result,test_data_needs,tools_required,estimated_effort,dependencies
+TST-ARC-UT-001,Core Architecture,Functional,Unit Testing,Critical,High,"Verify Serilog PHI redaction filter correctly masks Patient Name","Serilog logger is configured with the custom PHI redaction filter.","1. Create a log message string: ""Processing study for patient John Doe"".
+2. Pass the message to the logger.
+3. Capture the formatted log output.","The captured log output is ""Processing study for patient ***REDACTED***"".",Sample log strings with Patient Name pattern,xUnit,1,TASK-001-001-003-02
+TST-ARC-UT-002,Core Architecture,Functional,Unit Testing,Critical,High,"Verify Serilog PHI redaction filter correctly masks Patient ID in structured logs","Serilog logger is configured with the custom PHI redaction filter.","1. Create a structured log message: `Log.Information(""Starting work on {PatientID}"", ""12345"")`.
+2. Capture the formatted log output.","The captured log output is ""Starting work on ***REDACTED***"".",Sample log strings with Patient ID pattern,xUnit,1,TASK-001-001-003-02
+TST-ARC-UT-003,Core Architecture,Functional,Unit Testing,Critical,High,"Verify Serilog PHI redaction filter does not alter non-PHI data","Serilog logger is configured with the custom PHI redaction filter.","1. Create a log message string: ""Application service started successfully on port 8080"".
+2. Pass the message to the logger.
+3. Capture the formatted log output.","The captured log output is identical to the input string: ""Application service started successfully on port 8080"".",Sample log strings without any PHI,xUnit,0.5,TASK-001-001-003-02
+TST-ARC-IT-004,Core Architecture,Functional,Integration Testing,High,High,"Verify Serilog writes to rolling text file sink","WPF or Service application is running with Serilog configured.","1. Start the application.
+2. Trigger an action that logs an informational message.
+3. Check the configured log file directory.","A new log file is created and contains the correct informational log entry.",N/A,"File System Inspector",2,TASK-001-001-003-01
+TST-ARC-IT-005,Core Architecture,Functional,Integration Testing,High,High,"Verify Serilog writes error-level logs to Windows Event Log","WPF or Service application is running with Serilog configured.","1. Start the application.
+2. Trigger an action that logs an error message.
+3. Open the Windows Event Viewer and navigate to the custom application source.","A new error event is present in the Windows Event Log with the correct message and source.",Admin access to the machine to view Event Log,"Windows Event Viewer",3,TASK-001-001-003-01
+TST-ARC-IT-006,Core Architecture,Functional,Integration Testing,Critical,High,"Verify successful publishing of a persistent message via RabbitMQ abstraction","A RabbitMQ instance is running (via Testcontainers). The RabbitMqMessageBus is initialized.","1. Create a sample message object.
+2. Call `PublishAsync` on the message bus instance.
+3. Use the RabbitMQ management API or a separate client to inspect the target queue.","The message exists in the queue, its content is the correct JSON serialization of the object, and its delivery mode is 'Persistent'.",A sample C# class for the message contract,xUnit; Testcontainers; Docker,4,TASK-001-002-004-02
+TST-ARC-IT-007,Core Architecture,Functional,Integration Testing,Critical,High,"Verify successful consumption and acknowledgment of a RabbitMQ message","A RabbitMQ instance is running. A message is pre-seeded in the target queue.","1. Define a handler function for the message type.
+2. Call `SubscribeAsync` on the message bus to start the consumer.
+3. Wait for the handler to be invoked.
+4. Assert that the handler received the correct, deserialized message.
+5. Inspect the queue after processing.","The handler is invoked with the correct data. The message is removed from the queue (acknowledged).",A sample JSON message in the queue,xUnit; Testcontainers; Docker,4,TASK-001-002-004-03
+TST-ARC-IT-008,Core Architecture,Functional,Integration Testing,Critical,High,"Verify rejected message is routed to the Dead-Letter Queue (DLQ)","A RabbitMQ instance is running with main queue, DLX, and DLQ configured. A message is in the main queue.","1. Implement a message handler that always throws an exception.
+2. Start a consumer subscribed to the main queue.
+3. Wait for the message to be processed and rejected (`requeue=false`).
+4. Inspect the DLQ.","The message is no longer in the main queue. The exact same message is present in the DLQ.",A sample JSON message in the queue,xUnit; Testcontainers; Docker,5,TASK-001-002-005-01
+TST-ARC-IT-009,Core Architecture,Non-Functional,Integration Testing,High,High,"Verify RabbitMQ publisher recovers from a dropped connection","A RabbitMQ instance is running. The RabbitMqMessageBus is connected.","1. Publish a first message successfully.
+2. Stop the RabbitMQ container.
+3. Attempt to publish a second message (it should fail internally but trigger reconnect logic).
+4. Restart the RabbitMQ container.
+5. Wait for the reconnection logic to succeed.
+6. Publish a third message.","The first and third messages are successfully published and exist in the queue. The second message may be lost, but the publisher recovers without crashing.",N/A,xUnit; Testcontainers; Docker,6,TASK-001-002-004-02
+TST-ARC-IT-010,Core Architecture,Functional,Integration Testing,High,Medium,"Verify Named Pipe client receives 'PONG' from server","The Windows Service with the Named Pipe server is running.","1. Start the WPF client application.
+2. Instantiate the Named Pipe client.
+3. Call the method to send 'PING' and await a response.","The client receives the string 'PONG' within the configured timeout.",N/A,Manual execution or custom test harness,3,TASK-001-002-006-01; TASK-001-002-006-02
+TST-ARC-IT-011,Core Architecture,Functional,Integration Testing,High,Medium,"Verify Named Pipe client throws TimeoutException when server is down","The Windows Service is stopped.","1. Start the WPF client application.
+2. Instantiate the Named Pipe client.
+3. Call the method to send 'PING'.","The client call throws a `TimeoutException` after the configured timeout period (e.g., 2 seconds).",N/A,Manual execution or custom test harness,2,TASK-001-002-006-02
+TST-ARC-IT-012,Core Architecture,Security,Integration Testing,High,Low,"Verify Named Pipe server denies access to unauthorized users","The Windows Service is running. The pipe's ACL is configured to allow only 'Authenticated Users'.","1. Create a separate test application that runs under a different, low-privilege user account (e.g., Guest).
+2. Attempt to connect to the named pipe from this test application.","The connection attempt fails with an `UnauthorizedAccessException`.",A separate test executable; a low-privilege user account,"Manual execution",6,TASK-001-002-008-01
+TST-DB-UT-001,Database and Persistence Layer,Functional,Unit Testing,High,High,"Verify specific repository custom query method returns correct data","The `ApplicationDbContext` is mocked. The `DbSet`s are populated with in-memory data.","1. Instantiate the `UserRepository` with the mocked `DbContext`.
+2. Call the `GetByUsernameAsync(""testuser"")` method.
+3. Assert the returned user object.","The method returns the correct `User` entity that matches the username 'testuser'.",A list of `User` entities for the in-memory context,"xUnit, Moq, EF Core In-Memory Provider",2,TASK-002-003-010-02
+TST-DB-IT-002,Database and Persistence Layer,Functional,Integration Testing,Critical,High,"Verify EF Core migration creates the correct schema in PostgreSQL","A blank PostgreSQL database is running (via Testcontainers).","1. Point the `DbContext` to the test container database.
+2. Run the `dotnet ef database update` command programmatically or as part of the test setup.
+3. Use a raw SQL query to inspect the database schema (`information_schema`).","All tables, columns, primary keys, foreign keys, and unique constraints defined in the EF Core model exist in the database.",A blank PostgreSQL database,xUnit; Testcontainers; Docker; Npgsql,4,TASK-002-003-008-01
+TST-DB-IT-003,Database and Persistence Layer,Security,Integration Testing,Critical,High,"Verify application fails to connect if PostgreSQL does not support TLS","A PostgreSQL instance is running with SSL/TLS disabled. The application's connection string is set to `SSL Mode=Require`.","1. Attempt to initialize the `ApplicationDbContext` and open a connection.","The connection attempt throws a `PostgresException` or similar, indicating a TLS-related error.",PostgreSQL server with SSL disabled,xUnit; Testcontainers; Docker,3,TASK-002-003-009-01
+TST-DB-IT-004,Database and Persistence Layer,Security,Integration Testing,Critical,High,"Verify data written to a PHI-configured column is encrypted at rest","A PostgreSQL instance with `pgcrypto` enabled is running. EF Core is configured with the encryption value converter.","1. Create a `Patient` entity with `PatientName = 'John Doe'`.
+2. Save the entity using the repository.
+3. Use a raw SQL query `SELECT PatientName FROM Patients WHERE PatientId = ...` to fetch the raw byte data from the column.
+4. Assert that the raw data is not 'John Doe'.","The raw data fetched from the database is an encrypted byte array and does not match the plaintext input.",Encryption key for pgcrypto,xUnit; Testcontainers; Docker; Npgsql,6,TASK-002-003-009-03
+TST-DB-IT-005,Database and Persistence Layer,Security,Integration Testing,Critical,High,"Verify data read from an encrypted PHI column is decrypted transparently","A PostgreSQL instance with `pgcrypto` enabled is running. An encrypted patient record exists in the database.","1. Use the `PatientRepository` to fetch the patient entity by its ID.
+2. Access the `PatientName` property of the returned entity object.","The `PatientName` property is correctly decrypted and returns the original plaintext value (e.g., 'John Doe').",An existing encrypted record in the DB,xUnit; Testcontainers; Docker; Npgsql,5,TASK-002-003-009-03
+TST-AUTH-UT-001,User Authentication,Functional,Unit Testing,Critical,High,"Verify BCrypt utility correctly hashes and verifies a password","N/A","1. Call `HashPassword(""correct_password"")` to get a hash.
+2. Call `VerifyPassword(""correct_password"", hash)`.
+3. Call `VerifyPassword(""wrong_password"", hash)`.","The first verification call returns `true`. The second verification call returns `false`.",N/A,xUnit,1,TASK-003-004-011-01
+TST-AUTH-UT-002,User Authentication,Functional,Unit Testing,Critical,High,"Verify Authentication Service successfully logs in a valid user","`IUserRepository` and `IPasswordHasher` are mocked.","1. Set up the `IUserRepository` mock to return a valid, active user object for a given username.
+2. Set up the `IPasswordHasher` mock to return `true` for the verification call.
+3. Call `LoginAsync` on the `AuthenticationService` with the correct credentials.","The service returns a success result containing the user's data and role.",A mocked User object,xUnit; Moq,2,TASK-003-004-012-01
+TST-AUTH-UT-003,User Authentication,Functional,Unit Testing,Critical,High,"Verify Authentication Service fails login for a disabled user","`IUserRepository` is mocked to return a valid but disabled user object.","1. Set up the `IUserRepository` mock to return a user with `isActive = false`.
+2. Call `LoginAsync` on the `AuthenticationService`.","The service returns a failure result with a specific message indicating the account is disabled.",A mocked User object with `isActive = false`,xUnit; Moq,2,TASK-003-004-012-01
+TST-AUTH-SYS-004,User Authentication,Functional,System Testing,Critical,High,"E2E Test: Successful user login and role-based UI change","A test database with active Technician and Admin users exists.","1. Launch the application.
+2. Enter Technician credentials and click Login.
+3. Verify the main window appears and the 'Administration' button is hidden.
+4. Log out.
+5. Enter Admin credentials and click Login.
+6. Verify the main window appears and the 'Administration' button is visible.","The application behaves as described in the steps, correctly adjusting the UI based on the logged-in user's role.",Technician and Admin user accounts,"Appium with WinAppDriver",8,US-005
+TST-AUTH-SYS-005,User Authentication,Security,System Testing,Critical,Medium,"Verify session automatically locks after inactivity","Application is running and user is logged in. Inactivity timeout is configured to a short value (e.g., 5 seconds) for the test.","1. Log into the application.
+2. Perform no mouse or keyboard actions for the configured timeout period.
+3. Attempt to interact with the main application window.
+4. Enter the correct password in the lock screen.","A modal lock screen overlay appears after the timeout. Interaction with the main window is blocked. After entering the correct password, the lock screen is dismissed and the application is usable again.",A valid user account,Manual or UI Automation,4,US-006
+TST-ADM-SYS-001,User Management,Functional,System Testing,High,Medium,"Verify an administrator can create a new Technician user","An Admin user is logged in.","1. Navigate to the Administration > User Management screen.
+2. Click 'Add User'.
+3. Enter a unique username and select the 'Technician' role.
+4. Click 'Create'.
+5. Note the temporary password displayed.
+6. Log out and attempt to log in as the new user with the temporary password.","The user is created successfully. The new user can log in but is immediately forced to change their password. An audit log entry for 'User Created' exists.",An Admin user account,Manual or UI Automation,6,US-007
+TST-ADM-SYS-002,User Management,Functional,System Testing,High,Medium,"Verify password policy is enforced on password change","An Admin is logged in. A password policy is configured (e.g., min 12 chars). A user is on the forced password change screen.","1. As the user, enter a new password that violates the policy (e.g., ""short"").
+2. Click 'Set Password'.
+3. Enter a new password that complies with the policy.
+4. Click 'Set Password'.","The first attempt is rejected with a specific error message ('Password must be at least 12 characters'). The second attempt is successful, and the user is logged into the main application.",An Admin account; A standard user account in 'force password change' state,Manual or UI Automation,5,US-008
+TST-DIC-IT-001,DICOM Functionality,Functional,Integration Testing,Critical,High,"Verify DICOM C-STORE SCP receives and publishes a message to RabbitMQ","A DICOM SCU tool is available. The Windows Service is running. RabbitMQ is running.","1. Use the SCU tool to send a DICOM file to the service's SCP port.
+2. Monitor the RabbitMQ ingestion queue.","The SCU tool reports a successful C-STORE operation (status 0x0000). A new message containing the study metadata appears in the RabbitMQ queue.",A sample DICOM file,"dcmtk or fo-dicom test tool",6,TASK-004-006-019-01
+TST-DIC-SYS-002,DICOM Functionality,Functional,System Testing,Critical,High,"E2E Test: Full DICOM study ingestion from C-STORE to database","A DICOM SCU tool is available. The full system (Service, RabbitMQ, PostgreSQL) is running.","1. Use the SCU tool to send a multi-file DICOM study.
+2. Wait for the consumer to process the messages.
+3. Query the PostgreSQL database for the Patient, Study, Series, and Image records.
+4. Check the permanent file storage directory.","All corresponding metadata records are correctly created in the database. All DICOM files are present in the correct, structured directory path.",A multi-file DICOM study,"dcmtk, PostgreSQL Client",10,US-009
+TST-DIC-IT-003,DICOM Functionality,Functional,Integration Testing,High,High,"Verify DICOM C-FIND SCU retrieves results from a mock PACS","A mock DICOM PACS (or Testcontainer) is running and configured in the application.","1. In the WPF client, navigate to the PACS Query view.
+2. Enter a Patient ID known to exist in the mock PACS.
+3. Click 'Search'.","The UI's data grid is populated with the correct study results returned from the mock PACS.",A mock PACS populated with test studies,"fo-dicom test tool, or a PACS simulator",8,TASK-004-006-020-02
+TST-DIC-SYS-004,DICOM Functionality,Functional,System Testing,High,Medium,"E2E Test: Query and Retrieve a study via C-MOVE","A mock DICOM PACS is running. The full local system is running.","1. Use the PACS Query UI to find a study.
+2. Select the study from the results and click 'Retrieve'.
+3. Monitor the local system's study list.","The C-MOVE is initiated. The mock PACS sends the study to the local SCP. The study is ingested and becomes available in the local study list.",A mock PACS populated with test studies,"PACS simulator, PostgreSQL Client",8,US-010
+TST-PERF-001,Performance,Non-Functional,Performance Testing,High,High,"Benchmark: C-STORE SCP Ingestion Throughput","The full system is running. A load testing tool capable of acting as a multi-threaded DICOM SCU is available.","1. Configure the load tool to send studies from 10 concurrent connections.
+2. Run the test for 5 minutes, sending a continuous stream of studies.
+3. Monitor the RabbitMQ queue depth and the UI responsiveness of a separate client instance.","The system sustains at least 10 simultaneous C-STORE associations. The UI responsiveness for a logged-in user remains under 500ms for common actions. The RabbitMQ queue does not grow uncontrollably.",A large set of DICOM studies for sending,"DICOM load testing tool, JMeter (if adaptable), or custom script",16,REQ-1-078
+TST-PERF-002,Performance,Non-Functional,Performance Testing,High,Medium,"Benchmark: Application Launch Time","The application is installed on a machine meeting recommended hardware specs.","1. Measure the time from executing the application .exe to the Login screen being fully rendered and interactive.
+2. Perform test on both an SSD and an HDD.","Launch time is < 3 seconds on SSD and < 5 seconds on HDD.",N/A,"Stopwatch or profiling tool",4,REQ-1-077
+TST-PERF-003,Performance,Non-Functional,Performance Testing,High,Medium,"Benchmark: Large DICOM Study Load Time","A user is logged in. A large (500MB) DICOM study is available for loading.","1. From the study list, double-click the 500MB study to open it in the viewer.
+2. Measure the time from the click until the first image of the study is rendered and the UI is interactive.","The study loading time is < 3 seconds.",A 500MB DICOM study (e.g., a large CT series),Manual testing with profiling tools,6,REQ-1-077
+TST-VIEW-UT-001,DICOM Viewer,Functional,Unit Testing,Critical,High,"Verify HLSL shader correctly applies linear window/level transformation","A test harness for the shader is created.","1. Pass a texture with a known pixel value (e.g., 1000) to the shader.
+2. Set the window/level constant buffer values (e.g., WW=400, WL=1000).
+3. Capture the output pixel color from the shader.","The output pixel color is mid-gray (0.5, 0.5, 0.5), as the value is exactly at the window level.",N/A,DirectX SDK/Shader compilation tools,4,TASK-004-007-021-03
+TST-VIEW-SYS-002,DICOM Viewer,Functional,System Testing,Critical,Medium,"Verify interactive WW/L tool updates the image fluidly","A DICOM image is loaded in the viewer.","1. Activate the Window/Level tool.
+2. Click and drag the mouse across the image viewport, both horizontally and vertically.
+3. Select a WW/L preset from the dropdown (e.g., 'Lung').","Dragging the mouse interactively updates the image's brightness and contrast. Selecting a preset immediately applies the corresponding WW/WL values to the image.",A sample CT DICOM image,Manual Testing,2,TASK-004-007-022-02
+TST-PRN-SYS-001,Printing,Functional,System Testing,High,Medium,"E2E Test: Submit a print job and verify output","The full system is running. A physical printer or PDF printer is installed on the service machine.","1. In the client, open a study and select images for printing.
+2. Open the Print Preview, choose a layout (e.g., 2x2).
+3. Click 'Print' and select the target printer.
+4. Check the Windows print spooler and the physical printer output.","A job appears in the print spooler. The final printed page matches the layout and images selected in the print preview.",A sample DICOM study; An installed printer,Manual Testing,6,US-013
+TST-PDF-SYS-001,PDF Export,Functional,System Testing,Medium,Medium,"E2E Test: Export a password-protected, PDF/A-3 compliant file","The full system is running.","1. In the client, open the Print Preview for a study.
+2. Click 'Export to PDF'.
+3. In the save dialog, specify a password.
+4. After the background job completes, open the generated PDF.
+5. Use a PDF/A validator tool to check the file.","The PDF prompts for a password before opening. The validator tool confirms the file is compliant with the PDF/A-3 standard. The PDF contains the embedded DICOM metadata.",A sample DICOM study,"Adobe Acrobat Pro or other PDF/A validator",8,US-015
+TST-DEP-SYS-001,Deployment,Functional,System Testing,Critical,Low,"Verify MSIX installer performs prerequisite checks correctly","A clean Windows machine without PostgreSQL or RabbitMQ is used.","1. Run the MSIX installer.
+2. When prompted for connection details, leave them blank or enter invalid ones and click 'Test and Save'.
+3. Install PostgreSQL but do not enable the `pgcrypto` extension.
+4. Re-run the installer and provide correct DB details.","The first attempt fails with connectivity errors and blocks installation. The second attempt fails with an error stating `pgcrypto` is missing. Installation is blocked in both cases.",Clean Windows VM,Manual Testing,8,US-019
+TST-DEP-SYS-002,Deployment,Functional,System Testing,Critical,Low,"Verify a signed MSIX package installs without publisher warnings","A clean Windows machine with the code signing certificate's root CA trusted.","1. Obtain the signed MSIX package from the CI/CD pipeline.
+2. Double-click the file to start the installation.","The Windows App Installer opens and displays the correct publisher information. The installation proceeds without any security warnings about an untrusted publisher.",Signed MSIX artifact; trusted root CA,Manual Testing,4,US-020
+TST-AUDIT-SYS-001,Auditing,Functional,System Testing,Critical,Medium,"Verify audit log is transactional with the parent action","Test setup requires the ability to inject a failure in the DB connection. An Admin user is logged in.","1. In the User Management UI, attempt to create a new user.
+2. Simulate a database failure immediately after the user record is inserted but before the audit log record is inserted.
+3. Check the `Users` table and the `AuditLog` table.","The entire transaction is rolled back. The new user does not exist in the `Users` table, and no audit log was created.",An Admin user account; DB failure simulation framework,Manual or scripted integration test,8,TASK-003-005-016-01
+TST-AUDIT-SYS-002,Auditing,Functional,System Testing,High,Medium,"Verify Export to CSV functionality in Audit Trail viewer","The database contains a significant number of audit log entries. An Admin is logged in.","1. Navigate to the Audit Trail viewer.
+2. Apply a date range filter that is known to match a subset of the logs.
+3. Click 'Export to CSV' and save the file.
+4. Open the CSV file with a spreadsheet program.","The CSV file contains exactly the log entries that were visible in the filtered UI view. The columns and data are formatted correctly.",A database seeded with >1000 audit log entries,Manual Testing,3,TASK-006-010-031-03

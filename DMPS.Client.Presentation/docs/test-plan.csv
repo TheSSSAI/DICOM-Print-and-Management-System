@@ -1,0 +1,115 @@
+test_id,feature_area,test_type,test_level,priority,automation_candidate,test_description,preconditions,test_steps,expected_result,test_data_needs,tools_required,estimated_effort,dependencies
+SMK-BUILD-001,Core Architecture,Smoke,System,Highest,High,"Verify that the entire solution builds successfully after initial scaffolding.","The solution and all project files have been created as per TASK-ARCH-01.","1. Open the solution in Visual Studio or use the .NET CLI.
+2. Execute the 'Build Solution' command.",The build process completes without any errors or warnings. All project references are resolved correctly.,N/A,"Visual Studio, .NET CLI",0.5,
+IT-HOST-001,Core Architecture,Functional,Integration,Highest,Medium,"Verify the Windows Service can be installed, started, and stopped correctly.","The DicomApp.Service project is built. Administrator privileges are available.","1. Use `sc.exe create` to install the service.
+2. Open the Windows Services management console.
+3. Start the 'DICOM Service'.
+4. Stop the 'DICOM Service'.
+5. Use `sc.exe delete` to uninstall the service.","The service installs without errors. The service status changes to 'Running' when started and 'Stopped' when stopped. The service uninstalls cleanly.",N/A,"Windows Services Console, sc.exe",2,TASK-ARCH-02
+SMK-WPF-001,Core Architecture,Smoke,System,Highest,High,"Verify the WPF client application starts without dependency injection errors.","The DicomApp.Client.Wpf project is built.","1. Launch the DicomApp.Client.Wpf.exe.
+2. Observe the application startup process.",The application launches and displays the initial window (LoginView) without crashing or throwing any exceptions related to the DI container setup.,N/A,"Windows Explorer",1,TASK-ARCH-03
+UT-IPC-001,IPC,Functional,Unit,High,High,"Unit test the RabbitMQ wrapper's connection and automatic recovery logic.","The RabbitMQ wrapper service code is complete.","1. Instantiate the wrapper service with a mocked connection factory.
+2. Simulate a connection failure.
+3. Simulate the broker becoming available again.",The wrapper service should attempt to reconnect based on its configured policy. The connection should be re-established when the broker is mocked as available again.,N/A,"xUnit, Moq",4,TASK-IPC-01
+IT-IPC-001,IPC,Functional,Integration,High,High,"Verify the Named Pipe client can successfully communicate with the server in the Windows Service.","The Windows Service with the Named Pipe server is running. The WPF client is running.","1. From the client, call the `IsServiceRunning()` method.
+2. The client should connect to the named pipe, send 'PING'.
+3. The server should receive 'PING' and respond with 'PONG'.","The client method returns `true` within the specified timeout. Logs on the service show the PING request was received.",N/A,"Test Runner, Running Service/Client",3,"TASK-IPC-05, TASK-IPC-06"
+IT-IPC-002,IPC,Regression,Integration,High,High,"Verify the Named Pipe client handles a timeout gracefully when the service is not running.","The Windows Service is stopped. The WPF client is running.","1. From the client, call the `IsServiceRunning()` method.",The client method returns `false` or throws a specific `TimeoutException` after the configured timeout period, without freezing the application.,N/A,"Test Runner, Stopped Service",2,"TASK-IPC-05, TASK-IPC-06"
+IT-IPC-003,IPC,Functional,Integration,High,High,"Verify that a persistent message published via the RabbitMQ producer is durable.","RabbitMQ is running. The producer logic is implemented.","1. Publish a message with the 'persistent' flag set to a durable queue.
+2. Stop the RabbitMQ broker service.
+3. Start the RabbitMQ broker service.
+4. Use the RabbitMQ Management UI to inspect the queue.",The message should still be present in the queue after the broker restarts.,A serialized message object.,"Test Runner, RabbitMQ Management UI",3,TASK-IPC-02
+IT-IPC-004,IPC,Functional,Integration,High,High,"Verify the Dead-Letter Queue (DLQ) mechanism correctly routes a rejected message.","RabbitMQ is running with a configured work queue, DLX, and DLQ. A consumer is attached to the work queue.","1. Publish a message to the work queue.
+2. Have the consumer receive the message and reject it with `requeue=false`.
+3. Inspect the DLQ using the RabbitMQ Management UI.",The original message should be present in the DLQ, and the work queue should be empty.,A serialized message object.,"RabbitMQ Management UI, Custom Test Consumer",4,"TASK-IPC-04, TASK-IPC-03"
+IT-DB-001,Database,Functional,Integration,Highest,High,"Verify that the initial EF Core migration can be applied to a clean PostgreSQL database successfully.","PostgreSQL is running. The EF Core migrations have been generated.","1. Point the application configuration to a clean, empty PostgreSQL database.
+2. Run the `dotnet ef database update` command or the application's startup migration logic.",The command completes successfully. All tables (Users, Roles, PasswordHistory, etc.) are created in the database with the correct columns, keys, and relationships.,Clean PostgreSQL database instance.,"dotnet-ef tool, pgAdmin",2,TASK-DB-02
+IT-SEC-001,Security & Compliance,Functional,Integration,Highest,Medium,"Verify the Secure Credential Storage Service can write to and read from the Windows Credential Manager.","A user is logged into a Windows session.","1. Call the `SetSecret` method with a test key and value.
+2. Open the Windows Credential Manager and verify the entry was created.
+3. Call the `GetSecret` method with the same test key.
+4. Clean up the created credential.","The credential appears in the Windows UI. The `GetSecret` method returns the correct value. The credential is removed successfully.",N/A,"Test Runner, Windows Credential Manager",3,TASK-SEC-03
+UT-AUTH-001,User Authentication,Functional,Unit,Highest,High,"Unit test successful authentication with a correct password.","AuthenticationService is instantiated with a mocked DbContext and BCrypt wrapper.","1. Set up the mock DbContext to return a valid user object with a known BCrypt hash.
+2. Set up the mock BCrypt wrapper to return `true` for the known hash and correct password.
+3. Call `AuthenticationService.LoginAsync` with the correct username and password.",The service returns a success result with a valid user session object.,Mock user object with BCrypt hash.,"xUnit, Moq, EF Core InMemory Provider",1.5,TASK-AUTH-04
+UT-AUTH-002,User Authentication,Functional,Unit,Highest,High,"Unit test failed authentication with an incorrect password.","AuthenticationService is instantiated with a mocked DbContext and BCrypt wrapper.","1. Set up the mock DbContext to return a valid user object with a known BCrypt hash.
+2. Set up the mock BCrypt wrapper to return `false` for the known hash and an incorrect password.
+3. Call `AuthenticationService.LoginAsync` with the correct username and an incorrect password.",The service returns a failure result. No user session is created.,Mock user object with BCrypt hash.,"xUnit, Moq, EF Core InMemory Provider",1.5,TASK-AUTH-04
+UT-AUTH-003,User Authentication,Functional,Unit,Highest,High,"Unit test failed authentication with a non-existent username.","AuthenticationService is instantiated with a mocked DbContext.","1. Set up the mock DbContext to return `null` when queried for the specified username.
+2. Call `AuthenticationService.LoginAsync` with the non-existent username and any password.",The service returns a failure result. The BCrypt verification method is never called.,N/A,"xUnit, Moq, EF Core InMemory Provider",1,TASK-AUTH-04
+UT-AUTH-004,User Authentication,Functional,Unit,Highest,High,"Unit test failed authentication for a disabled user account.","AuthenticationService is instantiated with a mocked DbContext.","1. Set up the mock DbContext to return a valid user object where the `isActive` property is `false`.
+2. Call `AuthenticationService.LoginAsync` with the disabled user's credentials.",The service returns a specific failure result indicating the account is disabled.,Mock user object with `isActive=false`.,"xUnit, Moq, EF Core InMemory Provider",1.5,TASK-AUTH-04
+E2E-AUTH-001,User Authentication,Functional,System,Highest,High,"Verify the full end-to-end login flow for a valid user.","The application is installed, services are running. A valid, active user exists in the database.","1. Launch the WPF client.
+2. Enter the valid username and password into the LoginView.
+3. Click the 'Login' button.",The LoginView closes, and the MainWindow is displayed. The application UI is configured according to the user's role.,Active 'Technician' or 'Admin' user account.,"Appium/WinAppDriver",2,TASK-AUTH-05
+E2E-AUTH-002,User Authentication,Functional,System,Highest,High,"Verify the UI response for an invalid login attempt.","The application is installed and running.","1. Launch the WPF client.
+2. Enter a valid username and an incorrect password.
+3. Click 'Login'.
+4. Enter a non-existent username and any password.
+5. Click 'Login'.","In both cases, a generic 'Invalid username or password' error message is displayed. The user remains on the LoginView. The password field is cleared.",Active 'Technician' user account.,"Appium/WinAppDriver",2,TASK-AUTH-05
+IT-RBAC-001,RBAC,Functional,Integration,Highest,High,"Verify the AuthorizationService correctly identifies user roles.","The application is running. A user is logged in.","1. Log in as a user with the 'Administrator' role.
+2. Programmatically call `AuthorizationService.IsInRole('Administrator')`.
+3. Call `AuthorizationService.IsInRole('Technician')`.
+4. Log out and log in as a 'Technician'.
+5. Repeat steps 2 and 3.",The service returns `true` for the user's assigned role and `false` for other roles.,Admin and Technician user accounts.,"Test Runner",2,TASK-RBAC-01
+E2E-RBAC-001,RBAC,Functional,System,Highest,High,"Verify the UI correctly hides/disables administrative features for a Technician user.","The application is running. A 'Technician' user exists.","1. Log in as the 'Technician' user.
+2. Inspect the main application window.
+3. Open a study and view the metadata panel.",The 'Administration' tab/button in the main navigation is not visible or is disabled. The 'Edit DICOM Metadata' button is not visible or is disabled.,'Technician' user account.,"Appium/WinAppDriver, Visual Inspector",3,TASK-RBAC-04
+E2E-RBAC-002,RBAC,Functional,System,Highest,High,"Verify an Administrator user has access to all features.","The application is running. An 'Administrator' user exists.","1. Log in as the 'Administrator' user.
+2. Inspect the main application window.
+3. Open a study and view the metadata panel.",The 'Administration' tab/button is visible and enabled. The 'Edit DICOM Metadata' button is visible and enabled.,'Administrator' user account.,"Appium/WinAppDriver",2,TASK-RBAC-04
+E2E-USER-001,User Management,Functional,System,Highest,High,"Verify an Admin can successfully create a new Technician user.","An Administrator is logged into the application.","1. Navigate to the Administration -> User Management view.
+2. Click 'Add User'.
+3. Enter a unique username and select the 'Technician' role.
+4. Click 'Create'.
+5. Navigate to the Audit Trail viewer.",A success notification appears showing a temporary password. The new user appears in the user list. The audit trail contains a 'User Created' event for this action.,Admin user account.,"Appium/WinAppDriver, pgAdmin",4,"TASK-ADMIN-03, TASK-ADMIN-04"
+IT-USER-001,User Management,Functional,Integration,Highest,High,"Verify the User Creation service logic is transactional.","Backend services are running. PostgreSQL is available.","1. In a test, call the `CreateUserAsync` method.
+2. Configure a mock `AuditService` to throw an exception during the call.
+3. Inspect the database.",The user creation should be rolled back. The `User` record should NOT exist in the database.,N/A,"xUnit, Moq, Testcontainers",3,TASK-ADMIN-03
+E2E-USER-002,User Management,Functional,System,High,High,"Verify an Admin can edit a user's role and disable their account.","An Administrator is logged in. A 'Technician' user exists.","1. Navigate to User Management.
+2. Select the Technician user and click 'Edit'.
+3. Change their role to 'Administrator'. Save.
+4. Select the same user and edit again.
+5. Set their status to 'Disabled'. Save.",The user's role in the list updates to 'Administrator'. The user's status updates to 'Disabled'. The user can no longer log in. Both actions are recorded in the audit trail.,Admin and Technician user accounts.,"Appium/WinAppDriver",4,TASK-ADMIN-07
+E2E-USER-003,User Management,Security,System,High,High,"Verify an Admin cannot delete the last remaining administrator account.","An Administrator is logged in. There is only one Administrator account in the system.","1. Navigate to User Management.
+2. Attempt to delete the last administrator account.",The 'Delete' button for that user is disabled, OR a confirmation dialog appears but the action fails with an error message: 'Cannot delete the last administrator account.',Test database with only one Admin user.,"Appium/WinAppDriver",3,TASK-ADMIN-06
+E2E-SESSION-001,Session Management,Functional,System,Highest,High,"Verify the session automatically locks after inactivity and can be unlocked.","A user is logged into the application. The inactivity timeout is configured to a short value (e.g., 10 seconds) for the test.","1. Log in.
+2. Perform an action (e.g., open a study).
+3. Do not interact with the application and wait for the timeout period to elapse.
+4. Enter the correct password into the lock screen.","The lock screen overlay appears, obscuring the application. After entering the correct password, the lock screen disappears, and the application state (open study) is restored.",Any valid user account.,"Appium/WinAppDriver",5,TASK-SESSION-04
+E2E-SESSION-002,Session Management,Security,System,High,High,"Verify the session is terminated after 5 failed unlock attempts.","A user is logged in, and the session is locked.","1. Enter an incorrect password 4 times.
+2. Enter an incorrect password for the 5th time.",After the 5th attempt, the application should close the main window and return to the LoginView. A security event is logged in the audit trail.,Any valid user account.,"Appium/WinAppDriver",3,TASK-SESSION-02
+E2E-PWRESET-001,User Management,Functional,System,Highest,High,"Verify the end-to-end forced password reset workflow.","An Admin and a Technician user exist. The Admin is logged in.","1. Admin navigates to User Management and resets the Technician's password.
+2. Admin securely provides the temporary password to the Technician.
+3. Log out. Log in as the Technician with the temporary password.
+4. Enter a new, valid password in the forced change view.
+5. Log out. Log back in as the Technician with the new password.",Upon first login, the Technician is forced to the 'Change Password' view. After setting a new password, they are logged in to the main application. The subsequent login with the new password succeeds.,Admin and Technician user accounts.,"Appium/WinAppDriver",6,"TASK-PWRESET-02, TASK-PWRESET-03"
+IT-SEC-002,Security & Compliance,Security,Integration,Highest,High,"Verify that PHI data written via EF Core is encrypted at rest using pgcrypto.","PostgreSQL is running with the `pgcrypto` extension enabled. EF Core is configured with encryption value converters.","1. Create a new Patient entity with a name and save it to the database via EF Core.
+2. Use a separate SQL client (e.g., pgAdmin) to query the 'Patients' table directly.
+3. Read the same Patient entity back via EF Core.",The patient name in the raw SQL query result should be an unreadable, encrypted bytea/text value. The entity read back through EF Core should have the correct, decrypted patient name.,N/A,"xUnit, Testcontainers, pgAdmin",5,TASK-SEC-04
+IT-SEC-003,Security & Compliance,Security,Integration,High,High,"Verify the logging system correctly masks PHI.","Serilog is configured with the PHI masking enricher.","1. Create a log message that includes structured data with properties like 'PatientName' and 'PatientID'.
+2. Write the log using the configured logger.
+3. Inspect the log output sink (e.g., a text file or console).",The log message should be written, but the values for 'PatientName' and 'PatientID' should be replaced with a mask (e.g., '***').",N/A,"xUnit, Serilog Test Sinks",3,TASK-SEC-06
+E2E-AUDIT-001,Security & Compliance,Functional,System,Highest,High,"Verify the Audit Trail Viewer can filter logs and export the results.","An Administrator is logged in. Multiple audit log entries exist for different users and dates.","1. Navigate to Administration -> Audit Trail.
+2. Use the date pickers to select a specific date range.
+3. Use the user dropdown to filter by a specific user.
+4. Click 'Export to CSV'.",The data grid updates to show only the logs matching the filter criteria. A CSV file is downloaded, and its contents match the filtered view in the data grid.,Admin user account, Populated audit log table.,"Appium/WinAppDriver, CSV Viewer",4,TASK-AUDIT-02
+PERF-DICOM-001,DICOM Data Management,Performance,Performance,High,High,"Verify C-STORE SCP throughput meets performance requirements.","The Windows Service is running. A DICOM test SCU is available.","1. Configure the DICOM SCU to send studies from 10 concurrent associations to the application's SCP.
+2. Monitor the application's client UI responsiveness and the service's resource usage.","The system must handle at least 10 simultaneous C-STORE associations without data loss. The client UI must remain responsive (actions < 500ms).",Multiple DICOM studies.,"dcmtk or similar DICOM SCU tool, Performance Profiler",8,US-009
+PERF-DICOM-002,DICOM Viewer,Performance,Performance,High,Medium,"Verify the DICOM viewer meets the image loading time performance target.","A user is logged in. A large DICOM study is available for testing.","1. On a machine meeting recommended specs, open a DICOM study > 500MB.
+2. Measure the time from clicking 'Open' to the image being displayed.",The image should be displayed in under 3 seconds. A low-resolution preview may appear first, followed by the full-resolution image.,DICOM CT/MR study > 500MB.,"Stopwatch, Performance Profiler",4,US-012
+SEC-PEN-001,RBAC,Security,Security,High,Manual Only,"Attempt to bypass RBAC controls.","A user is logged in as a 'Technician'.","1. Using a web proxy or other tool, attempt to directly call backend API endpoints or commands that are restricted to Administrators (e.g., the user creation endpoint).",All attempts must be rejected with an 'Unauthorized' or 'Forbidden' status. The attempt should be logged as a security event in the audit trail.,Technician user account.,"Burp Suite or similar proxy",8,US-004
+SYS-INSTALL-001,Installation & Deployment,Functional,System,Highest,Manual Only,"Verify the MSIX installer successfully deploys the application and service on a clean machine.","A clean Windows 10/11 VM is available. PostgreSQL and RabbitMQ are running and accessible from the VM.","1. Run the MSIX installer.
+2. Provide valid connection details for PostgreSQL and RabbitMQ.
+3. Complete the installation.
+4. Check the Start Menu and Windows Services.",The WPF client shortcut is created. The 'DICOM Service' is installed, set to 'Automatic', and is in the 'Running' state.,Clean Windows VM, accessible DB/MQ.,"Installer package, VirtualBox/VMware",4,US-021
+SYS-INSTALL-002,Installation & Deployment,Functional,System,Highest,Manual Only,"Verify the installer's prerequisite check for PostgreSQL connectivity.","A clean Windows VM is available. RabbitMQ is accessible. PostgreSQL is NOT running or is inaccessible.","1. Run the MSIX installer.
+2. Provide an invalid/inaccessible address for the PostgreSQL server.
+3. Attempt to proceed.",The installer displays an error message indicating it cannot connect to the PostgreSQL server and blocks the installation from continuing.,Clean Windows VM, inaccessible DB.,"Installer package, VirtualBox/VMware",2,US-021
+SYS-INSTALL-003,Installation & Deployment,Functional,System,Highest,Manual Only,"Verify the installer's prerequisite check for the `pgcrypto` extension.","A clean Windows VM. An accessible PostgreSQL server is running WITHOUT the `pgcrypto` extension enabled.","1. Run the MSIX installer.
+2. Provide valid connection details for the PostgreSQL server.
+3. Attempt to proceed.",The installer displays a specific error message stating that the `pgcrypto` extension is required and is not enabled, and blocks the installation.,Clean Windows VM, DB without pgcrypto.,"Installer package, VirtualBox/VMware",3,US-021
+E2E-HEALTH-001,System Operations,Functional,System,High,High,"Verify the System Health Dashboard accurately reflects component status.","An administrator is logged in. All services are running.","1. Navigate to the System Health Dashboard.
+2. Stop the RabbitMQ service on the server.
+3. Refresh the dashboard.
+4. Restart the RabbitMQ service.
+5. Refresh the dashboard.",Initially, all indicators are green. After stopping RabbitMQ, its indicator turns red. After restarting, it returns to green. An email alert for the failure should be triggered.,Admin user account.,"Appium/WinAppDriver, Email client",5,US-020

@@ -1,0 +1,609 @@
+Title,Description,Type,Status,Priority,Assignee,Reporter,Due Date,Estimate,Labels,Sprint,Epic,Project,Attachments,Comments,Parent ID,Dependencies,Created At,Updated At,Skills Required
+"EPIC-001: Core Architecture & Technology Foundation","This epic covers the foundational setup of the application's architecture, including project structure, dependency injection, inter-process communication (IPC) mechanisms like RabbitMQ and Named Pipes, and the initial database schema for security.","Epic","Backlog","Critical","pm@project.com","pm@project.com","",,"Architecture,Foundation","","","DICOM Management Platform","","","","","2024-01-01 09:00","2024-01-01 09:00",""
+"US-F01: Establish Core Application Structure","As a developer, I want a well-structured, multi-project solution with Dependency Injection and Hosting configured, so that I can build new features efficiently, consistently, and with a clear separation of concerns.
+---
+AC1: Given the solution is opened in Visual Studio, When the solution is built, Then all projects compile successfully without errors and project references are correctly established.
+AC2: Given the WPF application is started, When the application initializes, Then the main window is resolved from the DI container and displayed.
+AC3: Given the Windows Service is installed and started, When the service's hosted services are run, Then services injected via DI are successfully resolved and executed.","Story","Backlog","Critical","dev@project.com","pm@project.com","",32,"Architecture,Setup","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","","","","2024-01-01 09:00","2024-01-01 09:00",".NET,WPF,Dependency Injection,Windows Services,xUnit"
+"TASK-001: Create Solution and Scaffold Core Projects","Create the main Visual Studio solution (DicomApp.sln) and scaffold the core C# projects: DicomApp.Client.Wpf, DicomApp.Service, DicomApp.DataAccess, DicomApp.Infrastructure, DicomApp.Domain, DicomApp.Shared. All projects must target .NET 8.
+---
+AC1: The .sln file and all specified .csproj files exist in the repository.
+AC2: Projects are configured to target .NET 8.
+AC3: Logical project references are established (e.g., WPF Client references Shared, Infrastructure references Domain).","Task","Backlog","Critical","dev@project.com","pm@project.com","",6,"Architecture,Setup","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","Assumptions: Standard project templates in Visual Studio are sufficient.","US-F01","","2024-01-01 09:00","2024-01-01 09:00",".NET,Visual Studio"
+"TASK-002: Configure Dependency Injection Host for WPF Client","In the DicomApp.Client.Wpf project, implement the Microsoft.Extensions.Hosting builder in App.xaml.cs. Configure the DI container to register services and resolve the MainWindow.
+---
+AC1: The App.xaml.cs uses `Host.CreateDefaultBuilder()` and configures services.
+AC2: The application successfully builds and launches, displaying a placeholder MainWindow resolved from the DI container.
+AC3: A sample service can be successfully injected into the MainWindow's constructor.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.33,"Architecture,WPF","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","Assumptions: The Generic Host model integrates cleanly with the WPF application lifecycle.","US-F01","TASK-001","2024-01-01 09:00","2024-01-01 09:00",".NET,WPF,Dependency Injection"
+"TASK-003: Configure Dependency Injection Host for Windows Service","In the DicomApp.Service project, implement the Microsoft.Extensions.Hosting builder for a Windows Service. Configure it to register and run IHostedService components.
+---
+AC1: The Program.cs uses `Host.CreateDefaultBuilder()` and the `.UseWindowsService()` extension.
+AC2: The service can be installed, started, and stopped via PowerShell or `sc.exe`.
+AC3: A sample IHostedService is created, registered in DI, and its StartAsync/StopAsync methods are logged upon service start/stop.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.33,"Architecture,Windows Service","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","Assumptions: Developer has permissions to install and manage local services for testing.","US-F01","TASK-001","2024-01-01 09:00","2024-01-01 09:00",".NET,Windows Services,Dependency Injection"
+"US-F02: Implement Asynchronous Messaging Backbone","As a developer, I want a robust, reusable RabbitMQ service that supports durable queues, persistent messages, and dead-lettering, so that I can reliably offload long-running tasks from the client to the background service.
+---
+AC1: Given a message is published with the 'persistent' flag to a 'durable' queue, When the RabbitMQ broker is restarted, Then the message remains in the queue and is delivered to a consumer once the broker is back online.
+AC2: Given a consumer repeatedly fails to process a message, When the configured number of retries is exceeded, Then the message is automatically routed to the Dead-Letter Queue (DLQ) for manual inspection.
+AC3: Given a publisher and a consumer are configured, When a message is published to an exchange, Then the consumer successfully receives, deserializes, and processes the message from its bound queue.","Story","Backlog","Critical","dev@project.com","pm@project.com","",46.33,"RabbitMQ,Infrastructure,Architecture","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","","","","2024-01-01 09:00","2024-01-01 09:00","RabbitMQ,.NET,C#,Docker,Windows Services"
+"TASK-005: Implement RabbitMQ Connection Management Service","In the Infrastructure project, create a singleton service to manage the connection to the RabbitMQ broker. It must handle automatic retries on connection failure and provide a resilient IConnection object to other services.
+---
+AC1: The service successfully connects to a running RabbitMQ broker.
+AC2: If the connection is lost, the service automatically attempts to reconnect using an exponential backoff strategy.
+AC3: The service is registered as a singleton in the DI container.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.67,"RabbitMQ,Infrastructure","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","RISK-011: Asynchronous Workflow Testing Complexity. Assumptions: A local or containerized RabbitMQ instance is available for development.","US-F02","TASK-001","2024-01-01 09:00","2024-01-01 09:00","RabbitMQ,.NET,C#"
+"TASK-006: Implement Generic RabbitMQ Message Publisher","Create a generic message publisher service that can serialize and publish any C# object to a specified exchange. It must support setting messages as 'persistent'.
+---
+AC1: A method `PublishAsync<T>(T message, string exchange, string routingKey)` exists.
+AC2: The message is correctly serialized to JSON.
+AC3: The message properties are set to 'persistent' when requested.
+AC4: The service gets a channel from the connection management service.","Task","Backlog","Critical","dev@project.com","pm@project.com","",6.33,"RabbitMQ,Infrastructure","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","","US-F02","TASK-005","2024-01-01 09:00","2024-01-01 09:00","RabbitMQ,.NET,C#"
+"TASK-007: Implement Generic RabbitMQ Consumer Hosted Service","Create a base class or generic `IHostedService` for consuming messages from a RabbitMQ queue. It must handle message deserialization, acknowledgement (ack/nack), and error handling.
+---
+AC1: The hosted service subscribes to a specified queue on start.
+AC2: It correctly deserializes incoming JSON messages to the specified C# type.
+AC3: It calls a provided message handler delegate or abstract method.
+AC4: It sends a `basic.ack` on successful processing and `basic.nack` on failure.","Task","Backlog","Critical","dev@project.com","pm@project.com","",12,"RabbitMQ,Infrastructure,Windows Service","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","","US-F02","TASK-005","2024-01-01 09:00","2024-01-01 09:00","RabbitMQ,.NET,Windows Services"
+"TASK-008: Implement Dead-Letter Queue (DLQ) Configuration Logic","Extend the consumer/publisher infrastructure to programmatically declare queues with dead-lettering configured. This involves declaring a DLX (exchange) and a DLQ (queue) and setting the appropriate arguments when declaring the main queue.
+---
+AC1: A queue can be declared with `x-dead-letter-exchange` and `x-dead-letter-routing-key` arguments.
+AC2: The corresponding DLX and DLQ are also declared.
+AC3: A message that is rejected (`requeue=false`) from the main queue is routed to the DLQ.","Task","Backlog","High","dev@project.com","pm@project.com","",6,"RabbitMQ,Infrastructure","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","Assumptions: Developer is familiar with the DLX pattern in RabbitMQ.","US-F02","TASK-006,TASK-007","2024-01-01 09:00","2024-01-01 09:00","RabbitMQ,.NET"
+"US-F03: Implement Synchronous IPC Channel","As a developer, I want a low-latency, synchronous Inter-Process Communication (IPC) mechanism using Named Pipes, so that the client application can perform real-time status checks of the background service.
+---
+AC1: Given the background service is running and hosting a Named Pipe server, When the client application sends a 'PING' message via a Named Pipe client, Then the client receives a 'PONG' response from the service within 500ms.
+AC2: Given the background service is not running, When the client application attempts to connect to the Named Pipe, Then the connection fails gracefully with a timeout exception instead of freezing the application.
+AC3: Given the client and service are communicating, When either process is terminated, Then the pipe connection is cleanly closed without causing resource leaks.","Story","Backlog","Critical","dev@project.com","pm@project.com","",35.33,"IPC,Infrastructure,Architecture","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","RISK-012: Named Pipes Permission Issues","","","2024-01-01 09:00","2024-01-01 09:00","Named Pipes,.NET,C#"
+"TASK-010: Implement Named Pipe Server in Windows Service","In the Infrastructure project, create a Named Pipe server class. In the Windows Service, create an IHostedService that starts this server in a background thread to listen for client connections and respond to messages.
+---
+AC1: The server creates a `NamedPipeServerStream` on start.
+AC2: It waits for a client connection asynchronously.
+AC3: Upon receiving a 'PING' message, it writes back a 'PONG' message.
+AC4: The server correctly configures ACLs on the pipe to allow standard users to connect.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.67,"IPC,Infrastructure,Windows Service","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","RISK-012: Named Pipes Permission Issues","US-F03","TASK-003","2024-01-01 09:00","2024-01-01 09:00","Named Pipes,.NET,C#"
+"TASK-011: Implement Named Pipe Client for WPF Application","In the Infrastructure project, create a Named Pipe client class that can connect to the server, send a request, and wait for a reply, with configurable timeouts.
+---
+AC1: The client can connect to the server pipe using `NamedPipeClientStream`.
+AC2: It can write a request message and read a response message.
+AC3: The connect operation times out gracefully if the server is not available.
+AC4: The client is registered in the WPF app's DI container.","Task","Backlog","Critical","dev@project.com","pm@project.com","",6.33,"IPC,Infrastructure","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","","US-F03","TASK-002","2024-01-01 09:00","2024-01-01 09:00","Named Pipes,.NET,C#"
+"EPIC-002: Security & Compliance","This epic focuses on all aspects of security and compliance, including user authentication, role-based access control (RBAC), session management, auditing, and secure logging. These features are critical for HIPAA compliance.","Epic","Backlog","Critical","pm@project.com","pm@project.com","",,"Security,HIPAA,Compliance","","","DICOM Management Platform","","","","","2024-01-01 09:00","2024-01-01 09:00",""
+"US-001: User Login with Username and Password","As a registered System User, I want to securely log in to the application using my unique username and password, so that I can gain access to the system and its features.
+---
+AC1: Given I have a valid and active user account, When I enter my correct username and password and click 'Login', Then the login window closes and the main application window is displayed.
+AC2: Given I am on the login screen, When I enter a correct username but an incorrect password, Then the system displays a generic error message 'Invalid username or password' and the password field is cleared.
+AC3: Given I am on the login screen, When I enter a username that does not exist, Then the system displays the same generic error message 'Invalid username or password' to prevent user enumeration.","Story","Backlog","Critical","dev@project.com","pm@project.com","",51.33,"Security,Authentication,UI","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-F01","","2024-01-01 09:00","2024-01-01 09:00","EF Core,PostgreSQL,C#,Security,WPF,MVVM"
+"TASK-013: Create User, Role, PasswordHistory EF Core Entities & Migration","In the DataAccess project, create the C# classes for `User`, `Role`, and `PasswordHistory` entities. Configure their relationships and properties in the `ApplicationDbContext`. Generate the initial EF Core database migration.
+---
+AC1: The `User`, `Role`, and `PasswordHistory` classes are created with all fields specified in the database design.
+AC2: The `ApplicationDbContext` is configured with `DbSet` properties and relationships.
+AC3: An EF Core migration is successfully generated using `dotnet ef migrations add`.
+AC4: The generated migration script correctly reflects the entity models.","Task","Backlog","Critical","dev@project.com","pm@project.com","",6.33,"Database,EF Core","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","Assumptions: The database design is stable.","US-001","TASK-001","2024-01-01 09:00","2024-01-01 09:00","EF Core,PostgreSQL,C#"
+"TASK-014: Implement BCrypt Password Hashing Utility","Create a static utility class or a service for password hashing. It must contain two methods: one to hash a plaintext password using BCrypt, and one to verify a plaintext password against an existing hash.
+---
+AC1: A `HashPassword(string password)` method returns a valid BCrypt hash string.
+AC2: A `VerifyPassword(string password, string hash)` method returns true for a correct password and false for an incorrect one.
+AC3: The implementation uses a reputable BCrypt library (e.g., BCrypt.Net-Next).","Task","Backlog","Critical","dev@project.com","pm@project.com","",3.17,"Security,BCrypt","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-001","","2024-01-01 09:00","2024-01-01 09:00","Security,C#"
+"TASK-015: Implement AuthenticationService Logic","Create an `AuthenticationService` that orchestrates the login process. It will depend on a `UserRepository` to fetch user data and the `PasswordHasher` to verify credentials. It should manage the creation of a user session object upon successful login.
+---
+AC1: The service correctly fetches a user by username.
+AC2: It correctly calls the `PasswordHasher` to verify the password.
+AC3: It returns a result object indicating success/failure and, on success, a session object containing user ID and role.
+AC4: It handles cases for user not found, incorrect password, and disabled accounts.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.33,"Security,Authentication","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-001","TASK-013,TASK-014","2024-01-01 09:00","2024-01-01 09:00","C#,EF Core,Security"
+"TASK-017a: Implement User Session Management Service","Create a singleton service to hold the current authenticated user's session information (e.g., User ID, Username, Role). This service will be populated after a successful login and will be injectable into any ViewModel or service that needs to know the current user's identity or permissions.
+---
+AC1: A `UserSessionService` class is created and registered as a singleton.
+AC2: It has methods to set the current user upon login and clear it upon logout.
+AC3: It exposes properties like `IsAuthenticated`, `CurrentUserRole`, etc.
+AC4: The service is thread-safe.","Task","Backlog","Critical","dev@project.com","pm@project.com","",4,"Security,Architecture","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-001","TASK-015","2024-01-01 09:00","2024-01-01 09:00","C#"
+"TASK-016: Build LoginView and LoginViewModel","In the WPF project, create the LoginView.xaml and its corresponding LoginViewModel.cs. The ViewModel will use the `AuthenticationService` to perform the login and will manage the UI state (e.g., error messages, button enabled state).
+---
+AC1: The view contains fields for username, password, a login button, and an error message area.
+AC2: Data bindings between the view and ViewModel are correctly established.
+AC3: The login command on the ViewModel calls the `AuthenticationService`.
+AC4: A successful login triggers navigation to the main application window; a failed login displays a generic error message.","Task","Backlog","Critical","dev@project.com","pm@project.com","",12,"WPF,UI,Authentication","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-001","TASK-015,TASK-002","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,C#"
+"US-002: Role-Based Feature Access","As a System User, I want the application's features and UI controls to be enabled or disabled based on my assigned role, so that I can only perform actions I am authorized for, ensuring system security.
+---
+AC1: Given I am logged in as a user with the 'Technician' role, When I navigate the application, Then the 'Administration' area/tab is hidden and I cannot see or interact with any controls for editing DICOM metadata.
+AC2: Given I am logged in as a user with the 'Administrator' role, When I navigate the application, Then all features, including the 'Administration' area and the ability to edit DICOM metadata, are visible and enabled.
+AC3: Given a user with the 'Technician' role attempts to programmatically invoke an admin-only action, When the request is processed by the backend, Then the action is rejected with an authorization error and the attempt is logged.","Story","Backlog","Critical","dev@project.com","pm@project.com","",26.33,"Security,RBAC,UI","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-001","","2024-01-01 09:00","2024-01-01 09:00","C#,WPF,MVVM"
+"TASK-018: Implement Centralized Authorization Service","Create an `AuthorizationService` that depends on the `UserSessionService`. It will provide methods like `IsAdmin()` or `HasPermission(Permission permission)`. This service will be the single source of truth for permission checks throughout the application.
+---
+AC1: The service correctly determines the current user's role from the session.
+AC2: Methods return correct boolean values based on the role-permission mapping.
+AC3: The service is registered in DI and injectable.","Task","Backlog","Critical","dev@project.com","pm@project.com","",6,"Security,RBAC,Architecture","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-002","TASK-017a","2024-01-01 09:00","2024-01-01 09:00","C#"
+"EPIC-003: DICOM Functionality & Data Management","This epic encompasses all core clinical functionality related to handling DICOM data. It includes receiving, storing, querying, retrieving, viewing, and annotating DICOM studies. This is the primary value proposition of the application.","Epic","Backlog","Critical","pm@project.com","pm@project.com","",,"DICOM,Clinical Workflow","","","DICOM Management Platform","","","","","2024-01-01 09:00","2024-01-01 09:00",""
+"US-010: View and Navigate DICOM Images","As a Technician, I want a high-performance, GPU-accelerated DICOM viewer, so that I can load, view, and navigate through monochrome and color image series smoothly and efficiently.
+---
+AC1: Given I open a multi-frame DICOM series, When I scroll the mouse wheel, Then I can navigate through the individual frames of the series smoothly without lag.
+AC2: Given a large study is being loaded into the viewer, When the data is being read, Then a low-resolution preview is displayed almost immediately, which is then replaced by the full-resolution image once loading is complete.
+AC3: Given I am viewing an image, When I use the viewer controls, Then I can zoom, pan, rotate, and flip the image, and apply various window/level presets (e.g., Lung, Bone) to adjust the image contrast.","Story","Backlog","Critical","senior-dev@project.com","pm@project.com","",113.16,"DICOM,WPF,DirectX,UI,Performance","Sprint 1","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-001: GPU Viewer Complexity. RISK-005: Specialized Skill Dependency.","","","2024-01-01 09:00","2024-01-01 09:00","WPF,DirectX,Vortice.Windows,C#,HLSL"
+"TASK-049: Prototype DirectX Rendering in WPF","Create a technical spike/prototype to validate the core approach of rendering a DICOM image in a WPF control using DirectX via the Vortice.Windows library. The goal is to de-risk the technical challenges and establish a rendering pipeline.
+---
+AC1: A proof-of-concept WPF application can load a single DICOM file.
+AC2: The pixel data is uploaded to a DirectX texture on the GPU.
+AC3: The texture is rendered to the screen within a WPF control (e.g., using D3DImage).
+AC4: The prototype is reviewed by the team to confirm viability.","Task","Backlog","Critical","senior-dev@project.com","pm@project.com","",17,"DICOM,WPF,DirectX,Spike","Sprint 1","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-001: GPU Viewer Complexity. RISK-005: Specialized Skill Dependency. Assumptions: A developer with some graphics programming knowledge is available.","US-010","","2024-01-01 09:00","2024-01-01 09:00","WPF,DirectX,Vortice.Windows,C#"
+"TASK-038: Create DICOM EF Core Entities and Migration","In the DataAccess project, create the EF Core entities for `Patient`, `Study`, `Series`, and `Image` as defined in the database design. Configure their relationships and generate a new database migration.
+---
+AC1: All DICOM-related entities are created with the correct properties and relationships.
+AC2: An EF Core migration is successfully generated.
+AC3: The migration can be applied to a test database without errors.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.33,"Database,EF Core,DICOM","Sprint 1","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-008","TASK-013","2024-01-01 09:00","2024-01-01 09:00","EF Core,C#"
+"TASK-004: Write Integration Tests for DI Host Configurations","Create basic integration tests for both the WPF and Service hosts to ensure that the DI container is correctly configured and can resolve all registered services without throwing exceptions.
+---
+AC1: A test exists that builds the WPF host and successfully resolves the MainWindow.
+AC2: A test exists that builds the Windows Service host and successfully resolves all registered IHostedService instances.
+AC3: Tests are integrated into the CI pipeline.","Task","Backlog","High","dev@project.com","pm@project.com","",9.34,"Testing,Architecture","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","Assumptions: Host can be built and validated in a test runner context.","US-F01","TASK-002,TASK-003","2024-01-01 09:00","2024-01-01 09:00",".NET,xUnit"
+"TASK-009: Write Integration Tests for RabbitMQ Service","Create a suite of integration tests for the RabbitMQ infrastructure. Use Testcontainers to spin up a RabbitMQ instance for testing durability, persistence, and the DLQ mechanism.
+---
+AC1: A test verifies that a persistent message survives a container restart.
+AC2: A test verifies that a message is correctly routed to the DLQ after being nack'd without requeue.
+AC3: A test verifies the full publish/consume happy path.
+AC4: Tests are integrated into the CI pipeline.","Task","Backlog","High","dev@project.com","pm@project.com","",12,"RabbitMQ,Testing,Integration Test","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","RISK-011: Asynchronous Workflow Testing Complexity. Assumptions: The CI environment supports Docker for running Testcontainers.","US-F02","TASK-008","2024-01-01 09:00","2024-01-01 09:00","RabbitMQ,.NET,xUnit,Docker"
+"TASK-012: Write Integration Tests for Named Pipes IPC","Create integration tests that start the server in one thread and use the client in another to verify the request/reply communication. Test the happy path ('PING'/'PONG'), timeout scenarios, and graceful shutdown.
+---
+AC1: A test verifies the successful 'PING'/'PONG' exchange.
+AC2: A test verifies that the client throws a `TimeoutException` when trying to connect to a non-existent server.
+AC3: Tests run successfully in the CI pipeline.","Task","Backlog","High","dev@project.com","pm@project.com","",12,"IPC,Testing,Integration Test","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","Assumptions: The test runner environment allows creation of named pipes.","US-F03","TASK-010,TASK-011","2024-01-01 09:00","2024-01-01 09:00","Named Pipes,.NET,xUnit"
+"TASK-012a: Document IPC Mechanisms","Create technical documentation in the project's wiki or README explaining how to use the RabbitMQ and Named Pipes services, including setup, configuration, and example usage for publishing messages and making status checks.
+---
+AC1: Documentation for RabbitMQ service is created, covering publishing and consuming.
+AC2: Documentation for Named Pipes service is created, covering client and server interaction.
+AC3: Code examples are provided for both.","Task","Backlog","Medium","dev@project.com","pm@project.com","",8.33,"Documentation","Sprint 1","EPIC-001: Core Architecture & Technology Foundation","DICOM Management Platform","","","US-F03","TASK-009,TASK-012","2024-01-01 09:00","2024-01-01 09:00","Technical Writing"
+"US-F04: Implement Secure and Redacted Logging","As a System Administrator, I want application logs to be written to both a local file and the Windows Event Log without containing any Protected Health Information (PHI), so that I can troubleshoot issues without compromising patient privacy and compliance.
+---
+AC1: Given an event containing PHI (e.g., a patient name 'John Doe' and ID '12345') is logged, When I inspect the rolling text file and the Windows Event Log, Then the PHI is masked or redacted (e.g., 'Patient Name: ***', 'Patient ID: *****').
+AC2: Given the application is running, When various events occur in the client and service, Then logs are successfully written to both the configured rolling text file sink and the Windows Event Log sink.
+AC3: Given an asynchronous operation is initiated by a user, When I view the logs for that operation across the client and service, Then all related log entries contain the same unique correlation ID for easy tracing.","Story","Backlog","Critical","dev@project.com","pm@project.com","",30.33,"Logging,Serilog,Security,HIPAA","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","RISK-003: Flawed PHI Masking Logic","US-F01","","2024-01-01 09:00","2024-01-01 09:00","Serilog,.NET,C#,RabbitMQ"
+"TASK-034: Integrate Serilog and Configure Sinks","Integrate the Serilog library into both the WPF client and Windows Service hosts. Configure the standard sinks: a rolling file sink (`Serilog.Sinks.File`) and the Windows Event Log sink (`Serilog.Sinks.EventLog`).
+---
+AC1: Serilog is added as a NuGet package to all relevant projects.
+AC2: The DI hosts are configured to use Serilog for all logging.
+AC3: After running the apps, log files are created in the correct location.
+AC4: Log entries appear in the Windows Event Log under the specified source name.","Task","Backlog","Critical","dev@project.com","pm@project.com","",6,"Logging,Serilog","Sprint 1","EPIC-002: Security & Compliance","DICOM Management Platform","","Assumptions: The application has permissions to write to the file system and the Event Log.","US-F04","TASK-002,TASK-003","2024-01-01 09:00","2024-01-01 09:00","Serilog,.NET"
+"US-008: Receive and Store DICOM Studies (C-STORE SCP)","As a System Administrator, I want the system to function as a DICOM C-STORE SCP, so that it can receive and securely store studies sent from external modalities like CT scanners or other PACS.
+---
+AC1: Given the background service is running, When an external DICOM modality sends a study via a C-STORE operation, Then the service accepts the connection, receives the files, and returns a DICOM success status code quickly.
+AC2: Given a study has been received by the C-STORE SCP, When the operation completes, Then a message containing the study's metadata is published to a RabbitMQ queue for background processing.
+AC3: Given a message is consumed from the DICOM persistence queue, When the consumer finishes processing, Then the study's metadata is written to the PostgreSQL database and the corresponding DICOM files are moved to the permanent hierarchical storage location.","Story","Backlog","Critical","dev@project.com","pm@project.com","",73.34,"DICOM,fo-dicom,Windows Service,RabbitMQ,EF Core","Sprint 2","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-004: Data Inconsistency Risk","US-F02,US-001","","2024-01-01 09:00","2024-01-01 09:00","DICOM,fo-dicom,EF Core,RabbitMQ,Windows Services"
+"TASK-017: Write E2E and Integration Tests for Login Flow","Write integration tests for the `AuthenticationService` against a test database. Write an automated E2E test using a framework like Appium/WinAppDriver that simulates a user typing credentials and logging in.
+---
+AC1: Integration tests for success, wrong password, and disabled account scenarios all pass.
+AC2: An E2E test successfully automates the login process for a valid user.
+AC3: An E2E test asserts that a generic error message is shown for an invalid user.","Task","Backlog","High","dev@project.com","pm@project.com","",17,"Testing,Integration Test,E2E Test","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","Assumptions: The chosen E2E testing framework works reliably with the application's WPF components.","US-001","TASK-016","2024-01-01 09:00","2024-01-01 09:00",".NET,xUnit,Appium"
+"TASK-019: Apply RBAC to Main Navigation and Admin Area","In the MainWindowViewModel, inject the `AuthorizationService`. Create properties that are bound to the `Visibility` of UI elements like the 'Administration' tab. This property should return `Visibility.Collapsed` if the user is not an Admin.
+---
+AC1: The 'Administration' tab in the main window is not visible when a Technician is logged in.
+AC2: The 'Administration' tab is visible when an Admin is logged in.
+AC3: The UI updates immediately after login.","Task","Backlog","Critical","dev@project.com","pm@project.com","",6.33,"WPF,UI,Security,RBAC","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-002","TASK-018","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-020: Apply RBAC to DICOM Metadata Editing","In the ViewModel responsible for displaying DICOM metadata, inject the `AuthorizationService`. Create a boolean property `CanEditMetadata` that is bound to the `IsEnabled` property of the 'Edit Metadata' button. This should only be true for Admins.
+---
+AC1: The 'Edit Metadata' button is disabled when a Technician is viewing study metadata.
+AC2: The 'Edit Metadata' button is enabled when an Admin is viewing study metadata.
+AC3: A backend check in the service that saves metadata changes rejects any request from a non-Admin user.","Task","Backlog","High","dev@project.com","pm@project.com","",6,"WPF,UI,Security,RBAC","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","Assumptions: The metadata viewing feature exists to add this check to.","US-002","TASK-018","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-021: Write Automated Tests for RBAC","Write unit tests for the `AuthorizationService` and the ViewModels to verify that the permission-based properties return the correct values for different user roles. Write E2E tests to confirm UI elements are correctly hidden/disabled.
+---
+AC1: Unit tests for `AuthorizationService` cover all role checks.
+AC2: ViewModel unit tests, with a mocked `AuthorizationService`, assert that visibility/enabled properties are correct.
+AC3: E2E tests for Admin and Technician roles verify the visibility of the 'Administration' tab.","Task","Backlog","High","dev@project.com","pm@project.com","",8,"Testing,Security","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-002","TASK-019,TASK-020","2024-01-01 09:00","2024-01-01 09:00","xUnit,Moq,Appium"
+"TASK-039: Implement DICOM C-STORE SCP Hosted Service","In the Windows Service, create an `IHostedService` that uses `fo-dicom` to start a DICOM C-STORE SCP listener on a configurable port. The service should be an implementation of `DicomService, IDicomCStoreProvider`.
+---
+AC1: The service starts a listener on the configured port upon application start.
+AC2: It accepts incoming DICOM associations from a test SCU.
+AC3: The `OnCStoreRequest` method is correctly triggered when a DICOM object is received.","Task","Backlog","Critical","dev@project.com","pm@project.com","",12,"DICOM,fo-dicom,Windows Service","Sprint 2","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","Assumptions: A DICOM test tool (like DCMTK) is available to act as an SCU for testing.","US-008","TASK-003","2024-01-01 09:00","2024-01-01 09:00","DICOM,fo-dicom,Windows Services"
+"TASK-040: Implement Decoupled Metadata Publishing in SCP","Within the `OnCStoreRequest` method of the SCP service, extract the required DICOM metadata from the received `DicomFile`. Then, serialize this metadata and publish it as a message to a dedicated RabbitMQ queue. The file should be saved to a temporary 'ingress' location.
+---
+AC1: Upon receiving a DICOM file, it is saved to a temporary path.
+AC2: Key metadata (PatientID, StudyUID, etc.) is parsed from the file.
+AC3: A message containing this metadata and the temporary file path is published to RabbitMQ.
+AC4: The `OnCStoreRequest` method returns a `DicomStatus.Success` response immediately after publishing, without waiting for database writes.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.33,"DICOM,RabbitMQ,Architecture","Sprint 2","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-004: Data Inconsistency Risk","US-008","TASK-039,TASK-006","2024-01-01 09:00","2024-01-01 09:00","DICOM,fo-dicom,RabbitMQ"
+"TASK-041: Implement DICOM Persistence Consumer Service","Create a new RabbitMQ consumer (as an IHostedService) that subscribes to the DICOM metadata queue. This service will be responsible for the main ingestion logic.
+---
+AC1: The service subscribes to the correct RabbitMQ queue on startup.
+AC2: It correctly deserializes the DICOM metadata message.
+AC3: It uses a repository/DbContext to write the Patient/Study/Series/Image records to the PostgreSQL database.
+AC4: The logic is idempotent (e.g., uses `UPSERT` or checks for existence) to handle message redelivery.","Task","Backlog","Critical","dev@project.com","pm@project.com","",14.33,"DICOM,RabbitMQ,Windows Service,EF Core","Sprint 2","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-004: Data Inconsistency Risk","US-008","TASK-007,TASK-038","2024-01-01 09:00","2024-01-01 09:00","RabbitMQ,EF Core,C#"
+"TASK-042: Implement Hierarchical File Storage Logic in Consumer","Extend the `DicomPersistenceConsumer` to move the DICOM file from its temporary location to the permanent, hierarchical storage path: `[Storage_Root] / [PatientID] / [StudyInstanceUID] / [SeriesInstanceUID] / [SOPInstanceUID].dcm`.
+---
+AC1: After the database transaction is successful, the consumer moves the file.
+AC2: The directory structure is created correctly if it does not exist.
+AC3: The file path is updated in the `Image` entity record in the database.
+AC4: If the file move fails, the database transaction should be rolled back.","Task","Backlog","Critical","dev@project.com","pm@project.com","",6.33,"DICOM,File System","Sprint 2","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-004: Data Inconsistency Risk. Assumptions: The service has write permissions to the configured storage root.","US-008","TASK-041","2024-01-01 09:00","2024-01-01 09:00","C#,.NET"
+"TASK-043a: Configure C-STORE SCP Settings UI for Admin","Create a simple UI in the Administration area for an Admin to configure the C-STORE SCP settings, primarily the listening port number.
+---
+AC1: An admin can view and change the SCP listening port.
+AC2: The setting is persisted to the database.
+AC3: The DicomScpService reads this port number on startup.","Task","Backlog","High","dev@project.com","pm@project.com","",6.33,"Admin,UI,DICOM","Sprint 2","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-008","TASK-039","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-035: Implement PHI Redaction Enricher for Serilog","Create a custom Serilog `ILogEventEnricher` that inspects log event properties. If a property name is on a deny-list (e.g., 'PatientName', 'PatientID'), its value will be replaced with a redacted placeholder like '***'.
+---
+AC1: An enricher class is created.
+AC2: It correctly identifies and redacts properties based on a configured list of sensitive names.
+AC3: The enricher is added to the Serilog logger configuration.
+AC4: Logging a message with a sensitive property results in a redacted log entry.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.67,"Logging,Serilog,Security,HIPAA","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","RISK-003: Flawed PHI Masking Logic","US-F04","TASK-034","2024-01-01 09:00","2024-01-01 09:00","Serilog,C#"
+"TASK-036: Implement Correlation ID for Tracing","Implement a mechanism to generate a unique correlation ID for each user-initiated operation. This ID should be attached to the logging context (e.g., using Serilog's `LogContext`) so it appears in all related log entries, from the client through RabbitMQ to the service.
+---
+AC1: A correlation ID is generated in the client when an async operation starts.
+AC2: The ID is passed as a header in the RabbitMQ message.
+AC3: The service consumer reads the header and adds the ID to its own logging context.
+AC4: Logs for a single operation in both client and service files share the same correlation ID.","Task","Backlog","High","dev@project.com","pm@project.com","",8.33,"Logging,Serilog,Observability","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-F04","TASK-034,TASK-006","2024-01-01 09:00","2024-01-01 09:00","Serilog,RabbitMQ,C#"
+"TASK-037: Write Tests for Secure Logging","Create a dedicated suite of unit tests for the PHI redaction enricher, with many examples of log messages containing sensitive data. Write an integration test to confirm correlation IDs are passed through RabbitMQ correctly.
+---
+AC1: Unit tests for the enricher cover various property names and data structures.
+AC2: The tests assert that no PHI appears in the final log message.
+AC3: An integration test publishes a message with a correlation ID header and the consumer test asserts that its logs now contain that ID.","Task","Backlog","High","dev@project.com","pm@project.com","",7.17,"Logging,Security,Testing","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-F04","TASK-035,TASK-036","2024-01-01 09:00","2024-01-01 09:00","xUnit,Serilog"
+"US-003: Automatic Session Lock After Inactivity","As a System User, I want the application to automatically lock itself after 15 minutes of inactivity, so that sensitive Protected Health Information (PHI) is protected from unauthorized viewing on an unattended workstation.
+---
+AC1: Given I am logged into the application, When I perform no keyboard or mouse actions for 15 minutes, Then a modal lock screen overlay is displayed, obscuring the entire application and prompting for my password.
+AC2: Given my session is locked and I have a study open with unsaved annotations, When I unlock the session, Then my application state, including the open study and unsaved work, is perfectly preserved.
+AC3: Given I am working in the application, When I move the mouse or press a key after 14 minutes of inactivity, Then the 15-minute inactivity timer is reset and the session does not lock.","Story","Backlog","Critical","dev@project.com","pm@project.com","",39.33,"Security,WPF,UI,HIPAA","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","RISK-007: Inactivity Monitor Instability","US-001","","2024-01-01 09:00","2024-01-01 09:00","C#,P/Invoke,WPF,MVVM"
+"TASK-022: Implement Global Inactivity Monitor Service","Create a service that uses low-level Windows hooks (P/Invoke) to monitor global mouse and keyboard activity. The service will manage a timer that resets on any user input. When the timer elapses (default 15 mins), it will raise an event.
+---
+AC1: The service correctly detects global keyboard and mouse events.
+AC2: The inactivity timer is reset upon event detection.
+AC3: An `OnInactive` event is raised when the timer reaches its threshold.
+AC4: The service has minimal (<1%) CPU impact when idle.","Task","Backlog","Critical","dev@project.com","pm@project.com","",12.67,"Security,WPF,P/Invoke","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","RISK-007: Inactivity Monitor Instability. Assumptions: A stable method for global input hooking can be found or implemented.","US-003","TASK-002","2024-01-01 09:00","2024-01-01 09:00","C#,P/Invoke,WPF"
+"TASK-023: Build Session Lock View and ViewModel","Create the SessionLockView.xaml as a modal overlay. It will display the current user's name, a password box, and an 'Unlock' button. The ViewModel will handle the password input and call the `AuthenticationService` to verify it.
+---
+AC1: The view renders as a modal overlay, covering the entire application.
+AC2: It correctly displays the username from the current session.
+AC3: The 'Unlock' command calls the authentication service with the entered password.
+AC4: The view has a 'Log Out' button to terminate the session.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.33,"Security,WPF,UI","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-003","TASK-015","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-024: Integrate Session Lock with Main Application","In the main application shell, listen for the `OnInactive` event from the monitor service. When the event is raised, display the `SessionLockView` as a modal dialog. On successful unlock, close the dialog. The mechanism must preserve the application's state.
+---
+AC1: The lock screen is displayed modally upon the `OnInactive` event.
+AC2: The underlying application UI is non-interactive while the lock screen is visible.
+AC3: Upon successful password verification, the lock screen is dismissed.
+AC4: The application state (open windows, data) is unchanged after unlocking.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.67,"Security,WPF","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-003","TASK-022,TASK-023","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-043: Write E2E Tests for C-STORE Workflow","Create a full end-to-end integration test for the C-STORE workflow. The test will use a `DicomClient` from `fo-dicom` to send a study to the running service, then poll the database to verify that the metadata has been persisted and check the file system for the final stored DICOM file.
+---
+AC1: The test successfully sends a multi-file study to the SCP.
+AC2: The test waits and then confirms that the `Patient`, `Study`, `Series`, and `Image` records exist in the database.
+AC3: The test confirms that the DICOM file exists at the correct hierarchical path.
+AC4: The test cleans up the database and file system after execution.","Task","Backlog","Critical","dev@project.com","pm@project.com","",17,"DICOM,Testing,E2E Test","Sprint 2","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-011: Asynchronous Workflow Testing Complexity. Assumptions: The test environment can host the full Windows Service and its dependencies (DB, MQ).","US-008","TASK-042","2024-01-01 09:00","2024-01-01 09:00","fo-dicom,xUnit,EF Core,RabbitMQ"
+"US-007: Admin Views Audit Trail","As an Administrator, I want to view a comprehensive audit trail of all significant system events, so that I can monitor for security incidents and maintain compliance.
+---
+AC1: Given I am logged in as an Administrator, When I navigate to the Audit Trail viewer, Then I can see a chronological list of all logged events, including user logins, DICOM edits, and user management actions.
+AC2: Given I am viewing the audit trail, When I use the filter controls to select a specific user and a date range, Then the list updates to show only the events that match my filter criteria.
+AC3: Given I am viewing a filtered list of audit events, When I click the 'Export to CSV' button, Then a CSV file is generated containing all the currently displayed log data.","Story","Backlog","Critical","dev@project.com","pm@project.com","",46.33,"Security,Auditing,UI,Admin","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-F01","","2024-01-01 09:00","2024-01-01 09:00","EF Core,C#,WPF,MVVM"
+"TASK-029: Create AuditLog Entity and AuditService","Create the `AuditLog` EF Core entity as per the database design. Create a singleton `AuditService` with a method `LogEventAsync(AuditEventDetails details)` that creates and saves an `AuditLog` entity to the database.
+---
+AC1: The `AuditLog` entity is created and a corresponding database migration is generated.
+AC2: The `AuditService` can be injected and used to write log entries to the database.
+AC3: The logging operation is asynchronous to avoid blocking the caller.","Task","Backlog","Critical","dev@project.com","pm@project.com","",8.33,"Security,Auditing,Database","Sprint 2","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-007","TASK-013","2024-01-01 09:00","2024-01-01 09:00","EF Core,C#"
+"US-006: Admin Manages User Accounts","As an Administrator, I want to manage the full lifecycle of user accounts, so that I can provision, modify, and revoke access as needed.
+---
+AC1: Given I am on the User Management page, When I click 'Add User', enter a username, select a role, and click 'Create', Then a new user is created with a temporary password, and the event is logged in the audit trail.
+AC2: Given I am viewing the list of users, When I select a user and change their role from 'Technician' to 'Administrator' and save, Then the user's permissions are updated, and the change is logged in the audit trail.
+AC3: Given I am viewing the list of users, When I select a user and click 'Delete' and confirm, Then the user account is permanently removed from the system, and the deletion is logged in the audit trail.","Story","Backlog","Critical","dev@project.com","pm@project.com","",27,"Admin,UI,Security","Sprint 3","EPIC-005: Administration & Configuration","DICOM Management Platform","","","US-001,US-002,US-007","","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,C#,EF Core"
+"TASK-071: Build User Management View and ViewModel","Create the `UserManagementView.xaml` and `UserManagementViewModel.cs` for the Admin area. The UI will display a list of users and provide buttons for Add, Edit, and Delete.
+---
+AC1: The view displays a list of all users from the database.
+AC2: The Add, Edit, and Delete buttons are present.
+AC3: The view is only accessible to Admins.
+AC4: The UI prevents an admin from deleting their own account or the last admin account.","Task","Backlog","Critical","dev@project.com","pm@project.com","",12,"Admin,UI,WPF","Sprint 3","EPIC-005: Administration & Configuration","DICOM Management Platform","","","US-006","TASK-019","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,C#"
+"TASK-072: Implement User Management Service (CRUD Logic)","Create a `UserManagementService` with methods for creating, updating, and deleting users. This service will interact with the database and also call the `AuditService` to log all actions.
+---
+AC1: A `CreateUserAsync` method creates a user, hashes a temporary password, and logs the event.
+AC2: An `UpdateUserAsync` method changes a user's role and logs the event.
+AC3: A `DeleteUserAsync` method removes a user and logs the event.
+AC4: The service enforces business rules (e.g., cannot delete last admin).","Task","Backlog","Critical","dev@project.com","pm@project.com","",10.17,"Admin,Backend","Sprint 3","EPIC-005: Administration & Configuration","DICOM Management Platform","","","US-006","TASK-029","2024-01-01 09:00","2024-01-01 09:00","C#,EF Core"
+"TASK-073: Write Tests for User Management","Write unit tests for the `UserManagementService`, mocking database and audit dependencies. Write E2E tests for the UI, covering creating a user, editing their role, and deleting them.
+---
+AC1: Unit tests cover all service logic, including business rule enforcement.
+AC2: E2E tests successfully complete the full user lifecycle.
+AC3: Tests verify that audit logs are created for each action.","Task","Backlog","High","dev@project.com","pm@project.com","",6,"Admin,Testing","Sprint 3","EPIC-005: Administration & Configuration","DICOM Management Platform","","","US-006","TASK-071,TASK-072","2024-01-01 09:00","2024-01-01 09:00","xUnit,Moq"
+"TASK-030: Integrate Audit Logging into Key Workflows","Inject the `AuditService` into other services and call `LogEventAsync` at critical points: user login (success/failure), user management actions (create/edit/delete user), DICOM metadata edits, etc.
+---
+AC1: An audit log is created after a user successfully logs in.
+AC2: An audit log is created when an Admin creates a new user.
+AC3: An audit log is created when an Admin saves changes to DICOM metadata, and the log's `details` field contains the old and new values.","Task","Backlog","Critical","dev@project.com","pm@project.com","",12,"Security,Auditing,Integration","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-007","TASK-029,TASK-015,TASK-046","2024-01-01 09:00","2024-01-01 09:00","C#"
+"TASK-025: Implement Failed Unlock Attempt Logic","In the `SessionLockViewModel`, implement the logic to track consecutive failed unlock attempts. After 5 failed attempts, the session should be terminated, and the application should return to the main login screen.
+---
+AC1: An incorrect password displays an error and increments a failure counter.
+AC2: A correct password resets the counter.
+AC3: After the 5th consecutive failure, a logout event is triggered.
+AC4: A security event for 'Multiple failed unlock attempts' is logged to the audit trail.","Task","Backlog","Critical","dev@project.com","pm@project.com","",4.17,"Security,WPF","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-003","TASK-023,TASK-029","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-026: Write Automated Tests for Session Lock Feature","Write unit tests for the `SessionLockViewModel`, including the failed attempt logic. Due to the difficulty of testing global hooks, the inactivity monitor will primarily be tested manually, but the integration between the event and the UI display can be tested.
+---
+AC1: Unit tests for `SessionLockViewModel` verify correct behavior for valid and invalid passwords.
+AC2: Unit tests confirm that the session termination logic is triggered after 5 failures.
+AC3: A scripted manual test plan is created and executed for the full feature.","Task","Backlog","High","dev@project.com","pm@project.com","",5.17,"Security,Testing","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-003","TASK-024,TASK-025","2024-01-01 09:00","2024-01-01 09:00","xUnit,Moq"
+"US-009: Query and Retrieve Studies from Remote PACS","As a Technician, I want to query a remote PACS and retrieve studies to my local system, so that I can view and work with studies that are not stored locally.
+---
+AC1: Given I am on the PACS Query screen with a configured remote PACS, When I enter search criteria (e.g., Patient ID) and click 'Search', Then a C-FIND query is sent and a list of matching studies from the remote PACS is displayed.
+AC2: Given a list of search results from a remote PACS is displayed, When I select one or more studies and click 'Retrieve', Then a C-MOVE request is initiated to transfer the selected studies to my local system.
+AC3: Given a C-MOVE operation is in progress, When the studies are being transferred, Then the UI provides real-time feedback on the status, and the retrieved studies are ingested by the local C-STORE SCP.","Story","Backlog","Critical","dev@project.com","pm@project.com","",51.34,"DICOM,fo-dicom,UI,WPF","Sprint 3","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-015: PACS Compatibility Issues","US-008","","2024-01-01 09:00","2024-01-01 09:00","DICOM,fo-dicom,C#,WPF,MVVM,EF Core"
+"TASK-044: Implement DICOM SCU Service for C-FIND/C-MOVE","In the Infrastructure project, create a `DicomScuService` that uses `fo-dicom`'s `DicomClient` to perform C-FIND and C-MOVE operations. The methods must be asynchronous and handle the DICOM request/response lifecycle.
+---
+AC1: An async `FindAsync` method sends a C-FIND request and returns a list of parsed results.
+AC2: An async `MoveAsync` method sends a C-MOVE request.
+AC3: The service correctly handles DICOM statuses (Success, Pending, Failed) and provides progress updates for C-MOVE.
+AC4: All network operations are fully async to prevent blocking.","Task","Backlog","Critical","dev@project.com","pm@project.com","",14.33,"DICOM,fo-dicom,Infrastructure","Sprint 3","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-015: PACS Compatibility Issues. Assumptions: A test PACS server (e.g., Orthanc) is available for development.","US-009","","2024-01-01 09:00","2024-01-01 09:00","DICOM,fo-dicom,C#"
+"TASK-045: Build PACS Query UI (View and ViewModel)","In the WPF client, create the `PacsQueryView.xaml` and `PacsQueryViewModel.cs`. The UI will have fields for search criteria (Patient ID, Study Date, Modality), a button to initiate the search, a data grid for results, and a 'Retrieve' button.
+---
+AC1: The ViewModel calls the `DicomScuService.FindAsync` when the search button is clicked.
+AC2: Search results are populated into an `ObservableCollection` bound to the data grid.
+AC3: The 'Retrieve' button calls `DicomScuService.MoveAsync` with the selected studies.
+AC4: The UI displays status updates during the C-MOVE operation.","Task","Backlog","Critical","dev@project.com","pm@project.com","",12,"DICOM,UI,WPF","Sprint 3","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-009","TASK-044","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,C#"
+"TASK-046: Build PACS Configuration UI (View and ViewModel)","Create an Admin-only UI (`PacsConfigView.xaml`, `PacsConfigViewModel.cs`) for managing PACS connection details (AE Title, IP, Port). Implement CRUD functionality for PACS configurations, storing them in the database.
+---
+AC1: Admin can Add, Edit, and Delete PACS configurations.
+AC2: The configurations are persisted to a new `PacsConfiguration` table in the database.
+AC3: The PACS Query UI uses these saved configurations to connect.","Task","Backlog","High","dev@project.com","pm@project.com","",12,"Admin,UI,WPF,DICOM","Sprint 3","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-009","TASK-019","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,EF Core"
+"TASK-047: Implement C-ECHO Verification","In the `PacsConfigViewModel`, add logic for the 'Verify' button. It should call a new `VerifyAsync` method in the `DicomScuService` which performs a DICOM C-ECHO operation and returns a success/failure status.
+---
+AC1: Clicking 'Verify' performs a C-ECHO against the selected PACS configuration.
+AC2: The UI displays a clear 'Verification Successful' or 'Verification Failed: [Error]' message.
+AC3: The verification call is asynchronous and does not block the UI.","Task","Backlog","High","dev@project.com","pm@project.com","",4.17,"DICOM,fo-dicom","Sprint 3","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-009","TASK-044,TASK-046","2024-01-01 09:00","2024-01-01 09:00","DICOM,fo-dicom,WPF"
+"TASK-048: Write Automated Tests for SCU Functionality","Create integration tests for the `DicomScuService` that run against a Testcontainer-hosted PACS server (e.g., Orthanc). The tests should cover C-FIND, C-MOVE, and C-ECHO operations.
+---
+AC1: A test successfully performs a C-ECHO.
+AC2: A test successfully performs a C-FIND and gets expected results.
+AC3: A test successfully initiates a C-MOVE and verifies (by listening with a local SCP) that the files are received.
+AC4: Tests are integrated into the CI pipeline.","Task","Backlog","High","dev@project.com","pm@project.com","",10.17,"DICOM,Testing,Integration Test","Sprint 3","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-009","TASK-044,TASK-047","2024-01-01 09:00","2024-01-01 09:00","fo-dicom,xUnit,Docker"
+"TASK-031: Build Audit Trail Viewer UI","Create the `AuditTrailView.xaml` and `AuditTrailViewModel.cs` for Admins. The UI should include a data grid to display logs, filter controls (user dropdown, date pickers), and an 'Export to CSV' button.
+---
+AC1: The view loads and displays audit logs from the database.
+AC2: The data grid is sortable by timestamp.
+AC3: Filter controls are functional and correctly re-query the data.
+AC4: The UI is only accessible to users with the 'Administrator' role.","Task","Backlog","High","dev@project.com","pm@project.com","",12,"Security,Auditing,UI,WPF,Admin","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-007","TASK-019","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-032: Implement CSV Export Functionality for Audit Trail","Add the logic behind the 'Export to CSV' button. It should take the current (potentially filtered) list of audit logs and generate a well-formatted CSV file that the user can save locally.
+---
+AC1: Clicking the button opens a 'Save File' dialog.
+AC2: The generated CSV file contains a header row and data matching the grid.
+AC3: Complex data (like the JSON `details` field) is properly escaped for CSV format.","Task","Backlog","Medium","dev@project.com","pm@project.com","",4.17,"Security,Auditing,UI","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","Assumptions: A simple CSV generation library (like CsvHelper) can be used.","US-007","TASK-031","2024-01-01 09:00","2024-01-01 09:00","C#,WPF"
+"TASK-033: Write Automated Tests for Audit System","Write integration tests that perform an action (e.g., create a user) and then query the database to assert that the correct audit log was created. Write unit tests for the `AuditTrailViewModel` filtering logic.
+---
+AC1: Integration tests for login and user creation correctly verify the creation of audit logs.
+AC2: Unit tests for the ViewModel verify that the filtering logic constructs the correct database query.
+AC3: Tests are integrated into the CI pipeline.","Task","Backlog","High","dev@project.com","pm@project.com","",9.5,"Security,Auditing,Testing","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-007","TASK-030,TASK-031","2024-01-01 09:00","2024-01-01 09:00","xUnit,EF Core"
+"US-005: Admin Configures Password Policy","As an Administrator, I want to configure the system-wide password policy, so that I can enforce security standards for all user accounts.
+---
+AC1: Given I am on the password policy settings page, When I set the minimum length to 12, require complexity, set expiration to 90 days, and history to 5, and click 'Save', Then the new policy is persisted.
+AC2: Given the password policy requires 12 characters, When a user tries to set a new password that is 10 characters long, Then the change is rejected with a specific error message 'Password must be at least 12 characters'.
+AC3: Given the password history policy is set to 5, When a user attempts to change their password to one of their last 5 passwords, Then the change is rejected with an error message indicating the password has been used recently.","Story","Backlog","High","dev@project.com","pm@project.com","",32,"Security,Admin,UI","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-001,US-002","","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,C#,EF Core"
+"TASK-027: Build Password Policy Administration UI","Create a `PasswordPolicyView.xaml` and `PasswordPolicyViewModel.cs` within the Administration area. The UI will contain controls (numeric inputs, checkboxes) for an Admin to configure minimum length, complexity requirements, expiration period, and history count.
+---
+AC1: The view renders with controls for all configurable password policy parameters.
+AC2: The ViewModel loads the current policy on activation and binds it to the controls.
+AC3: A 'Save' button is present to persist changes.","Task","Backlog","High","dev@project.com","pm@project.com","",8.33,"Security,UI,WPF,Admin","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-005","TASK-019","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-028: Implement Password Policy Service and Persistence","Create a `PasswordPolicyService` to handle loading and saving the policy settings. Settings will be stored in the `SystemSetting` table in the database. Implement the validation logic that checks a given password against the configured policy.
+---
+AC1: The service can save and retrieve policy settings from the database.
+AC2: A `ValidatePassword(string password, User user)` method correctly enforces all policy rules, including length, complexity (regex), and history (by checking the `PasswordHistory` table).
+AC3: The service is registered in DI.","Task","Backlog","High","dev@project.com","pm@project.com","",12,"Security,Backend","Sprint 3","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-005","TASK-013","2024-01-01 09:00","2024-01-01 09:00","C#,EF Core"
+"TASK-050: Build DicomViewerControl with DirectX Pipeline","Based on the successful prototype, build the reusable `DicomViewerControl`. It will encapsulate the DirectX rendering logic. It needs to handle resizing, device management (e.g., device lost), and exposing properties for the image data to be rendered.
+---
+AC1: The control can be placed in a XAML window.
+AC2: It can be given a DICOM image object to render.
+AC3: It handles window resizing correctly without memory leaks.
+AC4: It supports both monochrome and color images.","Task","Backlog","Critical","senior-dev@project.com","pm@project.com","",25.33,"DICOM,WPF,DirectX,UI","Sprint 3","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-001: GPU Viewer Complexity. Assumptions: The approach from the prototype is viable.","US-010","TASK-049","2024-01-01 09:00","2024-01-01 09:00","WPF,DirectX,C#"
+"TASK-051: Implement Multi-Frame Series Loading and Scrolling","Extend the viewer to support multi-frame DICOM series. Implement logic to load all frames into memory (or GPU memory) and allow the user to scroll through them using the mouse wheel. Implement progressive loading: show a low-res preview first.
+---
+AC1: The viewer can load a series with hundreds of frames.
+AC2: Mouse wheel scrolling smoothly changes the displayed frame.
+AC3: A downsampled preview is shown near-instantly for large series before the full-resolution data is ready.
+AC4: Performance is acceptable (e.g., >30fps scrolling) on target hardware.","Task","Backlog","Critical","senior-dev@project.com","pm@project.com","",17,"DICOM,WPF,DirectX,Performance","Sprint 4","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-001: GPU Viewer Complexity.","US-010","TASK-050","2024-01-01 09:00","2024-01-01 09:00","WPF,DirectX,C#"
+"TASK-052: Implement Interactive Window/Level (WW/WL) Tool","Implement the WW/WL tool. This involves capturing mouse movement (e.g., drag with right mouse button) and translating it into changes in the window width and window level values. These values must be passed to the DirectX shader to update the image rendering in real-time.
+---
+AC1: Dragging the mouse while the tool is active interactively changes the image's brightness and contrast.
+AC2: The update is applied on the GPU via shader constants for high performance.
+AC3: Common presets (Lung, Bone, etc.) can be applied with a button click.","Task","Backlog","Critical","senior-dev@project.com","pm@project.com","",14.33,"DICOM,WPF,DirectX,Tool","Sprint 4","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-010","TASK-050","2024-01-01 09:00","2024-01-01 09:00","WPF,DirectX,HLSL"
+"TASK-053: Implement Zoom, Pan, Rotate, and Flip Tools","Implement the standard geometric manipulation tools. Zoom and Pan will be implemented by modifying the transformation matrix passed to the shader. Rotate and Flip will also modify this matrix.
+---
+AC1: User can zoom in/out with the mouse wheel or a tool.
+AC2: User can pan the image by dragging with the mouse.
+AC3: User can rotate the image in 90-degree increments.
+AC4: User can flip the image horizontally and vertically.
+AC5: All operations are smooth and interactive.","Task","Backlog","Critical","senior-dev@project.com","pm@project.com","",14.33,"DICOM,WPF,DirectX,Tool","Sprint 4","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-010","TASK-052","2024-01-01 09:00","2024-01-01 09:00","WPF,DirectX,C#"
+"TASK-054a: Build Viewer Layout Controls","Implement the UI shell around the DicomViewerControl. This includes a side-by-side comparison mode for two viewers and a thumbnail grid panel for quick navigation within a series.
+---
+AC1: A user can switch to a view that displays two DicomViewerControls side-by-side.
+AC2: An option to synchronize pan/zoom between the two viewers is available and functional.
+AC3: A panel showing thumbnails for all images in the current series is displayed.
+AC4: Clicking a thumbnail navigates the main viewer to that image.","Task","Backlog","High","dev@project.com","pm@project.com","",12.33,"DICOM,UI,WPF","Sprint 4","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-010","TASK-050","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-028a: Integrate Policy Validation with Password Change Flows","Integrate the `PasswordPolicyService.ValidatePassword` method into all workflows where a user sets a password. This includes the 'Force Password Change on Next Login' screen and any future 'Change Password' feature.
+---
+AC1: The forced password change screen calls the validation service.
+AC2: Specific error messages from the service are displayed to the user in the UI.
+AC3: A password is not updated if validation fails.","Task","Backlog","High","dev@project.com","pm@project.com","",4.17,"Security,Integration","Sprint 4","EPIC-002: Security & Compliance","DICOM Management Platform","","Assumptions: The password change UI flows exist.","US-005","TASK-028","2024-01-01 09:00","2024-01-01 09:00","C#"
+"TASK-028b: Write Automated Tests for Password Policy Feature","Write comprehensive unit tests for the `PasswordPolicyService`, ensuring every validation rule is tested. Write E2E tests for the admin UI to save a policy and for the user-facing UI to enforce it.
+---
+AC1: Unit tests cover all scenarios: min length, all complexity rules, history check.
+AC2: An E2E test logs in as an admin, changes the policy, saves, logs out, logs back in, and verifies the policy was persisted.
+AC3: An E2E test for a user password change fails with an expected error when a policy is violated.","Task","Backlog","High","dev@project.com","pm@project.com","",7.17,"Security,Testing","Sprint 4","EPIC-002: Security & Compliance","DICOM Management Platform","","","US-005","TASK-027,TASK-028a","2024-01-01 09:00","2024-01-01 09:00","xUnit,Moq"
+"US-016: Admin Monitors System Health","As an Administrator, I want to view a real-time System Health Dashboard, so that I can proactively monitor the status of critical system components and troubleshoot issues.
+---
+AC1: Given I am on the System Health Dashboard, When the system is operating normally, Then I see 'Running' status for the Windows Service and 'Connected' for PostgreSQL and RabbitMQ.
+AC2: Given the RabbitMQ service stops, When I view the dashboard, Then the RabbitMQ status indicator changes to 'Disconnected' or 'Error' within the polling interval (e.g., 60 seconds).
+AC3: Given I am viewing the dashboard, When the number of messages in the Dead-Letter Queue (DLQ) is greater than zero, Then the DLQ count is highlighted in red to indicate a critical problem that requires intervention.","Story","Backlog","High","dev@project.com","pm@project.com","",24.33,"Admin,Monitoring,UI,WPF","Sprint 4","EPIC-005: Administration & Configuration","DICOM Management Platform","","RISK-010: Operational Misconfiguration Risk","US-F01,US-F03","","2024-01-01 09:00","2024-01-01 09:00","Windows Services,C#,RabbitMQ,WPF,MVVM,Named Pipes"
+"TASK-074: Implement System Health Probe Service","In the Windows Service, create an `IHostedService` that periodically (e.g., every 30 seconds) checks the status of its dependencies: database connectivity, RabbitMQ connectivity, and available disk space. It should also query RabbitMQ for queue depths. The results should be stored in a thread-safe, in-memory cache.
+---
+AC1: The service runs on a timer.
+AC2: It can successfully check the status of PostgreSQL and RabbitMQ.
+AC3: It retrieves the message count for the main queue and the DLQ.
+AC4: It checks disk space for the configured DICOM storage path.
+AC5: The latest health status is available from a singleton cache service.","Task","Backlog","High","dev@project.com","pm@project.com","",10.17,"Admin,Monitoring,Windows Service","Sprint 4","EPIC-005: Administration & Configuration","DICOM Management Platform","","RISK-010: Operational Misconfiguration Risk","US-016","TASK-003","2024-01-01 09:00","2024-01-01 09:00","Windows Services,C#,RabbitMQ"
+"TASK-075: Build System Health Dashboard UI","In the WPF client, create the `SystemHealthView.xaml` and `SystemHealthViewModel.cs`. The ViewModel will use the `NamedPipeClient` to periodically poll a new endpoint on the service that returns the cached health status. The UI will display this data with clear status indicators.
+---
+AC1: The view renders with indicators for all monitored components.
+AC2: The ViewModel polls the service for status updates.
+AC3: UI indicators change color based on status (e.g., green for OK, red for Error).
+AC4: Numerical data like queue counts and disk space are displayed.","Task","Backlog","High","dev@project.com","pm@project.com","",10.17,"Admin,Monitoring,UI,WPF","Sprint 4","EPIC-005: Administration & Configuration","DICOM Management Platform","","","US-016","TASK-074,TASK-011","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,Named Pipes"
+"TASK-076: Write Tests for System Health Feature","Write unit tests for the `HealthProbeService`, mocking its dependencies to simulate healthy and unhealthy states. Write an integration test for the Named Pipe communication that verifies the health data is correctly serialized and transmitted.
+---
+AC1: Unit tests verify that the probe correctly interprets success/failure from its dependency checks.
+AC2: An integration test verifies the client receives and deserializes the health status DTO from the server.","Task","Backlog","High","dev@project.com","pm@project.com","",4,"Admin,Monitoring,Testing","Sprint 4","EPIC-005: Administration & Configuration","DICOM Management Platform","","","US-016","TASK-074,TASK-075","2024-01-01 09:00","2024-01-01 09:00","xUnit,Moq"
+"US-011: Annotate and Measure Images","As a Technician, I want to add non-destructive annotations and measurements to images, so that I can highlight findings and record key metrics, with my work saved as a DICOM Presentation State.
+---
+AC1: Given I am viewing an image, When I select the 'length measurement' tool and draw a line, Then a line is displayed on the image with its real-world length (e.g., in mm) calculated from the DICOM metadata.
+AC2: Given I have added several annotations (arrows, text, measurements) to a series, When I click 'Save Annotations', Then a new DICOM Grayscale Softcopy Presentation State (GSPS) object is created and associated with the series, leaving the original image files untouched.
+AC3: Given a series with a saved GSPS object is opened, When the images are displayed, Then the previously saved annotations are automatically loaded and displayed on top of the images.","Story","Backlog","High","senior-dev@project.com","pm@project.com","",90.84,"DICOM,WPF,UI,Tool,fo-dicom","Sprint 5","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-006: GSPS Compliance Issues","US-010","","2024-01-01 09:00","2024-01-01 09:00","WPF,C#,DICOM,fo-dicom,EF Core"
+"TASK-055: Implement Annotation Drawing Canvas","Overlay a transparent canvas (e.g., a WPF `InkCanvas` or custom control) on top of the `DicomViewerControl`. Implement the logic for drawing basic shapes like lines, arrows, and text boxes. The drawing coordinates must be correctly mapped to the underlying image coordinates, accounting for zoom and pan.
+---
+AC1: A user can select a tool (e.g., 'Arrow') and draw it on the image.
+AC2: The drawn annotations correctly move and scale with the image when panned and zoomed.
+AC3: The coordinates of the annotations are stored relative to the image pixels.","Task","Backlog","Critical","senior-dev@project.com","pm@project.com","",17,"DICOM,WPF,UI,Tool","Sprint 4","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-011","TASK-053","2024-01-01 09:00","2024-01-01 09:00","WPF,C#"
+"TASK-054: Write Performance and Stability Tests for Viewer","Create a test plan for the DICOM viewer. This will involve mostly scripted manual testing on various hardware configurations (different GPUs) and with different types of DICOM studies (large CT, multiframe US, color). Measure performance metrics like load time and scrolling FPS. Run the viewer for extended periods to check for memory leaks.
+---
+AC1: A formal test plan document is created.
+AC2: Performance targets from REQ-1-077 are met on test hardware.
+AC3: No crashes or major visual artifacts are observed on Nvidia, AMD, and Intel GPUs.
+AC4: Memory usage remains stable after opening and closing many studies.","Task","Backlog","Critical","qa@project.com","pm@project.com","",24,"DICOM,Testing,Performance","Sprint 4","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-001: GPU Viewer Complexity. Assumptions: A range of test hardware is available.","US-010","TASK-053","2024-01-01 09:00","2024-01-01 09:00","QA,Performance Profiling"
+"US-012: Prepare and Preview a Print Job","As a Technician, I want to prepare and preview a print job with flexible layouts and settings, so that I can compose a precise, professional-looking printout of DICOM images.
+---
+AC1: Given I am in the Print Preview window, When I select a layout template like '2x2 grid on A4', Then the preview area updates to show four image placeholders on an A4-sized page.
+AC2: Given I have a layout with multiple images, When I drag an image from one grid cell and drop it onto another, Then the positions of the images are swapped in the preview.
+AC3: Given I am in the Print Preview window, When I adjust the page settings for margins, orientation (Portrait/Landscape), and image scaling (Fit/Actual Size), Then the preview updates in real-time to reflect my changes.","Story","Backlog","High","dev@project.com","pm@project.com","",32.33,"Printing,UI,WPF","Sprint 4","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-010","","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-061: Build Print Preview View and ViewModel","Create the `PrintPreviewView.xaml` and `PrintPreviewViewModel.cs`. The UI will feature a main preview area, and panels for selecting layouts, printers, and page settings (margins, orientation, etc.).
+---
+AC1: The view renders with all required controls for layout and settings.
+AC2: The ViewModel is populated with available system printers.
+AC3: Changing a setting in the UI updates a property in the ViewModel.","Task","Backlog","High","dev@project.com","pm@project.com","",17,"Printing,UI,WPF","Sprint 4","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-012","TASK-054a","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-056: Implement Measurement Calculation Logic","Implement the logic for calculating real-world measurements. This involves reading the `PixelSpacing` DICOM tag from the image metadata and using it to convert pixel distances and areas into millimeters/cm.
+---
+AC1: The length measurement tool displays the length in `mm`.
+AC2: The angle measurement tool displays the angle in degrees.
+AC3: The area measurement tool displays the area in `mm²`.
+AC4: The logic handles images with no `PixelSpacing` tag gracefully (e.g., by measuring in pixels).","Task","Backlog","High","dev@project.com","pm@project.com","",8.33,"DICOM,Tool","Sprint 5","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-011","TASK-055","2024-01-01 09:00","2024-01-01 09:00","DICOM,C#"
+"TASK-057: Implement DICOM GSPS Object Creation","Using `fo-dicom`, implement a service that takes a list of annotation objects (lines, text, etc.) and creates a valid DICOM Grayscale Softcopy Presentation State (GSPS) object. This involves creating the necessary modules and sequences according to the DICOM standard.
+---
+AC1: The service can generate a `DicomFile` object representing a GSPS.
+AC2: The GSPS object contains references to the images it annotates.
+AC3: All graphical annotations are correctly encoded in the `GraphicAnnotationSequence`.
+AC4: The generated file passes basic validation.","Task","Backlog","Critical","senior-dev@project.com","pm@project.com","",25.33,"DICOM,fo-dicom,Interoperability","Sprint 5","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-006: GSPS Compliance Issues. Assumptions: fo-dicom provides the necessary low-level tools to build GSPS objects.","US-011","TASK-055","2024-01-01 09:00","2024-01-01 09:00","DICOM,fo-dicom,C#"
+"TASK-058: Implement GSPS Saving and Association Logic","Implement the 'Save Annotations' feature. This will call the `GspsService` to create the GSPS object, save it to the file system alongside the original series, and create a `PresentationState` record in the database, linking it to the series and the user who created it.
+---
+AC1: A new .dcm file for the GSPS is saved to disk.
+AC2: A new record is created in the `PresentationState` database table.
+AC3: The original DICOM image files are not modified.
+AC4: The operation is logged in the audit trail.","Task","Backlog","High","dev@project.com","pm@project.com","",8.33,"DICOM,Database","Sprint 5","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","","US-011","TASK-057","2024-01-01 09:00","2024-01-01 09:00","EF Core,C#"
+"TASK-059: Implement GSPS Loading and Applying Logic","When a study is loaded, the application must check for any associated `PresentationState` records. If found, it must load the corresponding GSPS DICOM file, parse the graphical objects, and render them on the annotation canvas.
+---
+AC1: When opening a series, the system queries the DB for related GSPS objects.
+AC2: If a GSPS exists, it is loaded and its annotations are parsed.
+AC3: The parsed annotations are drawn on the canvas, correctly overlaid on the images.","Task","Backlog","High","senior-dev@project.com","pm@project.com","",17,"DICOM,fo-dicom,WPF","Sprint 5","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","RISK-006: GSPS Compliance Issues","US-011","TASK-058","2024-01-01 09:00","2024-01-01 09:00","DICOM,fo-dicom,WPF,C#"
+"TASK-060: Write Automated Tests for Annotation/GSPS Workflow","Write integration tests that programmatically create annotation data, call the service to create a GSPS file, and then validate the contents of the generated DICOM file. Write another test that loads a pre-made GSPS file and verifies the parsed annotation data.
+---
+AC1: A test for GSPS creation passes and the output file is validated against a schema or known good file.
+AC2: A test for GSPS parsing successfully loads a sample file and extracts the correct annotation data.
+AC3: Tests are integrated into the CI pipeline.","Task","Backlog","High","dev@project.com","pm@project.com","",14.5,"DICOM,Testing,Integration Test","Sprint 5","EPIC-003: DICOM Functionality & Data Management","DICOM Management Platform","","Assumptions: A DICOM validation tool can be integrated into CI.","US-011","TASK-057,TASK-059","2024-01-01 09:00","2024-01-01 09:00","fo-dicom,xUnit"
+"US-013: Submit a Print Job Asynchronously","As a Technician, I want to submit my print job to a background service for processing, so that my application remains responsive and I can continue working while the printing occurs.
+---
+AC1: Given the background 'DICOM Service' is running, When I click the 'Print' button in the preview window, Then my application immediately becomes responsive again, and the print job is sent to a RabbitMQ queue for processing.
+AC2: Given the background 'DICOM Service' is NOT running, When I open the Print Preview window, Then the 'Print' button is disabled, and a notification informs me that the print service is unavailable.
+AC3: Given a print job has been submitted to the background service, When the service processes the job, Then a physical printout is spooled to the selected Windows printer, matching the layout and settings from the preview.","Story","Backlog","High","dev@project.com","pm@project.com","",48,"Printing,RabbitMQ,IPC,Windows Service","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-012,US-F02,US-F03","","2024-01-01 09:00","2024-01-01 09:00","WPF,RabbitMQ,Named Pipes,EF Core,QuestPDF"
+"TASK-062: Implement Drag-and-Drop for Image Rearrangement","Add drag-and-drop functionality to the print preview area. The user should be able to drag an image from one grid cell in the layout and drop it into another to reorder the images.
+---
+AC1: Dragging an image and dropping it on another swaps their positions.
+AC2: Visual feedback is provided during the drag operation.
+AC3: The underlying data model for the layout is correctly updated.","Task","Backlog","High","dev@project.com","pm@project.com","",8.67,"Printing,UI,WPF","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-012","TASK-061","2024-01-01 09:00","2024-01-01 09:00","WPF"
+"TASK-063: Write Unit Tests for PrintPreviewViewModel","Write unit tests for the `PrintPreviewViewModel` to verify its logic, such as updating layout properties, handling commands, and managing the collection of images to be printed.
+---
+AC1: Tests verify that selecting a layout template updates the correct properties.
+AC2: Tests verify that the image reordering logic works correctly.
+AC3: Tests are integrated into CI.","Task","Backlog","High","dev@project.com","pm@project.com","",6.33,"Printing,Testing","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-012","TASK-061","2024-01-01 09:00","2024-01-01 09:00","xUnit,Moq"
+"TASK-064: Implement Print Job Submission Service in Client","In the WPF client, create a `ClientPrintService`. It will first use the `NamedPipeClient` to check the status of the background service. If the service is available, it will serialize the `PrintPreviewViewModel`'s data into a `PrintJob` DTO and publish it to RabbitMQ.
+---
+AC1: The service correctly calls the Named Pipe client for a status check.
+AC2: If the status check fails, it returns a failure result.
+AC3: If the status check succeeds, it publishes a message to the `print_jobs` RabbitMQ queue.
+AC4: The 'Print' button in the UI is disabled/enabled based on the status check result.","Task","Backlog","High","dev@project.com","pm@project.com","",8.33,"Printing,RabbitMQ,IPC","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-013","TASK-061,TASK-006,TASK-011","2024-01-01 09:00","2024-01-01 09:00","WPF,RabbitMQ,Named Pipes"
+"TASK-065: Create PrintJob Entity and Data Model","Create an EF Core entity `PrintJob` to track the status of submitted print jobs for the Print Queue UI. It should store the job payload, status (Queued, Processing, Completed, Failed), submitter, etc.
+---
+AC1: The `PrintJob` entity is created with all required fields.
+AC2: A database migration is generated.
+AC3: The client creates a `PrintJob` record with 'Queued' status before publishing to RabbitMQ.","Task","Backlog","High","dev@project.com","pm@project.com","",4.17,"Printing,Database","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-013","TASK-013","2024-01-01 09:00","2024-01-01 09:00","EF Core,C#"
+"TASK-066: Implement Background Print Job Consumer","In the Windows Service, create a RabbitMQ consumer for the `print_jobs` queue. This consumer will deserialize the job, update its status in the DB to 'Processing', generate the print document using `QuestPDF`, and spool it to the printer using `System.Printing` API.
+---
+AC1: The consumer processes messages from the queue.
+AC2: It successfully uses QuestPDF to compose the document from the job data.
+AC3: It spools the job to the correct printer specified in the job payload.
+AC4: It updates the `PrintJob` status to 'Completed' or 'Failed' with a reason.
+AC5: The consumer handles errors (e.g., printer offline) gracefully.","Task","Backlog","High","dev@project.com","pm@project.com","",17,"Printing,Windows Service,QuestPDF","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","Assumptions: QuestPDF can generate documents compatible with standard printer drivers.","US-013","TASK-007,TASK-065","2024-01-01 09:00","2024-01-01 09:00","Windows Services,RabbitMQ,QuestPDF,.NET Printing API"
+"TASK-067: Write E2E Tests for Asynchronous Printing","Create an E2E test that submits a print job from the client, waits for the background consumer to process it, and verifies the `PrintJob` record in the database is updated to 'Completed'. The test should print to a virtual printer like 'Microsoft XPS Document Writer' to verify the output.
+---
+AC1: The test successfully submits a job via RabbitMQ.
+AC2: It polls the database and confirms the job status transitions from 'Queued' to 'Processing' to 'Completed'.
+AC3: The test verifies that an output file is created by the XPS writer.","Task","Backlog","High","dev@project.com","pm@project.com","",14.5,"Printing,Testing,E2E Test","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","RISK-011: Asynchronous Workflow Testing Complexity. Assumptions: The CI environment has the XPS printer installed.","US-013","TASK-064,TASK-066","2024-01-01 09:00","2024-01-01 09:00","xUnit,RabbitMQ,EF Core"
+"US-014: Export Print Layout to a Secure PDF","As a Technician, I want to export my composed print layout as a secure, compliant PDF file, so that I can create a digital, portable record of the images.
+---
+AC1: Given I am in the Print Preview window, When I click 'Export to PDF', provide a filename, and check the 'Encrypt with password' option, Then a password-protected PDF file is generated by the background service.
+AC2: Given a PDF has been generated, When I inspect its properties, Then the file is compliant with the PDF/A-3 standard.
+AC3: Given I chose to encrypt the PDF, When I try to open the file, Then I am prompted to enter the password I provided during export.","Story","Backlog","High","dev@project.com","pm@project.com","",23,"PDF,QuestPDF,UI","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-012","","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,QuestPDF,RabbitMQ"
+"TASK-068: Add PDF Export UI to Print Preview","In the `PrintPreviewView`, add an 'Export to PDF' button. Add controls for PDF-specific options like 'Encrypt with password' and a password input field. The ViewModel will trigger a new command for exporting.
+---
+AC1: The UI elements for PDF export are present and functional.
+AC2: The export command is wired up in the ViewModel.
+AC3: Clicking the button opens a 'Save File' dialog to choose the output path.","Task","Backlog","High","dev@project.com","pm@project.com","",4.17,"PDF,UI,WPF","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-014","TASK-061","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-069: Implement PDF Generation Consumer","Create a new RabbitMQ consumer (or extend the existing print consumer logic) to handle `PdfExportJob` messages. It will use QuestPDF to generate the document, applying PDF/A-3 compliance, AES-256 encryption, and metadata embedding as specified in the job.
+---
+AC1: The consumer processes PDF export jobs from a queue.
+AC2: It correctly generates a PDF file using QuestPDF.
+AC3: It applies PDF/A-3 compliance during generation.
+AC4: It correctly encrypts the output PDF with the provided password.
+AC5: The generated PDF is saved to the user-specified path.","Task","Backlog","High","dev@project.com","pm@project.com","",10.33,"PDF,QuestPDF,Windows Service","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","Assumptions: QuestPDF fully supports PDF/A-3 and AES-256 encryption features.","US-014","TASK-066","2024-01-01 09:00","2024-01-01 09:00","QuestPDF,RabbitMQ,Windows Services"
+"TASK-070: Write Automated Tests for PDF Export","Create an integration test that submits a PDF export job. The test will then check for the existence of the output file and use a PDF library (e.g., iTextSharp) to verify its properties, such as being password-protected and compliant with PDF/A.
+---
+AC1: The test verifies that the PDF file is created at the target path.
+AC2: The test asserts that an attempt to open the encrypted PDF without a password fails.
+AC3: The test uses a validator to confirm PDF/A compliance.","Task","Backlog","High","dev@project.com","pm@project.com","",8.5,"PDF,Testing,Integration Test","Sprint 5","EPIC-004: Printing & Exporting","DICOM Management Platform","","","US-014","TASK-069","2024-01-01 09:00","2024-01-01 09:00","xUnit,C#"
+"EPIC-006: Deployment & Documentation","This epic covers all activities related to packaging, deploying, and documenting the application. This includes creating a robust installer, ensuring prerequisites are handled, and delivering high-quality documentation for administrators.","Epic","Backlog","Critical","pm@project.com","pm@project.com","",,"Deployment,MSIX,DevOps,Documentation","","","DICOM Management Platform","","","","","2024-01-01 09:00","2024-01-01 09:00",""
+"US-017: Install the Application","As a System Administrator, I want to use a single, signed MSIX installer to deploy the application, so that the installation process is simple, secure, and correctly registers the background service.
+---
+AC1: Given I run the signed MSIX installer on a target Windows machine, When the installation completes, Then the WPF client application is available in the Start Menu and the 'DICOM Service' is installed and running in the Windows Services console.
+AC2: Given I have just installed the application, When I check the properties of the 'DICOM Service', Then its startup type is set to 'Automatic'.
+AC3: Given I uninstall the application via Windows 'Apps & Features', When the process completes, Then all application files are removed and the 'DICOM Service' is unregistered from the system.","Story","Backlog","Critical","devops@project.com","pm@project.com","",49.33,"Deployment,MSIX,DevOps","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","","US-F01","","2024-01-01 09:00","2024-01-01 09:00","MSIX,Visual Studio,CI/CD,Code Signing,QA"
+"TASK-077: Create and Configure MSIX Packaging Project","In the Visual Studio solution, create a new 'Windows Application Packaging Project'. Configure it to include the output of the WPF client and the Windows Service projects. Set the entry point to the WPF application.
+---
+AC1: The packaging project is created and correctly references the application projects.
+AC2: Building the project successfully produces an unsigned .msix package.
+AC3: The package manifest is configured with application name, version, and publisher information.","Task","Backlog","Critical","devops@project.com","pm@project.com","",8.33,"Deployment,MSIX","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","Assumptions: Visual Studio's packaging project template is sufficient.","US-017","TASK-001","2024-01-01 09:00","2024-01-01 09:00","MSIX,Visual Studio"
+"TASK-078: Implement Service Installation via MSIX","Configure the MSIX package manifest to declare the Windows Service. This uses the `<desktop:Extension Category=\"windows.service\">` element to specify the service executable, name, and startup type.
+---
+AC1: The `Package.appxmanifest` file is modified to include the service definition.
+AC2: Installing the generated MSIX package successfully registers the 'DICOM Service'.
+AC3: The service is configured for automatic startup.
+AC4: Uninstalling the package removes the service registration.","Task","Backlog","Critical","devops@project.com","pm@project.com","",12,"Deployment,MSIX,Windows Service","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","","US-017","TASK-077","2024-01-01 09:00","2024-01-01 09:00","MSIX,XML"
+"TASK-079: Set up Code Signing for MSIX Package","Acquire or generate a code signing certificate. Configure the MSIX packaging project to use this certificate to sign the package during the build process. Integrate this into the CI/CD pipeline.
+---
+AC1: A code signing certificate is available to the build agent.
+AC2: The build process produces a digitally signed .msix file.
+AC3: The signed package can be installed on a clean Windows machine without untrusted publisher warnings.","Task","Backlog","Critical","devops@project.com","pm@project.com","",12.67,"Deployment,MSIX,Security,CI/CD","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","Assumptions: A code signing certificate can be procured or a self-signed one is acceptable for initial testing.","US-017","TASK-077","2024-01-01 09:00","2024-01-01 09:00","MSIX,CI/CD,Code Signing"
+"US-018: Verify System Prerequisites during Installation","As a System Administrator, I want the installer to verify connectivity to required external services (PostgreSQL, RabbitMQ), so that I can ensure the application environment is correctly configured before the installation finishes.
+---
+AC1: Given I am running the installer and am prompted for PostgreSQL connection details, When I enter incorrect details (e.g., wrong password) and proceed, Then the installer shows a connection error and does not allow me to complete the installation.
+AC2: Given I am running the installer and have provided valid PostgreSQL connection details for a database that is missing the 'pgcrypto' extension, When the installer checks the database, Then it displays an error stating the extension is required and blocks installation.
+AC3: Given I have provided valid connection details for both PostgreSQL (with pgcrypto) and RabbitMQ during installation, When I proceed, Then the installer successfully validates the connections and allows the installation to complete.","Story","Backlog","Critical","devops@project.com","pm@project.com","",78.17,"Deployment,MSIX,Validation,Configuration","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","RISK-002: MSIX Installer Prerequisite Check Complexity.","US-017","","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM,C#,PostgreSQL,RabbitMQ,MSIX,PowerShell"
+"TASK-081: Design and Build Standalone Configuration Utility UI","Create a separate, simple WPF application (`DicomApp.Configurator`) that will be launched by the installer. This utility will have a UI to prompt for PostgreSQL and RabbitMQ connection strings.
+---
+AC1: A new WPF project is created for the utility.
+AC2: The UI contains input fields for all necessary connection parameters.
+AC3: A 'Test Connection' and 'Save & Continue' button are present.","Task","Backlog","Critical","devops@project.com","pm@project.com","",16,"Deployment,MSIX,WPF,UI","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","RISK-002: MSIX Installer Prerequisite Check Complexity.","US-018","","2024-01-01 09:00","2024-01-01 09:00","WPF,MVVM"
+"TASK-082: Implement Prerequisite Validation Logic","In the configuration utility, implement the logic that attempts to connect to PostgreSQL and RabbitMQ using the provided details. The PostgreSQL check must also specifically run a query to verify the `pgcrypto` extension is installed.
+---
+AC1: The 'Test Connection' button for PostgreSQL provides clear success or failure feedback.
+AC2: The PostgreSQL test fails if `pgcrypto` is not found.
+AC3: The 'Test Connection' button for RabbitMQ provides clear success or failure feedback.
+AC4: The logic handles timeouts and exceptions gracefully.","Task","Backlog","Critical","devops@project.com","pm@project.com","",14.33,"Deployment,Validation","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","","US-018","TASK-081","2024-01-01 09:00","2024-01-01 09:00","C#,PostgreSQL,RabbitMQ"
+"TASK-083: Implement Configuration Persistence and Exit Codes","Upon successful validation, the configuration utility must save the connection strings to a configuration file that the main application can read. The utility must then exit with a specific success code (e.g., 0). On failure or cancellation, it must exit with a failure code (e.g., 1).
+---
+AC1: Successful validation and 'Save' writes a config file to a known location.
+AC2: The utility exits with code 0 on success.
+AC3: The utility exits with a non-zero code on failure or if the user cancels.
+AC4: The saved configuration file is in a format the main app can consume (e.g., appsettings.json).","Task","Backlog","Critical","devops@project.com","pm@project.com","",8.33,"Deployment,Configuration","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","","US-018","TASK-082","2024-01-01 09:00","2024-01-01 09:00","C#,.NET"
+"TASK-084: Integrate Configuration Utility with MSIX Installer","Modify the MSIX package to bundle the configuration utility. Use a custom installer feature (e.g., PowerShell script executed on install, or a AppInstaller file feature) to launch the utility during the installation process. The installation must fail if the utility exits with a non-zero code.
+---
+AC1: The configuration utility is included in the MSIX package.
+AC2: The installer automatically launches the utility after files are copied.
+AC3: If the utility exits with a failure code, the MSIX installation rolls back.
+AC4: If the utility exits with a success code, the installation completes.","Task","Backlog","Critical","devops@project.com","pm@project.com","",25.33,"Deployment,MSIX","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","RISK-002: MSIX Installer Prerequisite Check Complexity. Assumptions: MSIX or AppInstaller provides a mechanism to run a bundled executable and check its exit code to control the installation flow.","US-018","TASK-083,TASK-078","2024-01-01 09:00","2024-01-01 09:00","MSIX,PowerShell"
+"TASK-085: Write Automated Tests for Prerequisite Validator","Write integration tests for the `ConfigurationValidator` logic. Use Testcontainers to spin up valid and invalid PostgreSQL/RabbitMQ environments and assert that the validator returns the correct results.
+---
+AC1: A test against a valid PostgreSQL DB (with pgcrypto) and RabbitMQ passes.
+AC2: A test against a PostgreSQL DB without pgcrypto fails with a specific error.
+AC3: A test with incorrect credentials fails as expected.
+AC4: Tests are integrated into CI.","Task","Backlog","High","devops@project.com","pm@project.com","",14.33,"Deployment,Testing,Integration Test","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","","US-018","TASK-082","2024-01-01 09:00","2024-01-01 09:00","xUnit,Docker,Testcontainers"
+"TASK-080: Create and Execute Installer Test Plan","Create a manual test plan for the installer. The plan should include installation, uninstallation, and upgrade scenarios on clean Windows 10 and Windows 11 machines. The tests must verify file locations, service registration, and clean uninstalls.
+---
+AC1: A test plan document is written and reviewed.
+AC2: The plan is executed on all supported OS versions.
+AC3: All test cases pass.
+AC4: The results are documented.","Task","Backlog","Critical","qa@project.com","pm@project.com","",16.33,"Deployment,MSIX,Testing","Sprint 6","EPIC-006: Deployment & Documentation","DICOM Management Platform","","Assumptions: Clean test VMs are available.","US-017","TASK-078,TASK-079,TASK-084","2024-01-01 09:00","2024-01-01 09:00","QA,Windows Administration"

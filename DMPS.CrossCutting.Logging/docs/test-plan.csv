@@ -1,0 +1,185 @@
+test_id,feature_area,test_type,test_level,priority,automation_candidate,test_description,preconditions,test_steps,expected_result,test_data_needs,tools_required,estimated_effort,dependencies
+TC-PLATFORM-001,Core Application & Service Shell,Non-Functional,Integration,High,High,"Verify RabbitMQ connection resiliency and automatic retry mechanism with exponential backoff.","RabbitMQ broker is running but can be stopped/restarted. The Windows Service is running.",1. Start the service and confirm connection to RabbitMQ.
+2. Stop the RabbitMQ broker service.
+3. Observe the application logs for connection loss and retry attempts.
+4. Verify that the retry attempts follow an exponential backoff pattern.
+5. Restart the RabbitMQ broker service.
+6. Confirm that the service automatically reconnects successfully.,The service should log connection loss, attempt to reconnect at increasing intervals, and successfully re-establish the connection once the broker is available again without manual intervention.,A running RabbitMQ instance.,RabbitMQ Management UI, Log file viewer,4,TASK-005
+TC-PLATFORM-002,Core Application & Service Shell,Functional,Integration,High,High,"Verify basic message publishing and consumption between the WPF client and the Windows Service.","RabbitMQ broker is running. WPF Client and Windows Service are running. A test queue 'test_queue' has been declared.",1. From the WPF client, use a test interface to publish a simple message to 'test_queue'.
+2. The message should be marked as persistent.
+3. In the Windows Service, verify that the consumer receives the message.
+4. Verify the message content is correctly deserialized.,The message is successfully published, appears in the queue, is consumed by the service, and its content is intact. The message persists in the queue if the service is restarted before consumption.,N/A,xUnit, Moq, RabbitMQ.Client,4,TASK-006;TASK-010
+TC-PLATFORM-003,Core Application & Service Shell,Functional,Integration,High,High,"Verify synchronous Inter-Process Communication (IPC) using Named Pipes for service status checks.","The Windows Service is running and has initialized the Named Pipe server.",1. Start the WPF client.
+2. Trigger the `CheckServiceStatusAsync()` method.
+3. The client should connect to the Named Pipe, send a 'PING' message, and await a response.
+4. The service should receive 'PING' and respond with 'PONG'.,The client method returns 'true', indicating a successful 'PONG' response was received within the timeout period.,N/A,xUnit, System.IO.Pipes,4,TASK-011;TASK-012
+TC-PLATFORM-004,Core Application & Service Shell,Functional,System,High,High,"Verify the full end-to-end communication loop: Client checks service status via Named Pipe, then sends a message via RabbitMQ, which is consumed by the service.","All components (Client, Service, RabbitMQ) are running.",1. Client successfully checks service status via Named Pipe (receives 'PONG').
+2. Client publishes a message to a processing queue on RabbitMQ.
+3. Service consumes the message.
+4. Service logs that the message was processed.,The entire sequence completes successfully, with logs indicating the successful Named Pipe communication and the subsequent message processing from RabbitMQ.,A test message object.,xUnit, Testcontainers, RabbitMQ.Client, System.IO.Pipes,8,TASK-013
+TC-PLATFORM-005,Core Application & Service Shell,Functional,Unit,High,High,"Verify the WPF application starts correctly, and the Generic Host builds the DI container and resolves the MainWindow/MainViewModel.","N/A",1. Create a unit test that mimics the App.xaml.cs startup sequence.
+2. Configure the HostBuilder with mock services.
+3. Build the host and request the `MainWindow` from the service provider.
+4. Assert that the `MainWindow` and its `DataContext` (ViewModel) are not null and are of the correct types.,The DI container successfully resolves the main application shell and its dependencies without throwing exceptions.,N/A,xUnit, Moq,2,TASK-009
+TC-PLATFORM-006,Core Application & Service Shell,Functional,Unit,High,High,"Verify the Windows Service starts correctly, and the Generic Host configures all required hosted services via DI.","N/A",1. Create a unit test that mimics the Program.cs startup for the service.
+2. Configure the HostBuilder with mock implementations of all `IHostedService`s.
+3. Build the host and retrieve all registered `IHostedService` instances.
+4. Assert that all expected services (e.g., consumer service, Named Pipe server) are present and correctly resolved.,The DI container correctly builds and provides all necessary services for the Windows Service to run.,N/A,xUnit, Moq,2,TASK-012
+TC-PLATFORM-007,Core Application & Service Shell,Functional,Integration,High,High,"Verify that the RabbitMQ Topology Configuration Service correctly creates all required exchanges, durable queues, and DLX/DLQ bindings on startup.","A clean, running RabbitMQ broker instance (no pre-existing exchanges/queues).",1. Start the Windows Service.
+2. After startup, connect to the RabbitMQ Management UI.
+3. Verify that the main processing exchanges and queues have been created.
+4. Verify that the queues are marked as 'Durable'.
+5. Verify that a dead-letter exchange (DLX) and dead-letter queue (DLQ) exist.
+6. Verify that the main queues are configured to route rejected messages to the DLX.,All RabbitMQ artifacts are created with the correct properties and bindings as per the system requirements (REQ-1-005, REQ-1-006).,A RabbitMQ instance.,RabbitMQ Management UI,4,TASK-010
+TC-AUTH-U-001,User Authentication & Session Management,Functional,Unit,Critical,High,"Verify the BCryptPasswordHasher service correctly hashes a password and validates a correct/incorrect password against the hash.","N/A",1. Create an instance of the `BCryptPasswordHasher`.
+2. Call the hash method with a sample password.
+3. Assert that the returned hash is a valid BCrypt hash string.
+4. Call the verify method with the original password and the hash; assert it returns true.
+5. Call the verify method with an incorrect password and the hash; assert it returns false.,The service correctly generates valid hashes and reliably verifies both correct and incorrect passwords against a given hash.,A sample password string.,xUnit,2,TASK-017
+TC-AUTH-I-001,User Authentication & Session Management,Functional,Integration,Critical,High,"Verify the AuthenticationService can successfully log in a user with valid credentials against a test database.","A test database is running with a pre-seeded user account (known username and password).",1. Seed the test database with a user, storing the BCrypt hash of their password.
+2. Instantiate the `AuthenticationService` with a real `UserRepository` and `BCryptPasswordHasher`.
+3. Call the login method with the correct username and password.
+4. Assert that the service returns a successful result with the correct user details.,The service successfully authenticates the user and returns their session information.,An active 'Technician' user with a known password in the test DB.,xUnit, Testcontainers, EF Core,4,TASK-023
+TC-AUTH-E2E-001,User Authentication & Session Management,Functional,System,Critical,High,"Verify the full user login flow via the UI for successful, failed, and disabled accounts.","WPF application, Windows Service, and Database are running. Test user accounts exist.",1. Launch the application.
+2. Enter correct credentials for an active user and click 'Login'. Verify the main app window appears.
+3. Log out. Enter the correct username but incorrect password. Click 'Login'. Verify a generic error message appears.
+4. Enter credentials for a disabled user. Click 'Login'. Verify the 'account disabled' error appears.,The application behaves exactly as described in the acceptance criteria for US-001 for all login scenarios.,One active 'Technician' user, one disabled 'Technician' user.,Appium, WinAppDriver,8,TASK-023
+TC-RBAC-E2E-001,Role-Based Access Control (RBAC) & Security,Functional,System,Critical,High,"Verify that UI elements are correctly shown, hidden, or disabled based on the logged-in user's role.","Application is running. An 'Admin' user and a 'Technician' user exist.",1. Log in as 'Technician'. Navigate through the app.
+2. Verify that the 'Administration' tab/button is not visible.
+3. Open a study and verify the 'Edit DICOM Metadata' button is disabled or hidden.
+4. Log out. Log in as 'Admin'.
+5. Verify the 'Administration' tab is visible and accessible.
+6. Open a study and verify the 'Edit DICOM Metadata' button is enabled.,The application correctly enforces UI-level security based on the user's role, as defined in US-002.,An active 'Admin' user, an active 'Technician' user, a sample DICOM study.,Appium, WinAppDriver,8,TASK-032
+TC-SEC-001,User Authentication & Session Management,Security,Integration,Critical,Manual Only,"Verify that user passwords are not stored in plaintext in the database.","An active user exists in the database.",1. Log into the PostgreSQL database using a DB client.
+2. Query the `User` table.
+3. Inspect the `passwordHash` column for the user.
+4. Verify that the value is a long string consistent with a BCrypt hash, not the plaintext password.,The `passwordHash` column contains a salted hash value, not the original password.,An active user account.,pgAdmin or other SQL client,1,TASK-017
+TC-SEC-002,User Authentication & Session Management,Security,System,Critical,High,"Verify that the login screen provides a generic error message for both incorrect password and non-existent username to prevent user enumeration.","Application is running.",1. Attempt to log in with a valid username and an invalid password. Note the exact error message.
+2. Attempt to log in with a non-existent username and any password. Note the exact error message.
+3. Assert that the error message in both cases is identical (e.g., 'Invalid username or password.').,The UI displays the exact same generic error message for both failure scenarios.,A valid username.,Appium, WinAppDriver,2,TASK-021
+TC-SECRETS-I-001,Role-Based Access Control (RBAC) & Security,Security,Integration,Critical,High,"Verify the SecretsManager can successfully store a secret in the Windows Credential Manager and retrieve it.","The test is running on a Windows machine with sufficient permissions.",1. Instantiate the `SecretsManager` service.
+2. Call `SetSecret` with a unique target name and a test secret.
+3. Call `GetSecret` with the same target name.
+4. Assert that the retrieved secret matches the original test secret.
+5. Clean up by deleting the credential.,The service can write to and read from the Windows Credential Manager without errors, and the data is consistent.,A test secret string.,xUnit, P/Invoke knowledge,2,TASK-037
+TC-SESSION-E2E-001,User Authentication & Session Management,Functional,System,Critical,High,"Verify that the session automatically locks after a configured period of inactivity (e.g., 1 minute for testing).","User is logged into the application. Inactivity timeout is configured to a short duration for the test.",1. Log in to the application.
+2. Perform no mouse or keyboard actions.
+3. Wait for the configured inactivity period to elapse.
+4. Verify that the lock screen overlay appears, covering the main application window.
+5. Move the mouse. Verify the timer resets and the screen does not lock prematurely.,The lock screen appears automatically after the specified period of inactivity and user actions correctly reset the timer, as per US-003.,An active user account.,Appium, WinAppDriver,4,TASK-024
+TC-SESSION-E2E-002,User Authentication & Session Management,Functional,System,Critical,High,"Verify the unlock screen functionality, including success, failure, and lockout after 5 failed attempts.","The application is in a locked state.",1. Enter the correct password and click 'Unlock'. Verify the lock screen disappears and the app is usable.
+2. Re-lock the session. Enter an incorrect password. Verify an error message appears.
+3. Enter an incorrect password 5 consecutive times.
+4. Verify that after the 5th failure, the session is terminated and the application returns to the main login screen.,The unlock screen functions as described in US-004, including successful unlocking, clear error feedback, and session termination after 5 failed attempts.,An active user account with a known password.,Appium, WinAppDriver,6,TASK-027
+TC-ADMIN-E2E-001,User & System Administration,Functional,System,High,High,"Verify the full user management lifecycle: Create, Edit, Reset Password, Disable/Enable, Delete.","User is logged in as an Administrator.",1. Navigate to User Management. Create a new Technician user. Verify they appear in the list.
+2. Edit the new user's role to Admin. Verify the change.
+3. Reset the user's password. Verify a temporary password is provided.
+4. Disable the user's account. Verify their status changes.
+5. Enable the user's account.
+6. Delete the user's account. Verify they are removed from the list.,All CRUD and management operations in the user management UI work as expected, and the UI reflects the changes. All actions are logged in the audit trail.,An active 'Admin' user account.,Appium, WinAppDriver,12,TASK-046
+TC-AUTH-E2E-002,User & System Administration,Functional,System,High,High,"Verify that a user whose password has been reset is forced to change it on their next login.","An Administrator has reset a user's password. The user has the temporary password.",1. The user logs in with their username and the temporary password.
+2. Verify they are immediately shown a non-dismissible 'Change Password' screen.
+3. The user enters a new, valid password and confirms it.
+4. Verify they are then redirected to the main application.
+5. The user logs out and successfully logs back in with their new password.,The forced password change workflow is enforced and cannot be bypassed, as described in US-005.,A user account that has had its password reset.,Appium, WinAppDriver,6,TASK-045
+TC-SEC-I-004,Role-Based Access Control (RBAC) & Security,Security,Integration,Critical,High,"Verify that data marked for encryption is stored as ciphertext in the database but is transparently decrypted in the application.","A test database with the `pgcrypto` extension enabled is running.",1. Use EF Core to save a `Patient` entity with a known `PatientName`.
+2. Use a raw SQL query to `SELECT` the `PatientName` column from the `patients` table. Assert that the returned value is binary ciphertext, not the original string.
+3. Use EF Core to fetch the same `Patient` entity.
+4. Assert that the `Patient.PatientName` property is correctly decrypted and matches the original known name.,Data is successfully encrypted at rest in the database and correctly decrypted when accessed through the application's data layer, as per US-006.,A PostgreSQL DB with `pgcrypto` enabled, a symmetric encryption key.,xUnit, Testcontainers, EF Core, Npgsql,8,TASK-036
+TC-DICOM-E2E-001,DICOM C-STORE SCP (Ingestion Pipeline),Functional,System,High,High,"Verify the full end-to-end DICOM C-STORE ingestion pipeline.","All application components are running. A test DICOM study is available.",1. Use a DICOM toolkit (SCU) to send a test study to the application's SCP listener port.
+2. Verify the SCU receives a success response quickly.
+3. Check the RabbitMQ queue to see the metadata message.
+4. Wait for the consumer to process the message.
+5. Query the database to verify the Patient, Study, Series, and Image metadata has been created.
+6. Check the file system to verify the DICOM files have been moved to the correct structured permanent storage path.,The system correctly ingests, processes, and stores a DICOM study sent via C-STORE, with all data persisted correctly in the database and filesystem, as per US-014.,A valid, multi-file DICOM study.,dcmtk or similar DICOM toolkit, pgAdmin, RabbitMQ Management UI,12,TASK-061
+TC-PERF-002,DICOM C-STORE SCP (Ingestion Pipeline),Performance,System,High,Medium,"Verify the C-STORE SCP can handle at least 10 simultaneous associations without significant degradation of client UI responsiveness.","All application components are running on a machine meeting recommended specs.",1. Start the WPF client and navigate to an interactive screen.
+2. Use a test script or multiple instances of a DICOM toolkit to initiate 10 simultaneous C-STORE associations, each sending a moderately sized study.
+3. While the ingestion is in progress, interact with the WPF client UI (e.g., click buttons, navigate).
+4. Measure the UI response time.,The C-STORE SCP processes all 10 associations successfully. The client UI remains responsive (actions complete in <500ms) during the ingestion process.,10 medium-sized DICOM studies (e.g., 50-100MB).,dcmtk scripting, UI performance profiler,8,TASK-061
+TC-DICOM-I-001,DICOM C-STORE SCP (Ingestion Pipeline),Functional,Integration,High,High,"Verify that the DICOM metadata persistence consumer is idempotent and does not create duplicate records on message redelivery.","A test database and RabbitMQ are running.",1. Manually publish a valid DICOM metadata message to the ingestion queue.
+2. Allow the consumer to process it. Verify the records are created in the DB.
+3. Manually publish the exact same message to the queue again.
+4. Allow the consumer to process it.
+5. Query the database and verify that no new/duplicate Patient, Study, Series, or Image records were created.,Processing the same message multiple times results in the same final state in the database, with no duplicate records created. This mitigates RISK-TEC-004.,A sample DICOM metadata message.,xUnit, Testcontainers, RabbitMQ Management UI,4,TASK-059
+TC-ADMIN-S-002,User & System Administration,Functional,System,High,Medium,"Verify the data retention policy correctly purges old studies.","The application is running. A study older than the retention policy exists. A study newer than the policy exists.",1. As an Admin, configure the data retention policy to 30 days.
+2. Seed the database with a study dated 45 days ago and another dated 15 days ago.
+3. Manually trigger the scheduled data purge service.
+4. Verify that the 45-day-old study's files and database records have been deleted.
+5. Verify that the 15-day-old study remains untouched.
+6. Check the audit trail for a log entry corresponding to the deleted study.,The purge service correctly identifies and deletes only the data that falls outside the configured retention period, as per US-013.,Two DICOM studies with different dates.,pgAdmin, File Explorer,4,TASK-053
+TC-LOG-I-001,Auditing, Logging, and Monitoring,Security,Integration,High,High,"Verify the Serilog PHI Redaction enricher correctly masks patient data in log messages.","Serilog is configured with the custom enricher.",1. Create a log message template that includes properties for Patient Name and Patient ID.
+2. Log an object containing sample PHI using Serilog.
+3. Capture the formatted log output (e.g., to a text writer sink in a unit test).
+4. Assert that the output message has replaced the patient's name and ID with '[REDACTED]' or a similar mask.,The enricher successfully identifies and redacts all configured PHI fields before the log event is written to a sink, as per US-029.,Sample log object containing PHI fields.,xUnit, Serilog,4,TASK-202
+TC-VIEWER-P-001,DICOM Viewer & Tools,Performance,System,Critical,Medium,"Benchmark the viewer's load time for a large study to ensure it meets the <3 second requirement.","Application is running on a machine with recommended hardware specs.",1. Select a large DICOM study (e.g., a CT series > 500MB).
+2. Start a stopwatch.
+3. Double-click to open the study.
+4. Stop the stopwatch when the first (low-resolution) image is rendered and the UI is interactive.
+5. Repeat 5 times and average the result.,The average time to load the study and display an interactive preview is less than 3 seconds.,A multi-frame CT or MRI study > 500MB on an SSD.,Stopwatch, Performance Profiler,4,TASK-114
+TC-GSPS-E2E-001,DICOM Viewer & Tools,Functional,System,High,High,"Verify the complete annotation workflow: creating, saving as GSPS, and reloading.","User is logged in. A DICOM study is open in the viewer.",1. Use the annotation tools to draw a line measurement and a text box on an image.
+2. Click the 'Save Annotations' button.
+3. Close and reopen the study.
+4. Verify that the annotations are automatically loaded and displayed exactly as they were created.
+5. Check the file system to confirm a new DICOM file (the GSPS object) was created alongside the original series.,Annotations are correctly saved as a non-destructive GSPS object and are automatically reloaded when the study is opened, as per US-021.,A sample DICOM study.,Appium, WinAppDriver,8,TASK-131
+TC-QR-E2E-001,DICOM Query/Retrieve SCU & Storage Management,Functional,System,High,High,"Verify the full C-FIND and C-MOVE workflow against a remote PACS.","A test PACS server is running and configured in the application. The application's SCP is running.",1. Navigate to the PACS Query screen.
+2. Enter valid search criteria and execute a C-FIND. Verify the results are displayed.
+3. Select a study from the results and initiate a C-MOVE.
+4. Verify the UI shows progress/status updates.
+5. Verify the study is transferred and appears in the application's local storage browser after completion.,The user can successfully query a remote PACS, retrieve a study, and view it locally, as per US-015.,A test PACS server (e.g., Orthanc) populated with sample studies.,Orthanc or similar test PACS,6,TASK-139
+TC-PRINT-E2E-001,Printing & PDF Export Pipeline,Functional,System,High,Medium,"Verify the asynchronous print workflow from UI to background processing.","The application and a test printer (e.g., Microsoft Print to PDF) are available.",1. Open a study and initiate the print action.
+2. In the print preview, select a layout (e.g., 2x2 on A4).
+3. Click 'Print'. Verify a 'Job Queued' notification appears and the UI remains responsive.
+4. Navigate to the Print Queue view.
+5. Verify the job appears with status 'Queued', then 'Processing', then 'Completed'.
+6. Verify the document is successfully created by the 'Microsoft Print to PDF' printer.,The end-to-end printing process works asynchronously, with correct status updates and a final output that matches the preview, as per US-022 and US-024.,A sample DICOM study, A configured printer (physical or virtual).,Appium, WinAppDriver,6,US-022
+TC-PDF-E2E-001,Printing & PDF Export Pipeline,Functional,System,High,High,"Verify the export to a secure, password-protected PDF/A-3 file.","The application is running.",1. In the print preview, finalize a layout.
+2. Click 'Export to PDF'.
+3. In the options dialog, select to encrypt the PDF and provide a password.
+4. Save the file.
+5. Verify the export is processed asynchronously by the background service.
+6. Open the resulting PDF file. Verify it requires the password.
+7. Use a PDF validator tool to confirm it complies with the PDF/A-3 standard.,The system correctly generates a password-protected, PDF/A-3 compliant file based on the print preview layout, as per US-026.,A sample DICOM study.,PDF viewer, PDF/A validation tool,4,US-026
+TC-MONITOR-E2E-001,Auditing, Logging, and Monitoring,Functional,System,High,High,"Verify the System Health Dashboard displays accurate, real-time data from the background service.","All application components are running.",1. As an Admin, navigate to the System Health Dashboard. Verify all indicators are green.
+2. Stop the PostgreSQL database service.
+3. Refresh the dashboard and verify the PostgreSQL status indicator turns red.
+4. Send 10 messages to the main processing queue without a consumer running.
+5. Verify the dashboard shows '10' for the main queue depth.
+6. Start the DB and the consumer. Verify the indicators return to green and the queue depth goes to 0.,The dashboard accurately reflects the real-time status of all monitored components, providing a reliable overview for administrators, as per US-030.,An active 'Admin' account.,Appium, WinAppDriver, RabbitMQ Management UI, PostgreSQL service controls,6,TASK-205
+TC-INSTALL-S-001,Installation & Deployment,Functional,System,Critical,Manual Only,"Verify the MSIX installer correctly installs the client and the Windows Service on a clean machine.","A clean Windows 10 or Windows 11 machine without the application installed.",1. Run the MSIX installer package.
+2. Follow the installation prompts.
+3. After installation, check the Start Menu for the client application shortcut.
+4. Open the Windows Services console (`services.msc`).
+5. Verify that the ""DICOM Service"" is listed, its status is 'Running', and its Startup Type is 'Automatic'.
+6. Verify the service's Recovery properties are set to 'Restart the Service' for all failures.,The installer successfully deploys all application components, registers and starts the service, and configures it for auto-recovery, as per US-032.,A clean Windows 10/11 VM, the signed MSIX package.,Windows VM,4,TASK-228
+TC-INSTALL-S-003,Installation & Deployment,Functional,System,Critical,Manual Only,"Verify the first-run prerequisite check prevents application use until dependencies are configured correctly.","The application has been installed on a clean machine.",1. Launch the application for the first time.
+2. Verify a configuration screen appears, blocking the main UI.
+3. Enter incorrect RabbitMQ connection details and click 'Test'. Verify it fails.
+4. Enter correct RabbitMQ details but incorrect PostgreSQL details. Verify it fails.
+5. Enter all correct details. Click 'Test'. Verify it succeeds.
+6. Save the configuration.
+7. Verify the configuration screen closes and the main login screen appears.,The application enforces the initial configuration of its dependencies and provides clear feedback, preventing it from running in a broken state, as per US-033.,A clean installation, accessible PostgreSQL and RabbitMQ instances.,Windows VM,4,TASK-229
+TC-EDIT-E2E-001,DICOM Viewer & Tools,Functional,System,High,Medium,"Verify the 'Working Copy' logic for DICOM metadata editing, including auditing.","Logged in as an Admin. A DICOM study exists.",1. Open a study and note the original Patient Name. Check the file path of the original DICOM files.
+2. Click 'Edit Metadata'.
+3. Change the Patient Name to a new value and save.
+4. Verify the UI displays the new name.
+5. Check the file system. Verify the original files are untouched and a new set of files exists in a 'working copy' location.
+6. Check the audit trail. Verify a log entry exists for the metadata change, showing the old and new patient name.,Editing metadata is non-destructive to original files. All changes are performed on a working copy and are meticulously logged in the audit trail, as per US-035.,An 'Admin' account, a sample DICOM study.,Appium, WinAppDriver, pgAdmin, File Explorer,8,TASK-210
+TC-ANON-E2E-001,DICOM Viewer & Tools,Functional,System,High,Medium,"Verify the DICOM metadata anonymization feature creates a new, de-identified copy of a study.","A DICOM study with identifiable PHI exists.",1. Select a study and choose the 'Anonymize' feature.
+2. Select the 'Full De-ID' profile and execute.
+3. Verify a new study is created.
+4. Open the new study and inspect its DICOM tags.
+5. Verify that tags like Patient Name, ID, Birth Date, etc., have been removed or replaced with dummy values.
+6. Verify the original study remains unmodified.,The system successfully creates a de-identified copy of a study according to the selected profile, preserving the integrity of the original data, as per REQ-1-065.,A sample DICOM study containing PHI.,dcmtk or a DICOM tag viewer,6,TASK-215
+TC-UX-M-001,DICOM Viewer & Tools,Usability,System,Medium,Manual Only,"Perform a full audit of the application to ensure complete keyboard navigability.","The application is running.",1. Start from the login screen.
+2. Using only the keyboard (Tab, Shift+Tab, Arrow Keys, Enter, Space), attempt to navigate to and operate every single interactive control in the application.
+3. This includes all buttons, menus, input fields, data grids, and viewer tools.
+4. Create a list of any controls that cannot be reached or operated via keyboard.,All UI functionality is accessible and usable without a mouse, meeting accessibility requirements from US-039.,N/A,Keyboard,8,TASK-225
+TC-SEC-S-005,Role-Based Access Control (RBAC) & Security,Security,System,High,High,"Run an automated dependency vulnerability scan against the project's third-party libraries.","The CI/CD pipeline is configured with the scanning tool.",1. Trigger the CI/CD build pipeline.
+2. The pipeline should automatically execute the OWASP Dependency-Check (or similar) tool against the solution's NuGet packages.
+3. Review the generated report.
+4. Identify any high or critical severity vulnerabilities in the dependencies used.,The build pipeline includes a step that automatically scans for and reports known security vulnerabilities in third-party libraries, as per REQ-1-085.,N/A,CI/CD Server (e.g., Jenkins, Azure DevOps), OWASP Dependency-Check,4,TASK-234
+TC-UAT-001,Operations & Release,Functional,UAT,Critical,Manual Only,"UAT Scenario: A technician receives a study from a modality, reviews it, and prints it for a physician.","A stakeholder acting as a technician is logged in.",1. A study is sent from a test modality (SCU) to the application (SCP).
+2. The technician finds the study in the local browser.
+3. The technician opens the study, uses the WW/WL tool to adjust the view, and adds a measurement annotation.
+4. The technician opens the print preview, selects a '1+3 comparison' layout, and submits the print job.
+5. The technician checks the print queue to monitor the job's completion.,The system supports the core clinical workflow from ingestion to output smoothly and intuitively, meeting the business requirements.,A stakeholder user, a test modality/SCU.,dcmtk, Physical or Virtual Printer,8,TASK-236

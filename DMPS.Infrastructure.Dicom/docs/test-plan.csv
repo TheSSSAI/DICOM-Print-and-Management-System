@@ -1,0 +1,158 @@
+test_id,feature_area,test_type,test_level,priority,automation_candidate,test_description,preconditions,test_steps,expected_result,test_data_needs,tools_required,estimated_effort,dependencies
+"TEST-SMOKE-001","Core Framework","Smoke","System","Critical","Yes","Verify solution builds and applications start","Visual Studio and .NET 8 SDK are installed. All NuGet packages are restored.","1. Open the solution in Visual Studio.
+2. Build the entire solution.
+3. Start the WPF client application without debugging.
+4. Install and start the Windows Service.","1. The solution builds successfully with zero errors.
+2. The WPF client application launches and shows a placeholder main window.
+3. The Windows Service installs, starts, and remains in the 'Running' state.",NA,"Visual Studio, Windows Services MMC",2,"TASK-001, TASK-002, TASK-003"
+"TEST-UNIT-001","Security & Logging","Functional","Unit","Critical","Yes","Verify PHI Redaction Enricher masks PatientName property","Serilog is configured with the custom enricher.","1. Create a log event with a property { PatientName: ""John Doe"" }.
+2. Process the log event through the enricher.
+3. Render the log message.","The final log output contains 'PatientName: ""[REDACTED]""' instead of the actual name.","Log event templates with various PHI properties.","xUnit, Serilog",4,"TASK-004, TASK-011"
+"TEST-UNIT-002","Security & Logging","Functional","Unit","Critical","Yes","Verify PHI Redaction Enricher masks PatientID in formatted message","Serilog is configured with the custom enricher.","1. Create a log event with the message template ""Processing study for patient {PatientID}"" and the value ""12345"".
+2. Process the log event through the enricher.
+3. Render the log message.","The final log message is ""Processing study for patient [REDACTED]"".","Log event templates with various PHI properties.","xUnit, Serilog",2,"TASK-004, TASK-011"
+"TEST-UNIT-003","Security & Logging","Functional","Unit","Critical","Yes","Verify PHI Redaction Enricher does not redact non-PHI data","Serilog is configured with the custom enricher.","1. Create a log event with a message template ""User {Username} logged in"" and value ""admin"".
+2. Process the log event through the enricher.
+3. Render the log message.","The final log message remains ""User admin logged in"" without any redactions.","Log event templates with non-PHI properties.","xUnit, Serilog",2,"TASK-004, TASK-011"
+"TEST-INT-001","Security & Logging","Functional","Integration","Critical","Yes","Verify Serilog writes redacted PHI to Windows Event Log","The Windows Service is installed and running with Serilog configured.","1. Trigger a code path in the service that logs a message containing PHI (e.g., Patient Name).
+2. Open the Windows Event Viewer.
+3. Locate the event logged by the 'DICOM Service'.","The event message in the Event Viewer contains the redacted placeholder '[REDACTED]' instead of the actual PHI.",NA,"Windows Event Viewer",4,"TASK-028"
+"TEST-UNIT-004","Security & Authentication","Functional","Unit","Critical","Yes","Verify BCrypt utility correctly hashes a password","The BCrypt utility class is available.","1. Call `HashPassword(""correct-password"")` on the utility.
+2. Call `VerifyPassword(""correct-password"", generatedHash)` on the utility.","1. `HashPassword` returns a valid BCrypt hash string.
+2. `VerifyPassword` returns true.","A set of sample passwords.","xUnit, BCrypt.Net",2,"TASK-055"
+"TEST-UNIT-005","Security & Authentication","Functional","Unit","Critical","Yes","Verify BCrypt utility fails to verify an incorrect password","A valid password hash has been generated for ""correct-password"".","1. Call `VerifyPassword(""wrong-password"", validHash)` on the utility.","The `VerifyPassword` method returns false.","A valid password and its corresponding hash.","xUnit, BCrypt.Net",1,"TASK-055"
+"TEST-INT-002","Data Persistence","Functional","Integration","Critical","Yes","Verify Generic Repository can add and retrieve an entity","A test database is available and the DbContext is configured.","1. Instantiate `EfRepository<User>`.
+2. Create a new `User` entity.
+3. Call `AddAsync(newUser)`.
+4. Call `GetByIdAsync(newUser.Id)`.","The user retrieved from `GetByIdAsync` has the same properties as the user that was added.","A new User object.","xUnit, Testcontainers, EF Core",4,"TASK-049, TASK-052, TASK-053, TASK-054"
+"TEST-INT-003","Data Persistence","Functional","Integration","Critical","Yes","Verify custom repository method `GetUserByUsernameAsync` works correctly","A test database is available and a user with username 'testuser' exists.","1. Instantiate `UserRepository`.
+2. Call `GetUserByUsernameAsync(""testuser"")`.
+3. Call `GetUserByUsernameAsync(""nonexistentuser"")`.","1. The first call returns the correct `User` entity.
+2. The second call returns null.","User records in a test database.","xUnit, Testcontainers, EF Core",4,"TASK-053, TASK-054"
+"TEST-INT-004","IPC & Messaging","Functional","Integration","Critical","Yes","Verify RabbitMQ publisher sends a persistent message","A RabbitMQ test instance is running. The publisher service is configured.","1. Call the publisher service to send a critical command object.
+2. Use the RabbitMQ Management API/UI to inspect the message in the target queue.","The message exists in the queue and its 'delivery_mode' property is set to 2 (persistent).","A sample command object.","xUnit, Testcontainers, RabbitMQ.Client",6,"TASK-017, TASK-018"
+"TEST-INT-005","IPC & Messaging","Resilience","Integration","Critical","Yes","Verify RabbitMQ consumer base class handles connection loss and recovery","A RabbitMQ test instance is running. A test consumer hosted service is running.","1. While the consumer is running, stop the RabbitMQ service/container.
+2. Wait 30 seconds and restart the RabbitMQ service/container.
+3. Publish a new message to the queue.","The consumer service logs the connection loss, attempts to reconnect, and successfully re-establishes the connection. The new message is consumed after the connection is restored.","A test message.","xUnit, Testcontainers, RabbitMQ.Client",8,"TASK-019"
+"TEST-INT-006","IPC & Messaging","Functional","Integration","Critical","Yes","Verify RabbitMQ topology declaration creates all required objects","A clean RabbitMQ test instance is running.","1. Run the topology declaration service/task.
+2. Use the RabbitMQ Management API/UI to inspect the broker.","The main exchange, primary queue (durable=true), dead-letter exchange, and dead-letter queue all exist with the correct names and properties. The primary queue is correctly bound and configured with the DLX argument.","NA","Testcontainers, RabbitMQ Management UI",4,"TASK-020"
+"TEST-INT-007","IPC & Messaging","Functional","Integration","Critical","Yes","Verify Named Pipe client and server can communicate successfully","The test orchestrator can start both a pipe server and pipe client.","1. Start the Named Pipe server component in a background thread.
+2. Start the Named Pipe client.
+3. Call the client's `CheckServiceStatusAsync` method.","The method returns a 'success' status within the timeout period. The server logs a received 'PING' and sent 'PONG'.","NA","xUnit",4,"TASK-026, TASK-027, TASK-030"
+"TEST-INT-008","IPC & Messaging","Error Handling","Integration","Critical","Yes","Verify Named Pipe client gracefully handles a timeout","The test orchestrator starts only the pipe client.","1. Do not start the Named Pipe server.
+2. Start the Named Pipe client.
+3. Call the client's `CheckServiceStatusAsync` method.","The method throws or catches a `TimeoutException` and returns a 'failure' status. It does not crash the application.","NA","xUnit",4,"TASK-027, TASK-030"
+"TEST-INT-009","Deployment & Configuration","Smoke","Integration","Critical","No","Verify EF Core migration script is valid and applies correctly","A clean development PostgreSQL database is available.","1. Run `dotnet ef database update` from the command line.
+2. Connect to the database using a DB client (e.g., DBeaver, pgAdmin).
+3. Inspect the database schema.","The command completes successfully. All tables, columns, constraints, and indexes defined in the `ApplicationDbContext` are present in the database. The `__EFMigrationsHistory` table contains an entry for the migration.","A configured connection string to a PostgreSQL DB.","dotnet-ef, DBeaver",2,"TASK-029"
+"TEST-UNIT-006","Security & Configuration","Functional","Unit","Critical","Yes","Verify CredentialManagerService handles storing and retrieving secrets","The underlying Windows Credential Manager API is mocked.","1. Call `StoreSecretAsync(""test_secret"", ""password123"")`.
+2. Call `RetrieveSecretAsync(""test_secret"")`.","1. The mock's 'save' method is called with the correct parameters.
+2. The mock's 'retrieve' method is called, and the service returns ""password123"".","A mock implementation of the credential manager API.","xUnit, Moq",4,"TASK-014, TASK-015"
+"TEST-UNIT-007","Security & Configuration","Error Handling","Unit","Critical","Yes","Verify CredentialManagerService handles a non-existent secret","The underlying Windows Credential Manager API is mocked to return 'not found'.","1. Call `RetrieveSecretAsync(""non_existent_secret"")`.","The service returns null or throws a specific `SecretNotFoundException` without crashing.","A mock implementation of the credential manager API.","xUnit, Moq",2,"TASK-014, TASK-015"
+"TEST-INT-010","IPC & Messaging","Error Handling","Integration","Critical","Yes","Verify a poison message is routed to the Dead-Letter Queue (DLQ)","RabbitMQ is running with the full topology (main queue, DLX, DLQ) configured. A test consumer is set to fail processing 3 times.","1. Publish a message to the main processing queue.
+2. The test consumer receives the message, fails to process it, and sends a negative acknowledgement (NACK with requeue=false).
+3. Repeat step 2 two more times.
+4. Check the contents of the main queue and the DLQ.","After 3 failed attempts, the message is removed from the main queue and appears in the DLQ.","A test message payload.","xUnit, Testcontainers, RabbitMQ.Client",12,"TASK-015"
+"TEST-SYS-001","Authentication","Functional","System","Critical","Yes","Verify successful user login for Technician role","A test database with an active 'Technician' user ('techuser' / 'password123') exists.","1. Launch the application.
+2. On the login screen, enter 'techuser' for username and 'password123' for password.
+3. Click 'Login'.","The login screen closes. The main application window appears. The 'Administration' tab/button is not visible.","An active user account with the 'Technician' role.","Appium/WinAppDriver",4,"TASK-029, TASK-030, TASK-031, TASK-032"
+"TEST-SYS-002","Authentication","Functional","System","Critical","Yes","Verify successful user login for Administrator role","A test database with an active 'Administrator' user ('adminuser' / 'password123') exists.","1. Launch the application.
+2. On the login screen, enter 'adminuser' for username and 'password123' for password.
+3. Click 'Login'.","The login screen closes. The main application window appears. The 'Administration' tab/button is visible and enabled.","An active user account with the 'Administrator' role.","Appium/WinAppDriver",4,"TASK-029, TASK-030, TASK-031, TASK-032"
+"TEST-SYS-003","Authentication","Error Handling","System","Critical","Yes","Verify login failure with incorrect password","An active user 'techuser' exists.","1. Launch the application.
+2. On the login screen, enter 'techuser' for username and 'wrongpassword' for password.
+3. Click 'Login'.","An error message 'Invalid username or password.' is displayed. The user remains on the login screen. The password field is cleared.","An active user account.","Appium/WinAppDriver",2,"TASK-029, TASK-030, TASK-031, TASK-032"
+"TEST-SYS-004","Authentication","Error Handling","System","Critical","Yes","Verify login failure with disabled account","A user 'disableduser' exists but their account is marked as inactive/disabled in the database.","1. Launch the application.
+2. Enter 'disableduser' and their correct password.
+3. Click 'Login'.","An error message 'Your account has been disabled. Please contact an administrator.' is displayed. The user remains on the login screen.","A user account that is flagged as disabled.","Appium/WinAppDriver",4,"TASK-031, TASK-032"
+"TEST-INT-011","Authentication","Functional","Integration","Critical","Yes","Verify AuthenticationService logic for all scenarios","A test database contains users: active admin, active tech, disabled tech.","1. Instantiate `AuthenticationService` with mocked dependencies.
+2. Call `AuthenticateAsync` with correct admin credentials.
+3. Call with correct tech credentials.
+4. Call with incorrect password.
+5. Call with disabled user credentials.","1. Returns success result with Admin role.
+2. Returns success result with Technician role.
+3. Returns failure result.
+4. Returns failure result with 'disabled' reason.","User records for each state.","xUnit, Testcontainers, EF Core",8,"TASK-032"
+"TEST-UNIT-008","Authorization","Functional","Unit","Critical","Yes","Verify role-based visibility converter logic","The `IAuthorizationService` is mocked.","1. Set up the mock `IAuthorizationService` to return 'true' for 'AdminOnly' permission.
+2. Pass 'AdminOnly' to the converter.
+3. Set up the mock to return 'false' for 'AdminOnly' permission.
+4. Pass 'AdminOnly' to the converter.","1. The converter returns `Visibility.Visible`.
+2. The converter returns `Visibility.Collapsed`.","NA","xUnit, Moq",2,"TASK-035"
+"TEST-SECURITY-001","Authorization","Security","Integration","Critical","Yes","Verify backend authorization check prevents unauthorized action","A test `IUserService` and `UserSession` context are created.","1. Set the current user in the `UserSession` to a 'Technician'.
+2. Call the `CreateUserAsync` method on the `IUserService` (which is an admin-only action).","The method must throw an `UnauthorizedAccessException` before performing any logic. No user should be created.","A mock user session object.","xUnit",4,"TASK-037"
+"TEST-INT-012","Security & Data Persistence","Security","Integration","Critical","Yes","Verify pgcrypto correctly encrypts and decrypts PHI data","A test database with the `pgcrypto` extension enabled is running. The DbContext is configured for encryption.","1. Use EF Core to save a `Patient` entity with a name 'Sensitive Name'.
+2. Use a raw SQL query (`SELECT patientName FROM Patients...`) to read the value directly from the database.
+3. Use EF Core to fetch the same `Patient` entity by its ID.","1. The raw SQL query returns an encrypted bytea/string, not 'Sensitive Name'.
+2. The `Patient` entity fetched via EF Core has its `PatientName` property correctly decrypted to 'Sensitive Name'.","A patient record with PHI.","xUnit, Testcontainers, EF Core, Npgsql",10,"TASK-050, TASK-051"
+"TEST-INT-013","Security & Auditing","Functional","Integration","Critical","Yes","Verify AuditService correctly logs an event","A test database is available.","1. Call `IAuditService.LogEventAsync` with a new `AuditEventInfo` object.
+2. Query the `AuditLog` table in the database.","A new record exists in the `AuditLog` table that matches the data from the `AuditEventInfo` object.","An AuditEventInfo object.","xUnit, Testcontainers, EF Core",4,"TASK-082"
+"TEST-SYS-005","Administration","Functional","System","Critical","Yes","Verify Admin can create a new Technician user","Logged in as an Administrator.","1. Navigate to the Administration -> User Management page.
+2. Click 'Add User'.
+3. Enter a unique username, select 'Technician' role.
+4. Click 'Create'.","A success notification appears with a temporary password. The new user appears in the user list. An audit log entry for 'User Created' is generated.","An admin user account.","Appium/WinAppDriver",6,"TASK-081, TASK-080"
+"TEST-SYS-006","Administration","Error Handling","System","Critical","Yes","Verify Admin cannot delete the last Administrator account","Logged in as the only Administrator in the system.","1. Navigate to Administration -> User Management.
+2. Attempt to delete your own account or the only admin account.","The 'Delete' button for the last admin is disabled. If the action is attempted, an error message 'Cannot delete the last administrator account.' is displayed.","A test environment with only one Administrator user.","Appium/WinAppDriver",4,"TASK-081, TASK-080"
+"TEST-E2E-001","DICOM SCP","Functional","System","Critical","Yes","Verify E2E C-STORE ingestion pipeline","The Windows Service is running. All dependencies (PostgreSQL, RabbitMQ) are running.","1. Use a DICOM SCU tool to send a multi-file DICOM study to the service's configured AET/Port.
+2. Check the RabbitMQ queue for a new message.
+3. Wait for the message to be consumed.
+4. Query the PostgreSQL database.
+5. Check the configured final storage location.","1. The SCU tool receives a C-STORE success response.
+2. A `DicomStudyReceived` message appears and is consumed.
+3. New records for Patient, Study, Series, and Images appear in the database.
+4. The DICOM files exist in the correct hierarchical folder structure.","A sample multi-file DICOM study.","dcmtk/fo-dicom-net-samples, Testcontainers",16,"TASK-042"
+"TEST-PERF-001","DICOM SCP","Performance","Performance","High","Yes","Measure C-STORE SCP performance under load","The Windows Service is running in a release build on target hardware.","1. Configure a DICOM test tool to simulate 10 concurrent clients.
+2. Each client will send 10 small (single-image) studies to the SCP.
+3. Monitor the service's CPU/memory usage and the time taken for all transfers to complete.","The service must handle all 10 concurrent associations without crashing or timing out. CPU usage should not remain at 100% for an extended period after the load stops. UI on a client machine should remain responsive.","100 small DICOM studies.","dcmtk/fo-dicom-net-samples, Performance Monitor",16,"TASK-042"
+"TEST-SYS-007","DICOM SCU","Functional","System","Critical","Yes","Verify user can query a remote PACS and retrieve a study","A test PACS server is running and configured in the application. Logged in as a Technician.","1. Navigate to the Query/Retrieve page.
+2. Enter search criteria that matches a study on the test PACS. Click 'Search'.
+3. Select a study from the results. Click 'Retrieve'.
+4. Navigate to the local study list.","1. The search results grid populates with matching studies from the test PACS.
+2. A C-MOVE request is initiated. The study is transferred.
+3. The retrieved study now appears in the local study list.","A test DICOM PACS server (e.g., Orthanc) populated with sample data.","Orthanc, Appium/WinAppDriver",12,"TASK-043, TASK-044, TASK-045, TASK-046"
+"TEST-SYS-008","Security & Session","Functional","System","Critical","No","Verify automatic session lock and successful unlock","Logged in as any user. Inactivity timeout configured to 10 seconds for testing.","1. Log in to the application.
+2. Do not touch the mouse or keyboard for 11 seconds.
+3. A lock screen appears. Enter the correct password.
+4. Click 'Unlock'.","1. The lock screen overlay appears, obscuring the application.
+2. After entering the correct password, the lock screen disappears and the application is in the exact state it was before locking.","A valid user account.","Appium/WinAppDriver",8,"TASK-084, TASK-085, TASK-086"
+"TEST-PERF-002","Viewer Rendering","Performance","Performance","Critical","No","Measure initial load time for a large DICOM study","Application is running on a machine meeting recommended hardware specs.","1. Select a large DICOM study (e.g., 500MB, 500+ slices CT) from the study list.
+2. Start a stopwatch upon clicking 'Open'.
+3. Stop the stopwatch when the low-resolution preview image is first displayed and interactive.","The time to display the initial preview must be less than 3 seconds.","A large, multi-frame CT or MR study (>= 500MB).","Stopwatch, Visual Studio Profiler",8,"TASK-056, TASK-057, TASK-058"
+"TEST-PERF-003","Viewer Rendering","Performance","Performance","Critical","No","Measure viewer memory usage and stability","Application is running on a machine meeting recommended hardware specs.","1. Open Task Manager or PerfView to monitor application memory.
+2. Open a large study.
+3. Scroll through all slices multiple times. Apply zoom/pan/WWL.
+4. Close the study.
+5. Repeat steps 2-4 five times.","The application must not crash. Memory usage should increase when a study is opened, but it should return to a baseline (not the initial baseline, but stable) after the study is closed and garbage collection runs. There should not be a continual, unbounded increase in memory after each cycle.","A large, multi-frame CT or MR study (>= 500MB).","PerfView, Task Manager",12,"TASK-056"
+"TEST-SYS-009","Viewer Tools","Functional","System","High","Partial","Verify Window/Level tool functions correctly","A monochrome DICOM image (e.g., CT) is open in the viewer.","1. Activate the WW/WL tool.
+2. Click and drag the mouse up/down and left/right.","Dragging the mouse interactively and smoothly changes the brightness and contrast of the image in the viewport.","A CT or MR DICOM image.","Manual visual inspection",4,"TASK-059"
+"TEST-SYS-010","Licensing","Functional","System","Critical","Yes","Verify application enters grace period on API failure","The Odoo licensing API endpoint is blocked or unreachable.","1. Ensure the API is unreachable (e.g., via firewall rule or mock server returning 503).
+2. Launch the application.","The application launches into a fully functional mode. A notification is displayed informing the user that the license could not be verified and they are in a 72-hour grace period.","Mock licensing server or network manipulation tool.","Fiddler, Charles Proxy, Mock-server",8,"TASK-087, TASK-088, TASK-089"
+"TEST-SYS-011","Licensing","Functional","System","Critical","Yes","Verify application enters read-only mode when license is invalid","The Odoo licensing API is configured to return an 'invalid' status.","1. Configure the mock API to return a license status of 'invalid'.
+2. Launch the application.","The application launches, but features like 'Print', 'Export', and C-STORE SCP functionality are disabled. A prominent message indicates the application is in read-only mode.","Mock licensing server.","Mock-server, Appium/WinAppDriver",8,"TASK-087, TASK-088, TASK-089"
+"TEST-SYS-012","Printing","Functional","System","Critical","Partial","Verify E2E print job submission and processing","Windows Service is running. A physical or virtual printer is installed. Logged in as a Technician.","1. Open a study and select images.
+2. Go to the Print Preview screen. Configure a layout.
+3. Click 'Print'.
+4. Check the print queue of the selected printer.","1. A notification confirms the job was queued.
+2. The print job appears in the Windows printer queue and eventually prints.
+3. An entry for the print job is created in the database.","A virtual PDF printer (e.g., Microsoft Print to PDF).","Appium/WinAppDriver, Manual verification of output",12,"TASK-069, TASK-070, TASK-071"
+"TEST-SYS-013","PDF Export","Functional","System","Should Have","Partial","Verify PDF export with encryption","Logged in as a Technician.","1. Configure a layout in Print Preview.
+2. Click 'Export to PDF'.
+3. In the options dialog, specify a password.
+4. Save the file.
+5. Attempt to open the generated PDF file.","1. The file requires the password to open.
+2. Once opened, the content and layout of the PDF match the print preview.
+3. The file properties indicate PDF/A compliance.","A valid user account.","Adobe Acrobat Reader, Appium/WinAppDriver",8,"TASK-072, TASK-073, TASK-074"
+"TEST-SYS-014","Deployment","Functional","System","Critical","No","Verify MSIX installer registers and starts the service","A clean Windows 10/11 machine without the application installed.","1. Run the signed MSIX installer package.
+2. Complete the installation wizard.
+3. Open the Windows Services console (services.msc).
+4. Launch the application from the start menu.","1. The application installs successfully.
+2. The 'DICOM Service' is listed, its Startup Type is 'Automatic', and its Status is 'Running'.
+3. The client application launches correctly.","A signed MSIX package.","Clean Windows VM",4,"TASK-090, TASK-091, TASK-092"
+"TEST-SYS-015","Deployment","Functional","System","Critical","No","Verify first-run prerequisite check for PostgreSQL","Running the application for the first time. PostgreSQL is running but the `pgcrypto` extension is not enabled.","1. Launch the application.
+2. The 'First Run Setup' screen appears.
+3. Enter the correct PostgreSQL connection details.
+4. Click 'Test Connection'.","An error message is displayed specifically stating that the 'pgcrypto' extension is required and could not be found. The setup cannot be completed.","A PostgreSQL instance without pgcrypto enabled.","Appium/WinAppDriver",6,"TASK-093, TASK-094, TASK-095"
+"TEST-REGRESSION-001","Core Functionality","Regression","System","Critical","Yes","Execute full automated regression suite","A new build is deployed to the staging environment.","1. Trigger the automated E2E test suite (Appium/WinAppDriver).
+2. The suite executes tests covering: Login (all roles), C-STORE, C-FIND/C-MOVE, User Creation, PACS configuration.","The test suite completes with a pass rate of 100% for all critical path scenarios. Any failures are immediately triaged as potential regressions.","Full suite of test data (users, DICOM files, test PACS).","CI/CD platform (e.g., Azure DevOps, Jenkins), Appium/WinAppDriver",16,"TASK-096"
+"TEST-PERF-004","System Performance","Performance","Performance","Critical","No","Execute performance benchmark suite","The application is deployed to a dedicated test environment matching the recommended hardware specifications.","1. Execute the C-STORE SCP load test (TEST-PERF-001).
+2. Execute the viewer load time test (TEST-PERF-002).
+3. Measure UI responsiveness for common actions while the service is under load.","All previously established performance targets must be met. (Launch < 3s, Study Load < 3s, UI response < 500ms). Any degradation of more than 10% from the baseline is flagged for investigation.","Full suite of performance test data.","Visual Studio Profiler, PerfView, dcmtk",24,"TASK-096"

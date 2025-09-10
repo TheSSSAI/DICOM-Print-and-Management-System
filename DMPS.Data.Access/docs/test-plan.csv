@@ -1,0 +1,170 @@
+test_id,feature_area,test_type,test_level,priority,automation_candidate,test_description,preconditions,test_steps,expected_result,test_data_needs,tools_required,estimated_effort,dependencies
+TEST-F01-INT-01,Core Architecture,Functional,Integration,Critical,Yes,"Verify WPF DI Host can resolve the MainWindow","The solution is built successfully.","1. Create a test host builder that mimics the App.xaml.cs configuration.
+2. Build the host.
+3. Request the MainWindow instance from the DI container's service provider.
+4. Assert that the instance is not null.","The DI container successfully resolves and returns a non-null instance of the MainWindow.",N/A,"xUnit, Microsoft.Extensions.Hosting",2h,TASK-002
+TEST-F01-INT-02,Core Architecture,Functional,Integration,Critical,Yes,"Verify Windows Service DI Host can resolve all IHostedService implementations","The solution is built successfully.","1. Create a test host builder that mimics the Program.cs configuration for the service.
+2. Build the host.
+3. Request all registered `IHostedService` instances from the DI container.
+4. Assert that the collection of services is not empty and all expected services are present.","The DI container successfully resolves all registered `IHostedService` instances without throwing exceptions.",N/A,"xUnit, Microsoft.Extensions.Hosting",3h,TASK-003
+TEST-F02-INT-01,Core Architecture,Functional,Integration,Critical,High Priority,"Verify RabbitMQ message persistence and queue durability","A RabbitMQ instance is running via Testcontainers.","1. Programmatically declare a durable queue.
+2. Publish a message to the queue with the 'persistent' flag set.
+3. Stop and restart the RabbitMQ container.
+4. Start a consumer for the queue.
+5. Assert that the consumer receives the original message.","The message survives the broker restart and is successfully delivered to the consumer, confirming durability and persistence settings are effective.",Test message object,"xUnit, Testcontainers, RabbitMQ.Client",4h,US-F02
+TEST-F02-INT-02,Core Architecture,Functional,Integration,Critical,High Priority,"Verify RabbitMQ Dead-Letter Queue (DLQ) mechanism","A RabbitMQ instance is running via Testcontainers. A main queue is configured with a DLX/DLQ.",1. Publish a message to the main queue.
+2. Start a consumer that is programmed to fail processing (e.g., always throws an exception).
+3. In the consumer, reject the message with `requeue=false`.
+4. After rejection, attempt to consume a message from the DLQ.
+5. Assert that the original message is now in the DLQ.","The rejected message is correctly routed from the main queue to the Dead-Letter Queue.",Test message object,"xUnit, Testcontainers, RabbitMQ.Client",4h,TASK-008
+TEST-F02-INT-03,Core Architecture,Functional,Integration,High,Yes,"Verify RabbitMQ connection resiliency","A RabbitMQ instance is running via Testcontainers. The connection management service is initialized.","1. Establish a connection to RabbitMQ.
+2. Stop the RabbitMQ container.
+3. Wait for a short period (e.g., 10 seconds).
+4. Start the RabbitMQ container again.
+5. Assert that the connection management service successfully re-establishes the connection automatically.","The service detects the lost connection and successfully reconnects using its retry logic without manual intervention.",N/A,"xUnit, Testcontainers, Polly",4h,TASK-005
+TEST-F03-INT-01,Core Architecture,Functional,Integration,Critical,Yes,"Verify successful Named Pipe synchronous communication","The application is in a state where the test can start a Named Pipe server thread.","1. Start the Named Pipe server in a background thread.
+2. From the main test thread, initialize the Named Pipe client and connect to the server.
+3. Client sends a 'PING' message.
+4. Assert that the client receives a 'PONG' response from the server within 500ms.","The client and server communicate successfully, exchanging the PING/PONG messages as expected.",N/A,"xUnit, System.IO.Pipes",2h,US-F03
+TEST-F03-INT-02,Core Architecture,Non-Functional,Integration,Critical,Yes,"Verify Named Pipe client timeout on unavailable server","No Named Pipe server is running on the expected pipe name.","1. Initialize the Named Pipe client with a short timeout (e.g., 1 second).
+2. Attempt to connect to the non-existent server pipe.
+3. Assert that a `TimeoutException` is thrown.
+4. Assert that the application does not hang.","The client connection attempt fails with a `TimeoutException` instead of freezing, confirming graceful error handling.",N/A,"xUnit, System.IO.Pipes",2h,TASK-011
+TEST-001-SEC-01,Security & Compliance,Security,Unit,Critical,Yes,"Verify BCrypt password hashing and verification","BCrypt utility class is available.","1. Hash a known plaintext password using `HashPassword`.
+2. Call `VerifyPassword` with the original plaintext password and the generated hash.
+3. Assert that verification returns `true`.
+4. Call `VerifyPassword` with an incorrect plaintext password and the generated hash.
+5. Assert that verification returns `false`.","The `VerifyPassword` method correctly returns true for the correct password and false for an incorrect one, confirming the hashing algorithm works as expected.",Plaintext test password,"xUnit, BCrypt.Net-Next",1h,TASK-014
+TEST-001-INT-01,Security & Compliance,Functional,Integration,Critical,Yes,"Verify successful user login with valid credentials","Test database contains an active user with a known username and password.","1. Call `AuthenticationService.LoginAsync` with the correct username and password.
+2. Assert that the method returns a success result.
+3. Assert that the result contains a user session object with the correct user ID and role.","The service validates the credentials against the database and returns a successful session object.",Active 'Technician' user account,"xUnit, EF Core (Test DB)",2h,TASK-017
+TEST-001-INT-02,Security & Compliance,Functional,Integration,Critical,Yes,"Verify login failure with incorrect password","Test database contains an active user with a known username.","1. Call `AuthenticationService.LoginAsync` with the correct username and an incorrect password.
+2. Assert that the method returns a failure result.
+3. Assert that the error message is generic (e.g., 'Invalid username or password').","The service rejects the login attempt and returns a generic failure message.",Active 'Technician' user account,"xUnit, EF Core (Test DB)",2h,TASK-017
+TEST-001-INT-03,Security & Compliance,Functional,Integration,Critical,Yes,"Verify login failure with a disabled account","Test database contains a user account marked as disabled, with a known username and password.","1. Call `AuthenticationService.LoginAsync` with the disabled user's correct credentials.
+2. Assert that the method returns a failure result.
+3. Assert that the error message is specific to the account being disabled.","The service prevents login for a disabled account and provides a specific reason for the failure.",Disabled 'Technician' user account,"xUnit, EF Core (Test DB)",2h,TASK-017
+TEST-001-E2E-01,Security & Compliance,Functional,System,Critical,High Priority,"E2E test of successful user login","The application is installed, and an active 'Admin' user exists.","1. Launch the application.
+2. Enter the 'Admin' user's username in the username field.
+3. Enter the 'Admin' user's password in the password field.
+4. Click the 'Login' button.
+5. Assert that the login window closes and the main application window is displayed.
+6. Assert that admin-specific UI elements (e.g., 'Administration' tab) are visible.","The user can successfully log in and is presented with the main application UI corresponding to their role.",Active 'Admin' user account,"Appium, WinAppDriver",4h,TASK-017
+TEST-002-E2E-01,Security & Compliance,Functional,System,Critical,High Priority,"Verify Technician role restrictions in UI","The application is installed, and an active 'Technician' user exists.","1. Log in as the 'Technician' user.
+2. Navigate through the main application areas.
+3. Assert that the 'Administration' tab/button is not visible.
+4. Open a study and navigate to the metadata view.
+5. Assert that the 'Edit Metadata' button is disabled or not visible.","The UI correctly hides or disables administrative functions for a user with the 'Technician' role.",Active 'Technician' user account, Sample DICOM study,"Appium, WinAppDriver",4h,TASK-021
+TEST-002-E2E-02,Security & Compliance,Functional,System,Critical,High Priority,"Verify Administrator role access in UI","The application is installed, and an active 'Admin' user exists.","1. Log in as the 'Admin' user.
+2. Navigate to the main application areas.
+3. Assert that the 'Administration' tab/button is visible and accessible.
+4. Open a study and navigate to the metadata view.
+5. Assert that the 'Edit Metadata' button is enabled and clickable.","The UI correctly enables all administrative functions for a user with the 'Administrator' role.",Active 'Admin' user account, Sample DICOM study,"Appium, WinAppDriver",4h,TASK-021
+TEST-002-INT-01,Security & Compliance,Security,Integration,Critical,Yes,"Verify backend rejection of unauthorized action","An authenticated session for a 'Technician' user is established in the test context.","1. Directly invoke the service method responsible for saving DICOM metadata edits (bypassing the UI).
+2. Pass the 'Technician' user's security context with the call.
+3. Assert that the service method throws an `AuthorizationException` or returns a 'Forbidden' status.","The backend service layer correctly rejects an attempt by a non-admin user to perform an admin-only action.",Technician user security context,"xUnit, Moq",3h,TASK-020
+TEST-F04-U-01,Security & Compliance,Security,Unit,Critical,Yes,"Verify PHI redaction for sensitive log properties","The Serilog PHI redaction enricher is configured.","1. Create a log message with several properties, including 'PatientName', 'PatientID', and a non-sensitive property 'Operation'.
+2. Pass the log event through the enricher.
+3. Inspect the properties of the resulting log event.
+4. Assert that the values for 'PatientName' and 'PatientID' have been replaced with a redaction placeholder (e.g., '***').
+5. Assert that the value for 'Operation' remains unchanged.","The enricher correctly identifies and redacts PHI-containing properties while leaving non-sensitive properties untouched.",Log message with PHI,"xUnit, Serilog",3h,TASK-037
+TEST-F04-INT-01,Security & Compliance,Functional,Integration,High,Yes,"Verify correlation ID propagation through RabbitMQ","A RabbitMQ instance is running via Testcontainers. The publisher and consumer are configured.","1. In the publisher, generate a unique correlation ID.
+2. Add the correlation ID to the message header.
+3. Publish the message.
+4. In the consumer, receive the message and extract the correlation ID from the header.
+5. Add the correlation ID to the consumer's logging context.
+6. Assert that the consumer's log output for this message contains the original correlation ID.","The correlation ID is successfully passed from the client/publisher to the service/consumer and included in all related log entries, enabling distributed tracing.",N/A,"xUnit, Testcontainers, Serilog",4h,TASK-037
+TEST-003-E2E-01,Security & Compliance,Functional,System,Critical,Manual Only,"Verify automatic session lock on inactivity","User is logged into the application. The inactivity timeout is temporarily configured to 30 seconds for testing.","1. Log into the application.
+2. Perform an action (e.g., open a study).
+3. Do not touch the mouse or keyboard for 30 seconds.
+4. Observe the application.","The application displays the modal session lock screen, obscuring the underlying UI.",Technician or Admin user,"Manual Testing",0.5h,TASK-026
+TEST-003-E2E-02,Security & Compliance,Functional,System,Critical,Manual Only,"Verify successful session unlock and state preservation","The application session is locked. A study was open before the lock.","1. On the session lock screen, enter the correct password for the logged-in user.
+2. Click 'Unlock'.
+3. Observe the application state.","The lock screen is dismissed, and the application is restored to its exact previous state, with the study still open.",Technician or Admin user,"Manual Testing",0.5h,TASK-026
+TEST-003-U-01,Security & Compliance,Functional,Unit,Critical,Yes,"Verify session termination after multiple failed unlock attempts","The SessionLockViewModel is instantiated in a test. A mock AuthenticationService is injected.","1. Simulate 4 consecutive calls to the `UnlockCommand` with an incorrect password.
+2. Verify the failure counter in the ViewModel is 4.
+3. Simulate a 5th call to the `UnlockCommand` with an incorrect password.
+4. Assert that a 'Logout' or 'TerminateSession' event is raised by the ViewModel.","The ViewModel correctly tracks failed attempts and triggers a session termination event after the 5th consecutive failure.",N/A,"xUnit, Moq",2h,TASK-026
+TEST-008-E2E-01,DICOM Functionality,Functional,System,Critical,High Priority,"Verify end-to-end C-STORE SCP workflow","The Windows Service, PostgreSQL, and RabbitMQ are all running. A DICOM test tool is available.","1. Use a DICOM SCU tool (e.g., DCMTK's `storescu`) to send a DICOM study to the application's C-STORE SCP listener.
+2. Wait for a reasonable time for processing (e.g., 10 seconds).
+3. Query the PostgreSQL database to verify that records for the Patient, Study, Series, and Image have been created.
+4. Check the configured file storage location to verify that the DICOM file has been saved in the correct hierarchical path (`PatientID/StudyUID/...`).","The system successfully receives, processes, and stores the DICOM study, with metadata in the database and the file on the filesystem.",Sample DICOM study (CT or MR),"DCMTK or fo-dicom SCU, psql",8h,TASK-043
+TEST-010-PERF-01,DICOM Functionality,Performance,System,Critical,Manual Only,"Measure DICOM study load time","The application is installed on a machine meeting the recommended hardware specifications.","1. Start a stopwatch.
+2. In the application, double-click to open a DICOM study that is ~500MB in size.
+3. Stop the stopwatch as soon as the image is interactively displayed (even if low-res preview).
+4. Record the time.
+5. Repeat 5 times and average the result.","The average study load time is less than 3 seconds, meeting the performance target from REQ-1-077.",DICOM CT study (~500MB),"Performance Profiler (optional)",1h,TASK-054
+TEST-010-PERF-02,DICOM Functionality,Performance,System,Critical,Manual Only,"Measure multi-frame series scrolling performance","The application is installed on target hardware.","1. Open a multi-frame DICOM series (e.g., a CT study with 500+ slices).
+2. Use the mouse wheel to scroll through the entire series from beginning to end and back.
+3. Observe the visual smoothness of the scrolling.
+4. Optionally, use a performance profiler to measure the frame rate.","Scrolling through the series is smooth, without noticeable lag or stuttering (target >30fps).",Multi-frame DICOM CT study,"Performance Profiler (optional)",2h,TASK-054
+TEST-010-STAB-01,DICOM Functionality,Non-Functional,System,Critical,Manual Only,"DICOM viewer stability and memory leak test","The application is installed on a test machine.","1. Note the application's initial memory usage from Task Manager.
+2. Repeatedly perform a cycle of: open a large study, use all viewer tools (zoom, pan, WWL, rotate), close the study.
+3. Repeat the cycle for an extended period (e.g., 30 minutes or 100 cycles).
+4. After the final cycle, force garbage collection if possible, and note the final memory usage.","The application remains stable without crashing. Memory usage returns to near its initial state after closing all studies, indicating no major memory leaks.",Large DICOM study,"Memory Profiler",4h,TASK-054
+TEST-009-INT-01,DICOM Functionality,Functional,Integration,Critical,Yes,"Verify DICOM C-ECHO verification against test PACS","A test PACS server (e.g., Orthanc) is running via Testcontainers.","1. Configure the `DicomScuService` with the connection details for the test PACS.
+2. Call the `VerifyAsync` (C-ECHO) method.
+3. Assert that the method returns a success status.","The service successfully sends a C-ECHO request to the test PACS and receives a success response, confirming basic DICOM connectivity.",N/A,"xUnit, Testcontainers, Orthanc, fo-dicom",3h,TASK-048
+TEST-009-INT-02,DICOM Functionality,Functional,Integration,Critical,Yes,"Verify DICOM C-FIND query against test PACS","A test PACS server is running and has been pre-loaded with test DICOM data.","1. Call the `DicomScuService.FindAsync` method with search criteria that match the test data (e.g., a specific Patient ID).
+2. Assert that the method returns a list of results.
+3. Assert that the returned results match the expected study details from the test data.","The service successfully queries the remote PACS and correctly parses the C-FIND response into a list of study results.",Sample DICOM studies,"xUnit, Testcontainers, Orthanc, fo-dicom",5h,TASK-048
+TEST-009-INT-03,DICOM Functionality,Functional,Integration,Critical,Yes,"Verify DICOM C-MOVE retrieval from test PACS","A test PACS is running with test data. A local test C-STORE SCP listener is started.","1. Call the `DicomScuService.MoveAsync` method, requesting a study from the test PACS and specifying the local test SCP as the destination.
+2. The local test SCP listens for an incoming study.
+3. Assert that the `MoveAsync` method completes successfully.
+4. Assert that the local test SCP receives the correct DICOM files.","The service successfully initiates a C-MOVE request, and the remote PACS successfully sends the study to the specified local destination.",Sample DICOM study,"xUnit, Testcontainers, Orthanc, fo-dicom",6h,TASK-048
+TEST-006-E2E-01,Administration & Configuration,Functional,System,Critical,High Priority,"Verify user creation, role edit, and deletion workflow","The application is installed and an 'Admin' user exists.","1. Log in as an Admin.
+2. Navigate to User Management.
+3. Click 'Add User', create a new user 'testtech' with role 'Technician'.
+4. Verify 'testtech' appears in the user list.
+5. Log out. Log in as 'testtech' to confirm the account works. Log out.
+6. Log in as Admin again. Edit 'testtech' and change their role to 'Administrator'.
+7. Click 'Delete' for user 'testtech' and confirm.
+8. Verify 'testtech' is removed from the list.
+9. Verify all actions (Create, Edit, Delete) are recorded in the Audit Trail.","An admin can successfully perform the full user lifecycle (Create, Read, Update, Delete) and all actions are correctly audited.",Admin user account,"Appium, WinAppDriver",6h,TASK-073
+TEST-005-INT-01,Security & Compliance,Functional,Integration,High,Yes,"Verify password policy validation logic","The PasswordPolicyService is configured with a specific policy (e.g., min length 12, requires symbol).","1. Call `PasswordPolicyService.ValidatePassword` with a password that is too short ('short').
+2. Assert that validation fails with a specific 'length' error.
+3. Call the service with a password that meets length but lacks a symbol ('longpassword').
+4. Assert that validation fails with a specific 'complexity' error.
+5. Call the service with a valid password ('longp@ssword123').
+6. Assert that validation succeeds.","The password policy validation logic correctly enforces all configured rules.",N/A,"xUnit, Moq",3h,TASK-028b
+TEST-016-INT-01,Administration & Configuration,Functional,Integration,High,Yes,"Verify System Health data transmission via Named Pipes","The Windows Service is running with a mock Health Probe that returns a known health status DTO.","1. In a test, initialize the `NamedPipeClient`.
+2. Call the client method to request the health status from the service.
+3. Receive and deserialize the response.
+4. Assert that the deserialized DTO matches the known health status being returned by the mock probe in the service.","The health status data is correctly serialized, sent over the named pipe by the service, and deserialized by the client.",Sample Health Status DTO,"xUnit, Moq, System.IO.Pipes",3h,TASK-076
+TEST-011-INT-01,DICOM Functionality,Functional,Integration,High,Yes,"Verify DICOM GSPS object creation","A set of test annotation data is created.","1. Call the `GspsService` with the test annotation data.
+2. The service generates a `DicomFile` object representing the GSPS.
+3. Use a DICOM validation tool or library to parse the generated `DicomFile`.
+4. Assert that the file is a valid DICOM object and contains the expected annotation data in the correct DICOM tags (e.g., `GraphicAnnotationSequence`).","The service correctly creates a structurally valid GSPS DICOM object containing the provided annotation data.",Test annotation objects,"xUnit, fo-dicom",6h,TASK-060
+TEST-013-E2E-01,Printing & Exporting,Functional,System,High,Medium Priority,"Verify asynchronous printing to a virtual printer","The application is installed and the 'Microsoft XPS Document Writer' printer is available.","1. Log in and open a study.
+2. Open the Print Preview window and configure a layout.
+3. Select 'Microsoft XPS Document Writer' as the printer.
+4. Click 'Print' and provide a path for the output XPS file.
+5. Wait for the background processing to complete.
+6. Check the `PrintJob` status in the database (or a future Print Queue UI) and verify it is 'Completed'.
+7. Verify that the XPS file has been created at the specified path and is not empty.","The print job is successfully submitted, processed by the background service, and results in a valid output file from the virtual printer.",Sample DICOM study,"Appium, WinAppDriver (optional), Manual validation of XPS file",6h,TASK-067
+TEST-014-INT-01,Printing & Exporting,Functional,Integration,High,Yes,"Verify secure PDF export generation and validation","The background PDF generation service is running.","1. Submit a `PdfExportJob` message to the RabbitMQ queue, including a password for encryption.
+2. The test waits for the PDF file to be generated by the consumer.
+3. Assert that the output PDF file exists.
+4. Use a PDF library to try and open the file without a password; assert that this fails.
+5. Use the library to open the file with the correct password; assert that this succeeds.
+6. Use a PDF validation library to check for PDF/A-3 compliance.","The PDF consumer correctly generates a password-protected, PDF/A-3 compliant file.",N/A,"xUnit, RabbitMQ, QuestPDF, iTextSharp (for validation)",5h,TASK-070
+TEST-017-MAN-01,Deployment & Documentation,Functional,System,Critical,Manual Only,"Verify successful application installation","A clean Windows 11 machine is available. The signed MSIX installer is available.","1. Run the MSIX installer.
+2. Follow the on-screen prompts, providing valid config details if prompted.
+3. Complete the installation.
+4. Check the Windows Start Menu for the application icon.
+5. Open the Windows Services console (`services.msc`).
+6. Verify that the 'DICOM Service' is listed, its status is 'Running', and its startup type is 'Automatic'.","The installer successfully deploys the client application and installs and starts the background Windows Service.",Valid PostgreSQL and RabbitMQ connection details,"Manual Testing on clean VM",2h,TASK-080
+TEST-017-MAN-02,Deployment & Documentation,Functional,System,Critical,Manual Only,"Verify clean application uninstallation","The application is successfully installed on a clean Windows 10 machine.","1. Open Windows 'Apps & Features'.
+2. Find the application in the list and select 'Uninstall'.
+3. Follow the prompts to complete uninstallation.
+4. Verify the application is removed from the 'Apps & Features' list.
+5. Verify the application's installation directory is removed.
+6. Open the Windows Services console and verify that the 'DICOM Service' is no longer listed.","The uninstaller completely removes all application components, including the registered Windows Service.",N/A,"Manual Testing on clean VM",1h,TASK-080
+TEST-018-INT-01,Deployment & Documentation,Functional,Integration,Critical,Yes,"Verify prerequisite validator with invalid database configuration","A PostgreSQL instance is running via Testcontainers, but it does NOT have the `pgcrypto` extension installed.","1. Run the prerequisite validation logic from the configuration utility.
+2. Provide the connection details for the test database.
+3. Assert that the validation fails.
+4. Assert that the specific error message indicates that the 'pgcrypto' extension is missing.","The validator correctly identifies that the required `pgcrypto` extension is not enabled in the target database.",PostgreSQL DB without pgcrypto,"xUnit, Testcontainers",3h,TASK-085
+TEST-018-SYS-01,Deployment & Documentation,Functional,System,Critical,Manual Only,"Verify installer rollback on prerequisite check failure","A clean Windows VM is available. The MSIX installer is available.","1. Run the MSIX installer.
+2. When the configuration utility launches, enter incorrect database credentials.
+3. Click 'Save & Continue' or similar. The utility should show an error and exit.
+4. Observe the MSIX installer behavior.","The MSIX installer detects the failure from the configuration utility and rolls back the installation, leaving the system in a clean state.",Invalid PostgreSQL connection details,"Manual Testing on clean VM",2h,US-018
