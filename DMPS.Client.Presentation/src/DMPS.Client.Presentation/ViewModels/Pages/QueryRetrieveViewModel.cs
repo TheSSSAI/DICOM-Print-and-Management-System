@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DMPS.Client.Application.Services;
+using DMPS.Client.Application.DTO;
+using DMPS.Client.Application.Interfaces;
 using DMPS.Client.Presentation.Services.Interfaces;
 using DMPS.Client.Presentation.ViewModels.Base;
-using DMPS.Shared.Core.Models;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -13,95 +13,89 @@ namespace DMPS.Client.Presentation.ViewModels.Pages
 {
     public sealed partial class QueryRetrieveViewModel : ViewModelBase
     {
-        private readonly IPacsService _pacsService;
-        private readonly IDialogService _dialogService;
+        private readonly IDicomScuService _dicomScuService;
+        private readonly IPacsConfigurationService _pacsConfigService;
         private readonly INotificationService _notificationService;
+        private readonly IDialogService _dialogService;
+
+        public ObservableCollection<PacsConfigurationDto> PacsConfigurations { get; } = new();
+        public ObservableCollection<DicomQueryResultDto> QueryResults { get; } = new();
 
         [ObservableProperty]
-        private ObservableCollection<PacsConfiguration> _pacsNodes = new();
-        
+        private PacsConfigurationDto? _selectedPacs;
+
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(QueryCommand))]
-        [NotifyCanExecuteChangedFor(nameof(RetrieveCommand))]
-        private PacsConfiguration? _selectedPacsNode;
-        
+        private string? _patientIdFilter;
+
         [ObservableProperty]
-        private string? _patientId;
-        
+        private DateTime? _studyDateFilter;
+
         [ObservableProperty]
-        private DateTime? _studyDate = DateTime.Today;
-        
-        [ObservableProperty]
-        private ObservableCollection<PacsStudyResult> _queryResults = new();
-        
-        [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(RetrieveCommand))]
-        private PacsStudyResult? _selectedStudyResult;
-        
+        private string? _modalityFilter;
+
         [ObservableProperty]
         private bool _isQuerying;
 
         [ObservableProperty]
         private bool _isRetrieving;
-        
+
         public QueryRetrieveViewModel(
-            IPacsService pacsService,
-            IDialogService dialogService,
-            INotificationService notificationService)
+            IDicomScuService dicomScuService,
+            IPacsConfigurationService pacsConfigService,
+            INotificationService notificationService,
+            IDialogService dialogService)
         {
-            _pacsService = pacsService;
-            _dialogService = dialogService;
+            _dicomScuService = dicomScuService;
+            _pacsConfigService = pacsConfigService;
             _notificationService = notificationService;
+            _dialogService = dialogService;
         }
 
-        [RelayCommand]
-        private async Task LoadPacsNodesAsync()
+        [AsyncRelayCommand]
+        private async Task LoadPacsConfigurationsAsync()
         {
             try
             {
-                var result = await _pacsService.GetPacsConfigurationsAsync();
-                if (result.IsSuccess && result.Value is not null)
+                PacsConfigurations.Clear();
+                var configs = await _pacsConfigService.GetPacsConfigurationsAsync();
+                foreach (var config in configs)
                 {
-                    PacsNodes = new ObservableCollection<PacsConfiguration>(result.Value);
-                    SelectedPacsNode = PacsNodes.FirstOrDefault();
+                    PacsConfigurations.Add(config);
                 }
+                SelectedPacs = PacsConfigurations.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowMessageBoxAsync("Error", $"Failed to load PACS configurations: {ex.Message}");
+                // log
+                await _dialogService.ShowMessageAsync("Error", "Could not load PACS configurations.");
             }
         }
-        
-        [RelayCommand(CanExecute = nameof(CanQuery))]
+
+        [AsyncRelayCommand(CanExecute = nameof(CanQuery))]
         private async Task QueryAsync()
         {
             IsQuerying = true;
             QueryResults.Clear();
             try
             {
-                var query = new PacsQueryParameters
+                var criteria = new DicomQueryCriteria
                 {
-                    PatientId = PatientId,
-                    StudyDate = StudyDate
+                    PatientId = PatientIdFilter,
+                    StudyDate = StudyDateFilter,
+                    Modality = ModalityFilter
                 };
 
-                var result = await _pacsService.QueryStudiesAsync(SelectedPacsNode!.Id, query);
-                if (result.IsSuccess && result.Value is not null)
+                var results = await _dicomScuService.QueryStudiesAsync(SelectedPacs!, criteria);
+                foreach (var result in results)
                 {
-                    QueryResults = new ObservableCollection<PacsStudyResult>(result.Value);
-                    if (!QueryResults.Any())
-                    {
-                        _notificationService.ShowInformation("No Results", "Your query returned no matching studies.");
-                    }
+                    QueryResults.Add(result);
                 }
-                else
-                {
-                    await _dialogService.ShowMessageBoxAsync("Query Failed", result.Error ?? "An unknown error occurred during the C-FIND operation.");
-                }
+                _notificationService.Show("Query Complete", $"{QueryResults.Count} studies found.");
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowMessageBoxAsync("Query Error", $"A critical error occurred: {ex.Message}");
+                // log
+                await _dialogService.ShowMessageAsync("Query Failed", $"An error occurred while querying PACS: {ex.Message}");
             }
             finally
             {
@@ -109,27 +103,33 @@ namespace DMPS.Client.Presentation.ViewModels.Pages
             }
         }
 
-        private bool CanQuery() => SelectedPacsNode is not null && !IsQuerying;
+        private bool CanQuery()
+        {
+            return SelectedPacs != null && !IsQuerying && !IsRetrieving;
+        }
 
-        [RelayCommand(CanExecute = nameof(CanRetrieve))]
-        private async Task RetrieveAsync()
+        [AsyncRelayCommand(CanExecute = nameof(CanRetrieve))]
+        private async Task RetrieveAsync(DicomQueryResultDto resultToRetrieve)
         {
             IsRetrieving = true;
             try
             {
-                var result = await _pacsService.RetrieveStudyAsync(SelectedPacsNode!.Id, SelectedStudyResult!.StudyInstanceUid);
+                _notificationService.Show("Retrieve Started", $"Retrieving study {resultToRetrieve.StudyInstanceUid}...");
+                var result = await _dicomScuService.MoveStudyAsync(SelectedPacs!, resultToRetrieve.StudyInstanceUid);
+
                 if (result.IsSuccess)
                 {
-                    _notificationService.ShowSuccess("Retrieve Started", "The selected study is being retrieved to local storage. You will be notified on completion.");
+                    _notificationService.Show("Retrieve Complete", $"Study {resultToRetrieve.StudyInstanceUid} retrieved successfully.");
                 }
                 else
                 {
-                    await _dialogService.ShowMessageBoxAsync("Retrieve Failed", result.Error ?? "An unknown error occurred during the C-MOVE operation.");
+                    await _dialogService.ShowMessageAsync("Retrieve Failed", $"Failed to retrieve study: {result.ErrorMessage}");
                 }
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowMessageBoxAsync("Retrieve Error", $"A critical error occurred: {ex.Message}");
+                // log
+                await _dialogService.ShowMessageAsync("Retrieve Error", $"An unexpected error occurred during retrieve: {ex.Message}");
             }
             finally
             {
@@ -137,6 +137,14 @@ namespace DMPS.Client.Presentation.ViewModels.Pages
             }
         }
         
-        private bool CanRetrieve() => SelectedPacsNode is not null && SelectedStudyResult is not null && !IsRetrieving;
+        private bool CanRetrieve(DicomQueryResultDto? result)
+        {
+            return result != null && SelectedPacs != null && !IsQuerying && !IsRetrieving;
+        }
+
+        public async Task OnNavigatedToAsync()
+        {
+            await LoadPacsConfigurationsAsync();
+        }
     }
 }

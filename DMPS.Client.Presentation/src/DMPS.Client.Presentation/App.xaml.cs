@@ -5,12 +5,13 @@ using DMPS.Client.Presentation.ViewModels;
 using DMPS.Client.Presentation.ViewModels.Controls;
 using DMPS.Client.Presentation.ViewModels.Pages;
 using DMPS.Client.Presentation.ViewModels.Pages.Admin;
-using DMPS.Client.Presentation.Views;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Serilog;
+using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -21,83 +22,85 @@ namespace DMPS.Client.Presentation
     /// </summary>
     public partial class App : Application
     {
-        private static IHost? _host;
+        private IHost _host;
 
-        public static IHost Host => _host ?? throw new InvalidOperationException("Host has not been initialized.");
-
-        public App()
-        {
-            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
-        }
+        public static IServiceProvider ServiceProvider { get; private set; }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup(e);
+            var hostBuilder = Host.CreateDefaultBuilder(e.Args)
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    config.SetBasePath(Directory.GetCurrentDirectory());
+                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                    config.AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+                })
+                .ConfigureServices((context, services) =>
+                {
+                    ConfigureServices(context.Configuration, services);
+                })
+                .ConfigureLogging((context, logging) =>
+                {
+                    // Configure logging providers here. For Serilog, this would be where .UseSerilog() is called.
+                    // Example: logging.AddConsole();
+                });
 
-            var builder = Host.CreateDefaultBuilder(e.Args);
-
-            builder.ConfigureAppConfiguration((context, config) =>
-            {
-                config.SetBasePath(Directory.GetCurrentDirectory());
-                config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-            });
-
-            builder.UseSerilog((context, services, configuration) => configuration
-                .ReadFrom.Configuration(context.Configuration)
-                .Enrich.FromLogContext()
-                .WriteTo.File(
-                    path: "Logs\\log-.txt",
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: 7,
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-                .WriteTo.EventLog(
-                    source: "DMPS Client",
-                    logName: "Application",
-                    manageEventSource: true)
-            );
-
-            builder.ConfigureServices((context, services) =>
-            {
-                // Register Application Layer Services
-                services.AddApplicationServices(context.Configuration);
-
-                // Register Presentation Layer Services
-                services.AddSingleton<IDialogService, DialogService>();
-                services.AddSingleton<INavigationService, NavigationService>();
-                services.AddSingleton<INotificationService, NotificationService>();
-                services.AddSingleton<ISessionLockService, SessionLockService>();
-                // IRenderingService is transient as each viewer instance needs its own renderer
-                // services.AddTransient<IRenderingService, VorticeRenderingService>();
-
-                // Register ViewModels
-                services.AddSingleton<MainWindowViewModel>();
-                services.AddTransient<LoginViewModel>();
-                services.AddTransient<LockScreenViewModel>();
-                services.AddTransient<DicomViewerViewModel>();
-                services.AddTransient<StudyBrowserViewModel>();
-                services.AddTransient<PrintPreviewViewModel>();
-                services.AddTransient<QueryRetrieveViewModel>();
-                services.AddTransient<UserManagementViewModel>();
-                services.AddTransient<AuditTrailViewModel>();
-                services.AddTransient<SystemHealthViewModel>();
-
-                // Register Views (as Singletons or Transients based on use case)
-                services.AddSingleton<MainWindow>();
-                services.AddTransient<LoginView>();
-            });
-
-            _host = builder.Build();
+            _host = hostBuilder.Build();
+            ServiceProvider = _host.Services;
 
             await _host.StartAsync();
 
-            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+            var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
+
+            // Initialize and start services that need to run for the application's lifetime
+            var sessionLockService = ServiceProvider.GetRequiredService<ISessionLockService>();
+            var sessionLockTimeout = _host.Services.GetRequiredService<IConfiguration>()
+                .GetValue<int>("ApplicationSettings:SessionLockTimeoutMinutes");
+            sessionLockService.Start(TimeSpan.FromMinutes(sessionLockTimeout));
+
+            base.OnStartup(e);
+        }
+
+        private void ConfigureServices(IConfiguration configuration, IServiceCollection services)
+        {
+            // Register Application Layer services
+            // This extension method should be defined in the DMPS.Client.Application project
+            services.AddApplicationServices(configuration);
+
+            // Register Presentation Layer Services (UI-specific)
+            services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<INavigationService, NavigationService>();
+            services.AddSingleton<INotificationService, NotificationService>();
+            services.AddSingleton<ISessionLockService, SessionLockService>();
+
+            // Register ViewModels
+            // Main Window ViewModel should be a singleton as it represents the main application shell
+            services.AddSingleton<MainWindowViewModel>();
+
+            // Page/Feature ViewModels should be transient to ensure a clean state upon navigation
+            services.AddTransient<LoginViewModel>();
+            services.AddTransient<LockScreenViewModel>();
+            services.AddTransient<StudyBrowserViewModel>();
+            services.AddTransient<PrintPreviewViewModel>();
+            services.AddTransient<QueryRetrieveViewModel>();
+
+            // Admin Page ViewModels
+            services.AddTransient<UserManagementViewModel>();
+            services.AddTransient<AuditTrailViewModel>();
+            services.AddTransient<SystemHealthViewModel>();
+
+            // Control ViewModels
+            services.AddTransient<DicomViewerViewModel>();
+
+            // Register Views (Windows)
+            // The MainWindow is registered as a Singleton to ensure only one instance exists.
+            services.AddSingleton<MainWindow>();
         }
 
         protected override async void OnExit(ExitEventArgs e)
         {
-            if (_host is not null)
+            if (_host != null)
             {
                 await _host.StopAsync();
                 _host.Dispose();
@@ -108,34 +111,26 @@ namespace DMPS.Client.Presentation
 
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            Log.Error(e.Exception, "An unhandled exception occurred in the dispatcher thread.");
-            ShowFatalErrorDialog(e.Exception);
+            // Prevent default WPF unhandled exception processing
             e.Handled = true;
-            Shutdown(-1);
-        }
 
-        private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
-        {
-            Log.Error(e.Exception, "An unobserved task exception occurred.");
-            e.SetObserved(); // Prevents the process from terminating
-        }
+            // Log the exception and show a friendly message
+            var logger = ServiceProvider?.GetService<ILogger<App>>();
+            var dialogService = ServiceProvider?.GetService<IDialogService>();
 
-        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            Log.Fatal(e.ExceptionObject as Exception, "A fatal unhandled exception occurred.");
-            if (e.IsTerminating)
+            logger?.LogCritical(e.Exception, "An unhandled exception occurred.");
+
+            var errorMessage = $"An unexpected error occurred. The application may need to close. Please contact support and provide the following details:\n\nError: {e.Exception.Message}";
+            
+            // Using MainWindow directly if dialog service is not available yet
+            if (dialogService != null)
             {
-                ShowFatalErrorDialog(e.ExceptionObject as Exception);
+                dialogService.ShowMessageAsync("Critical Application Error", errorMessage);
             }
-        }
-
-        private void ShowFatalErrorDialog(Exception? ex)
-        {
-            var message = $"A critical, unrecoverable error has occurred and the application must close.\n\n" +
-                          $"Error: {ex?.Message}\n\n" +
-                          $"Please contact support and provide the log files located in the 'Logs' directory.";
-
-            MessageBox.Show(message, "Fatal Application Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            else
+            {
+                MessageBox.Show(errorMessage, "Critical Application Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

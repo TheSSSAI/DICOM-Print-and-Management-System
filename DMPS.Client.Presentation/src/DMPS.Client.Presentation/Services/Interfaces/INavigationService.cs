@@ -1,37 +1,29 @@
 using System;
-using System.Threading.Tasks;
+using DMPS.Client.Presentation.ViewModels.Base;
 
 namespace DMPS.Client.Presentation.Services.Interfaces
 {
     /// <summary>
-    /// Defines a contract for a service that manages navigation between different views/viewmodels.
-    /// This abstraction allows ViewModels to request navigation without being coupled to the UI framework's specific navigation mechanism.
+    /// Defines a contract for a service that manages navigation between different ViewModels
+    /// within the application's main content area.
     /// </summary>
     public interface INavigationService
     {
         /// <summary>
-        /// Navigates to the view associated with the specified ViewModel type.
+        /// Gets the currently active ViewModel.
         /// </summary>
-        /// <param name="viewModelType">The type of the ViewModel to navigate to.</param>
-        /// <returns>A task that represents the asynchronous navigation operation.</returns>
-        Task NavigateToAsync(Type viewModelType);
+        ViewModelBase? CurrentViewModel { get; }
 
         /// <summary>
-        /// Navigates to the view associated with the specified ViewModel type, passing a parameter.
+        /// An event that is raised when the current ViewModel changes.
         /// </summary>
-        /// <param name="viewModelType">The type of the ViewModel to navigate to.</param>
-        /// <param name="parameter">The parameter to pass to the target ViewModel after navigation.</param>
-        /// <returns>A task that represents the asynchronous navigation operation.</returns>
-        Task NavigateToAsync(Type viewModelType, object parameter);
+        event Action<ViewModelBase>? CurrentViewModelChanged;
 
         /// <summary>
-        /// Navigates back to the previous view in the navigation stack, if available.
+        /// Navigates to a new view associated with the specified ViewModel type.
         /// </summary>
-        void GoBack();
-
-        /// <summary>
-        /// Gets a value indicating whether it is possible to navigate back.
-        /// </summary>
-        bool CanGoBack { get; }
+        /// <typeparam name="TViewModel">The type of the ViewModel to navigate to. 
+        /// It must derive from ViewModelBase and be registered in the DI container.</typeparam>
+        void NavigateTo<TViewModel>() where TViewModel : ViewModelBase;
     }
 }

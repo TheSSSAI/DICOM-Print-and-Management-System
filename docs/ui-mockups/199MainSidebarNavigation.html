@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Sidebar Navigation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles & Showcase Setup */
+        :root {
+            /* Typography */
+            --font-primary: 'Roboto', sans-serif;
+            --font-size-body: 16px;
+            --font-size-caption: 14px;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+
+            /* Colors */
+            --color-primary-50: #E8EAF6;
+            --color-primary-500: #3F51B5;
+            --color-primary-700: #303F9F;
+            --color-neutral-white: #FFFFFF;
+            --color-neutral-50: #FAFAFA;
+            --color-neutral-100: #F5F5F5;
+            --color-neutral-500: #9E9E9E;
+            --color-neutral-900: #212121;
+
+            /* Spacing */
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+
+            /* Misc */
+            --border-radius-md: 8px;
+            --transition-speed: 0.25s;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-primary);
+            background-color: #eef2f9;
+        }
+        
+        .showcase-container {
+            display: flex;
+            gap: var(--spacing-xl);
+            padding: var(--spacing-xl);
+            align-items: flex-start;
+        }
+        
+        .showcase-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        
+        .showcase-item h2 {
+            font-size: 20px;
+            color: var(--color-neutral-900);
+            margin: 0;
+        }
+        
+        .component-wrapper {
+             height: 700px;
+             box-shadow: var(--shadow-md);
+             border-radius: var(--border-radius-md);
+             overflow: hidden;
+        }
+
+        /* MainSidebarNavigation Component CSS */
+        
+        /* Component Base */
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--color-neutral-50);
+            border-right: 1px solid var(--color-neutral-100);
+            transition: width var(--transition-speed) ease-in-out;
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav[data-variant="expanded"] {
+            width: 260px;
+        }
+
+        .sidebar-nav[data-variant="collapsed"] {
+            width: 80px;
+        }
+
+        /* Header & Footer */
+        .sidebar-nav__header, .sidebar-nav__footer {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            padding: 0 var(--spacing-lg);
+            height: 64px;
+        }
+
+        .sidebar-nav__header {
+            border-bottom: 1px solid var(--color-neutral-100);
+        }
+
+        .sidebar-nav__footer {
+            border-top: 1px solid var(--color-neutral-100);
+            margin-top: auto;
+        }
+
+        /* App Logo */
+        .sidebar-nav__logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 20px;
+            font-weight: var(--font-weight-medium);
+            color: var(--color-neutral-900);
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .sidebar-nav__logo .sidebar-nav__icon {
+            color: var(--color-primary-500);
+        }
+
+        /* Main Navigation List */
+        .sidebar-nav__list {
+            list-style: none;
+            padding: var(--spacing-md) 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .sidebar-nav__link {
+            display: flex;
+            align-items: center;
+            height: 48px;
+            padding: 0 var(--spacing-lg);
+            margin: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-md);
+            text-decoration: none;
+            color: var(--color-neutral-900);
+            position: relative;
+            white-space: nowrap;
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+        }
+
+        /* Link States */
+        .sidebar-nav__link:hover {
+            background-color: var(--color-neutral-100);
+        }
+
+        .sidebar-nav__link.is-active {
+            background-color: var(--color-primary-50);
+            color: var(--color-primary-500);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .sidebar-nav__link.is-active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            bottom: 12px;
+            width: 3px;
+            background-color: var(--color-primary-500);
+            border-top-right-radius: 3px;
+            border-bottom-right-radius: 3px;
+        }
+
+        .sidebar-nav__link:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: 2px;
+            z-index: 10;
+        }
+
+        /* Icon and Text */
+        .sidebar-nav__icon {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-right: var(--spacing-md);
+            transition: margin var(--transition-speed) ease-in-out;
+        }
+
+        .sidebar-nav__icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar-nav__text {
+            opacity: 1;
+            transition: opacity var(--transition-speed) ease-in-out;
+            font-size: var(--font-size-body);
+        }
+
+        /* Collapsed Variant Styles */
+        .sidebar-nav[data-variant="collapsed"] .sidebar-nav__link {
+            justify-content: center;
+            padding: 0;
+        }
+
+        .sidebar-nav[data-variant="collapsed"] .sidebar-nav__icon {
+            margin-right: 0;
+        }
+        
+        .sidebar-nav[data-variant="collapsed"] .sidebar-nav__link.is-active::before {
+             top: 0;
+             bottom: 0;
+             border-radius: 0;
+        }
+
+        .sidebar-nav[data-variant="collapsed"] .sidebar-nav__text {
+            opacity: 0;
+            width: 0;
+            position: absolute; /* Take out of flow */
+        }
+        
+        .sidebar-nav[data-variant="collapsed"] .sidebar-nav__header {
+            justify-content: center;
+        }
+        .sidebar-nav[data-variant="collapsed"] .sidebar-nav__logo .sidebar-nav__text {
+            display: none;
+        }
+
+        /* Toggle Button */
+        .sidebar-nav__toggle {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--color-neutral-500);
+        }
+        .sidebar-nav__toggle:hover {
+            background-color: var(--color-neutral-100);
+            color: var(--color-neutral-900);
+        }
+        .sidebar-nav__toggle:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: 2px;
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .sidebar-nav, .sidebar-nav__link, .sidebar-nav__icon, .sidebar-nav__text {
+                transition: none;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="showcase-container">
+        <div class="showcase-item">
+            <h2>Expanded</h2>
+            <div class="component-wrapper">
+                <nav class="sidebar-nav" data-variant="expanded" aria-label="Main Navigation">
+                    <div class="sidebar-nav__header">
+                        <a href="#" class="sidebar-nav__logo" aria-label="DICOM System Home">
+                             <span class="sidebar-nav__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                            </span>
+                            <span class="sidebar-nav__text">DICOM App</span>
+                        </a>
+                        <button class="sidebar-nav__toggle" aria-label="Collapse navigation" aria-expanded="true">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                        </button>
+                    </div>
+                    <ul class="sidebar-nav__list">
+                        <li class="sidebar-nav__item">
+                            <a href="#" class="sidebar-nav__link is-active" aria-current="page">
+                                <span class="sidebar-nav__icon" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                                </span>
+                                <span class="sidebar-nav__text">Study Browser</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav__item">
+                            <a href="#" class="sidebar-nav__link">
+                                <span class="sidebar-nav__icon" aria-hidden="true">
+                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 12H9v-2h2v2zm0-4H9V9h2v2zm0-4H9V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2z"/></svg>
+                                </span>
+                                <span class="sidebar-nav__text">Dashboards</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav__item">
+                            <a href="#" class="sidebar-nav__link">
+                                <span class="sidebar-nav__icon" aria-hidden="true">
+                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 1.07V9h7c0-4.08-3.05-7.44-7-7.93zM4 15c0 4.42 3.58 8 8 8s8-3.58 8-8v-4H4v4zm7-13.93C7.05 1.56 4 4.92 4 9h7V1.07z"/></svg>
+                                </span>
+                                <span class="sidebar-nav__text">Reporting</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav__item">
+                            <a href="#" class="sidebar-nav__link">
+                                <span class="sidebar-nav__icon" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.44.17-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.7 8.81c-.11.2-.06.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.06-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                                </span>
+                                <span class="sidebar-nav__text">Administration</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="sidebar-nav__footer">
+                         <a href="#" class="sidebar-nav__link" style="margin: 0; padding: 0 var(--spacing-md); flex-grow: 1;">
+                            <span class="sidebar-nav__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            </span>
+                            <span class="sidebar-nav__text">Jane Doe</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <div class="showcase-item">
+            <h2>Collapsed</h2>
+            <div class="component-wrapper">
+                 <nav class="sidebar-nav" data-variant="collapsed" aria-label="Main Navigation">
+                    <div class="sidebar-nav__header">
+                         <a href="#" class="sidebar-nav__logo" aria-label="DICOM System Home">
+                             <span class="sidebar-nav__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                            </span>
+                            <span class="sidebar-nav__text">DICOM App</span>
+                        </a>
+                    </div>
+                    <ul class="sidebar-nav__list">
+                        <li class="sidebar-nav__item">
+                            <a href="#" class="sidebar-nav__link is-active" aria-current="page" title="Study Browser">
+                                <span class="sidebar-nav__icon" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                                </span>
+                                <span class="sidebar-nav__text">Study Browser</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav__item">
+                            <a href="#" class="sidebar-nav__link" title="Dashboards">
+                                <span class="sidebar-nav__icon" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 12H9v-2h2v2zm0-4H9V9h2v2zm0-4H9V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2z"/></svg>
+                                </span>
+                                <span class="sidebar-nav__text">Dashboards</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav__item">
+                            <a href="#" class="sidebar-nav__link" title="Reporting">
+                                <span class="sidebar-nav__icon" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 1.07V9h7c0-4.08-3.05-7.44-7-7.93zM4 15c0 4.42 3.58 8 8 8s8-3.58 8-8v-4H4v4zm7-13.93C7.05 1.56 4 4.92 4 9h7V1.07z"/></svg>
+                                </span>
+                                <span class="sidebar-nav__text">Reporting</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav__item">
+                            <a href="#" class="sidebar-nav__link" title="Administration">
+                                <span class="sidebar-nav__icon" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.44.17-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.7 8.81c-.11.2-.06.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .44-.17.48.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.06-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                                </span>
+                                <span class="sidebar-nav__text">Administration</span>
+                            </a>
+                        </li>
+                    </ul>
+                     <div class="sidebar-nav__footer">
+                         <a href="#" class="sidebar-nav__link" style="margin: 0; padding: 0 var(--spacing-md); flex-grow: 1;" title="Jane Doe">
+                            <span class="sidebar-nav__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            </span>
+                            <span class="sidebar-nav__text">Jane Doe</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+	<div>
+      <h2> Component Variations</h2>
+      <div>
+        <h3>Variant Name : expanded</h3>
+		<p> The default, full-width state of the sidebar, showing both an icon and a text label for each navigation item. This provides maximum clarity and is suitable for wider application windows.</p>
+      </div>
+      <div>
+        <h3>Variant Name : collapsed</h3>
+		<p> A compact, icon-only state that saves horizontal screen space. The text labels are hidden, and the sidebar shrinks to its minimum width. Tooltips should be used to show the label on hover for usability.</p>
+      </div>
+	</div>
+
+</body>
+</html>

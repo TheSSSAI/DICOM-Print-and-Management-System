@@ -1,0 +1,58 @@
+flowchart TD
+    subgraph Authentication
+        A[Application Starts] --> B[Display Login Screen]
+        B --> C[/User Enters Credentials/]
+        C --> D{Validate Credentials}
+        D -->|Invalid| E[Show 'Invalid username or password' Error]
+        E --> B
+        D -->|Valid| F{Account Active?}
+        F -->|Disabled| G[Show 'Account Disabled' Error]
+        G --> B
+        F -->|Active| H{Force Password Change Required?}
+    end
+
+    subgraph Forced Password Change
+        H -->|Yes| I[Display Forced Password Change Screen]
+        I --> J[/User Sets New Password/]
+        J --> H_END(✔)
+    end
+
+    subgraph Active Session
+        H -->|No| K[Load Main UI Based on User Role]
+        H_END --> K
+        K --> L[Start/Reset 15-min Inactivity Timer]
+        L --> M{User Interaction Detected?}
+        M -- Yes --> L
+        M -- No --> N{Timer > 15 mins?}
+        N -- No --> M
+        K --> LOGOUT[User Clicks Logout]
+        LOGOUT --> B
+    end
+
+    subgraph Locked Session
+        N -- Yes --> O[Display Lock Screen Overlay]
+        O --> P[/User Enters Password/]
+        P --> Q{Validate Password}
+        Q -->|Correct| R[Dismiss Overlay]
+        R --> L
+        Q -->|Incorrect| S[Increment Failed Attempt Counter]
+        S --> T{Attempts >= 5?}
+        T -- Yes --> U[Force Logout]
+        U --> B
+        T -- No --> V[Show 'Invalid Password' Error]
+        V --> O
+        O --> LOCK_LOGOUT[User Clicks Logout]
+        LOCK_LOGOUT --> U
+    end
+
+    %% Styling
+    classDef process fill:#e3f2fd,stroke:#2196f3,color:#000
+    classDef decision fill:#fff9c4,stroke:#fbc02d,color:#000
+    classDef io fill:#f3e5f5,stroke:#8e24aa,color:#000
+    classDef error fill:#ffebee,stroke:#d32f2f,color:#000
+    classDef startend fill:#e8f5e9,stroke:#388e3c,color:#000
+
+    class A,B,I,K,L,O,R,S,U startend
+    class C,J,P io
+    class D,F,H,M,N,Q,T decision
+    class E,G,V error

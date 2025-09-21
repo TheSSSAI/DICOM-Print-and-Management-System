@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study List Item Component</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        /* Design System Tokens */
+        :root {
+            --font-primary: 'Roboto', 'Segoe UI', system-ui, sans-serif;
+            --font-monospace: 'Roboto Mono', monospace;
+            --font-size-body: 16px;
+            --font-size-caption: 14px;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+
+            --color-primary-50: #E8EAF6;
+            --color-primary-500: #3F51B5;
+            --color-primary-700: #303F9F;
+
+            --color-neutral-white: #FFFFFF;
+            --color-neutral-100: #F5F5F5;
+            --color-neutral-200: #EEEEEE;
+            --color-neutral-500: #9E9E9E;
+            --color-neutral-700: #616161;
+            --color-neutral-900: #212121;
+            
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+
+            --border-radius-sm: 4px;
+            --transition-speed: 0.2s;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        /* Base & Showcase Styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--color-neutral-100);
+            margin: 0;
+            padding: var(--spacing-xl);
+            color: var(--color-neutral-900);
+            line-height: 1.5;
+        }
+
+        .showcase-container {
+            max-width: 800px;
+            margin: auto;
+            background-color: var(--color-neutral-white);
+            padding: var(--spacing-xl);
+            border-radius: var(--border-radius-sm);
+            box-shadow: var(--shadow-md);
+        }
+
+        .showcase-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .showcase-section h2 {
+            font-size: 20px;
+            font-weight: var(--font-weight-medium);
+            margin: 0 0 var(--spacing-md) 0;
+            border-bottom: 1px solid var(--color-neutral-200);
+            padding-bottom: var(--spacing-sm);
+        }
+        
+        .showcase-section h3 {
+            font-size: 16px;
+            font-weight: var(--font-weight-medium);
+            color: var(--color-neutral-700);
+            margin: var(--spacing-lg) 0 var(--spacing-sm) 0;
+        }
+
+        .study-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        /* Component CSS */
+        .study-list-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background-color: var(--color-neutral-white);
+            border: 1px solid var(--color-neutral-200);
+            border-radius: var(--border-radius-sm);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--color-neutral-900);
+            transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 44px;
+        }
+
+        .study-list-item:hover {
+            background-color: var(--color-primary-50);
+            border-color: #C5CAE9;
+        }
+
+        .study-list-item.is-selected {
+            background-color: var(--color-primary-50);
+            border-color: var(--color-primary-500);
+        }
+
+        .study-list-item.is-selected::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: -1px;
+            bottom: -1px;
+            width: 4px;
+            background-color: var(--color-primary-500);
+        }
+
+        .study-list-item:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: 2px;
+            z-index: 1;
+        }
+
+        .study-list-item__modality {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-neutral-500);
+        }
+
+        .study-list-item__modality svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .study-list-item__details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+            min-width: 0;
+        }
+
+        .study-list-item__row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: var(--spacing-md);
+        }
+
+        .study-list-item__patient-name {
+            font-size: var(--font-size-body);
+            font-weight: var(--font-weight-medium);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .study-list-item__study-date,
+        .study-list-item__patient-id,
+        .study-list-item__modality-text {
+            font-size: var(--font-size-caption);
+            color: var(--color-neutral-500);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .study-list-item__patient-id {
+            font-family: var(--font-monospace);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .study-list-item {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="showcase-container">
+        
+        <div class="showcase-section">
+            <h2>Study List Item</h2>
+            <p>This component displays a summary of a DICOM study. It is designed to be used within a list where users can select a study to view.</p>
+        </div>
+
+        <div class="showcase-section">
+            <h3>States</h3>
+            <p>The component has three primary visual states: default, hover, and selected.</p>
+            <div class="study-list">
+                
+                <!-- Default State -->
+                <a href="#" class="study-list-item" aria-label="Study for DOE, JOHN. Study date 15-Oct-2023. Modality CT.">
+                    <div class="study-list-item__modality" aria-hidden="true">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h-2zm0 6h2v2h-2z"/></svg>
+                    </div>
+                    <div class="study-list-item__details">
+                        <div class="study-list-item__row">
+                            <span class="study-list-item__patient-name">DOE, JOHN (Default)</span>
+                            <span class="study-list-item__study-date">15-Oct-2023</span>
+                        </div>
+                        <div class="study-list-item__row">
+                            <span class="study-list-item__patient-id">PID-789012</span>
+                            <span class="study-list-item__modality-text">CT</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Hover State -->
+                <a href="#" class="study-list-item" aria-label="Study for ROE, JANE. Hover to see effect. Study date 14-Oct-2023. Modality MR.">
+                    <div class="study-list-item__modality" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 6h2v2h-2zm0 4h2v6h-2zm0 8h2v2h-2z"/></svg>
+                    </div>
+                    <div class="study-list-item__details">
+                        <div class="study-list-item__row">
+                            <span class="study-list-item__patient-name">ROE, JANE (Hover)</span>
+                            <span class="study-list-item__study-date">14-Oct-2023</span>
+                        </div>
+                        <div class="study-list-item__row">
+                            <span class="study-list-item__patient-id">PID-654321</span>
+                            <span class="study-list-item__modality-text">MR</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Selected State -->
+                <a href="#" class="study-list-item is-selected" aria-current="true" aria-label="Selected study for SMITH, PETER. Study date 12-Oct-2023. Modality XA.">
+                    <div class="study-list-item__modality" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2.5-12.5L14 9.5l-4.5 4.5-2-2L9 10.5l1.5 1.5 3.5-3.5z"/></svg>
+                    </div>
+                    <div class="study-list-item__details">
+                        <div class="study-list-item__row">
+                            <span class="study-list-item__patient-name">SMITH, PETER (Selected)</span>
+                            <span class="study-list-item__study-date">12-Oct-2023</span>
+                        </div>
+                        <div class="study-list-item__row">
+                            <span class="study-list-item__patient-id">PID-345678</span>
+                            <span class="study-list-item__modality-text">XA</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Long Text Truncation -->
+                 <a href="#" class="study-list-item" aria-label="Study for a patient with a very long name that should be truncated. Study date 01-Jan-2024. Modality US.">
+                    <div class="study-list-item__modality" aria-hidden="true">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-4h8v-2H8v2zm0-4h8v-2H8v2zm0-4h8V8H8v2z"/></svg>
+                    </div>
+                    <div class="study-list-item__details">
+                        <div class="study-list-item__row">
+                            <span class="study-list-item__patient-name">MONTGOMERY-VANDERBILT, ALEXANDRA ELIZABETH (Long Name Truncation)</span>
+                            <span class="study-list-item__study-date">01-Jan-2024</span>
+                        </div>
+                        <div class="study-list-item__row">
+                            <span class="study-list-item__patient-id">PID-999888777</span>
+                            <span class="study-list-item__modality-text">US</span>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </div>
+    
+	<div>
+        <h2>Component Variations</h2>
+        <div>
+            <h3>Variant Name : "Default"</h3>
+            <normal>The standard appearance of the study list item, used for all modalities.</normal>
+            <div class="study-list-item">
+                <div class="study-list-item__modality" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h-2zm0 6h2v2h-2z"/></svg>
+                </div>
+                <div class="study-list-item__details">
+                    <div class="study-list-item__row">
+                        <span class="study-list-item__patient-name">DOE, JOHN</span>
+                        <span class="study-list-item__study-date">15-Oct-2023</span>
+                    </div>
+                    <div class="study-list-item__row">
+                        <span class="study-list-item__patient-id">PID-789012</span>
+                        <span class="study-list-item__modality-text">CT</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

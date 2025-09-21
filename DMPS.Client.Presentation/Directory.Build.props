@@ -1,0 +1,42 @@
+<Project>
+  <!-- This file is used to set properties that are common to all projects in the solution. -->
+  <!-- For more information see https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build -->
+
+  <PropertyGroup>
+    <!-- Target framework for the entire solution. Individual projects can override this if necessary. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    
+    <!-- Use latest C# language version -->
+    <LangVersion>12.0</LangVersion>
+    
+    <!-- Enable modern .NET features -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    
+    <!-- Treat warnings as errors in Release builds to enforce code quality -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Central Package Version Management -->
+    <!-- https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Define all third-party dependency versions here. -->
+    <!-- Projects should use <PackageReference Include="PackageName" /> without a Version attribute. -->
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageVersion Include="MaterialDesignThemes" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageVersion Include="Serilog" Version="3.1.1" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageVersion Include="Serilog.Sinks.WindowsEventLog" Version="3.1.0" />
+    <PackageVersion Include="Vortice.Windows" Version="3.2.1" />
+    <!-- Add other shared package versions below -->
+  </ItemGroup>
+
+</Project>

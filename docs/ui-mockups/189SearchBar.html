@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SearchBar Component</title>
+  <style>
+    /* Global Styles & Design System Tokens */
+    :root {
+      --color-primary-500: #3F51B5;
+      --color-primary-600: #3949AB;
+      --color-primary-700: #303F9F;
+      --color-primary-50: #E8EAF6;
+      --color-neutrals-white: #FFFFFF;
+      --color-neutrals-gray-50: #FAFAFA;
+      --color-neutrals-gray-100: #F5F5F5;
+      --color-neutrals-gray-500: #9E9E9E;
+      --color-neutrals-gray-900: #212121;
+      --border-color-default: rgba(0,0,0,0.22);
+      --border-color-disabled: rgba(0,0,0,0.12);
+      --text-color-disabled: rgba(0,0,0,0.26);
+      
+      --spacing-xs: 8px;
+      --spacing-sm: 12px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+
+      --font-size-body: 16px;
+      --font-family-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --border-radius: 4px;
+      --transition-speed: 0.2s;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-neutrals-gray-50);
+      color: var(--color-neutrals-gray-900);
+      margin: 0;
+      padding: var(--spacing-xl);
+    }
+
+    .component-showcase {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .showcase-section {
+      background-color: var(--color-neutrals-white);
+      padding: var(--spacing-lg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: var(--spacing-xl);
+    }
+    
+    .showcase-section h2 {
+      margin-top: 0;
+      border-bottom: 1px solid var(--color-neutrals-gray-100);
+      padding-bottom: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .state-group {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .state-group h3 {
+        font-size: 14px;
+        color: var(--color-neutrals-gray-500);
+        font-weight: 500;
+        margin-bottom: var(--spacing-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* SearchBar Component CSS */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      width: 100%;
+    }
+
+    .search-bar__wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex-grow: 1;
+      background-color: var(--color-neutrals-white);
+      border: 1px solid var(--border-color-default);
+      border-radius: var(--border-radius);
+      transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+      min-height: 44px; /* Touch target size */
+    }
+
+    .search-bar__icon {
+      position: absolute;
+      left: var(--spacing-sm);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-neutrals-gray-500);
+      pointer-events: none;
+      width: 20px;
+      height: 20px;
+    }
+
+    .search-bar__input {
+      font-family: var(--font-family-primary);
+      font-size: var(--font-size-body);
+      color: var(--color-neutrals-gray-900);
+      width: 100%;
+      padding: var(--spacing-sm);
+      padding-left: calc(var(--spacing-sm) + 20px + var(--spacing-xs)); /* space for icon */
+      padding-right: calc(var(--spacing-sm) + 20px + var(--spacing-xs)); /* space for clear button */
+      border: none;
+      background-color: transparent;
+      outline: none;
+    }
+
+    .search-bar__input::placeholder {
+      color: var(--color-neutrals-gray-500);
+      opacity: 1;
+    }
+
+    .search-bar__clear-btn {
+      position: absolute;
+      right: var(--spacing-sm);
+      top: 50%;
+      transform: translateY(-50%);
+      display: none; /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border: none;
+      background: none;
+      border-radius: 50%;
+      cursor: pointer;
+      color: var(--color-neutrals-gray-500);
+      transition: color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+      width: 28px;
+      height: 28px;
+    }
+
+    .search-bar__clear-btn:hover {
+      color: var(--color-neutrals-gray-900);
+      background-color: var(--color-neutrals-gray-100);
+    }
+    
+    .search-bar__clear-btn:focus-visible {
+        outline: 2px solid var(--color-primary-700);
+        outline-offset: 1px;
+    }
+
+    .search-bar__clear-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Component States */
+    .search-bar--focused .search-bar__wrapper,
+    .search-bar__wrapper:focus-within {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+    }
+
+    .search-bar--with-input .search-bar__clear-btn {
+      display: flex;
+    }
+
+    /* With Filters Variant */
+    .search-bar__filter-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-xs);
+      font-family: var(--font-family-primary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 0 var(--spacing-md);
+      height: 44px;
+      border: 1px solid var(--border-color-default);
+      background-color: var(--color-neutrals-white);
+      color: var(--color-neutrals-gray-900);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all var(--transition-speed) ease;
+    }
+
+    .search-bar__filter-btn:hover {
+      background-color: var(--color-primary-50);
+      border-color: var(--color-primary-500);
+    }
+
+    .search-bar__filter-btn:focus-visible {
+      outline: 2px solid var(--color-primary-700);
+      outline-offset: 2px;
+    }
+
+    .search-bar__filter-btn svg {
+      width: 18px;
+      height: 18px;
+      color: var(--color-primary-500);
+    }
+    
+    /* Accessibility */
+    .visually-hidden {
+      border: 0;
+      clip: rect(0 0 0 0);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      width: 1px;
+    }
+  </style>
+</head>
+<body>
+  <main class="component-showcase">
+    <h1>SearchBar Component</h1>
+    
+    <div class="showcase-section" id="simple-search-bar">
+      <h2>Simple Search Bar</h2>
+      
+      <div class="state-group">
+        <h3>Default State</h3>
+        <div class="search-bar">
+          <label for="search-default" class="visually-hidden">Search</label>
+          <div class="search-bar__wrapper">
+            <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0s.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="search" id="search-default" class="search-bar__input" placeholder="Search by Patient Name, ID...">
+            <button class="search-bar__clear-btn" type="button" aria-label="Clear search">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="state-group">
+        <h3>Focused State</h3>
+        <div class="search-bar search-bar--focused">
+          <label for="search-focused" class="visually-hidden">Search</label>
+          <div class="search-bar__wrapper">
+            <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0s.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="search" id="search-focused" class="search-bar__input" placeholder="Search by Patient Name, ID...">
+            <button class="search-bar__clear-btn" type="button" aria-label="Clear search">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="state-group">
+        <h3>With Input State</h3>
+        <div class="search-bar search-bar--with-input">
+            <label for="search-with-input" class="visually-hidden">Search</label>
+            <div class="search-bar__wrapper">
+                <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0s.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="search" id="search-with-input" class="search-bar__input" value="John Doe">
+                <button class="search-bar__clear-btn" type="button" aria-label="Clear search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+                </button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase-section" id="search-with-filters">
+        <h2>Search Bar with Filters</h2>
+        
+        <div class="state-group">
+            <h3>Default State</h3>
+            <div class="search-bar">
+              <div class="search-bar__wrapper">
+                <label for="search-filter-default" class="visually-hidden">Search</label>
+                <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0s.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="search" id="search-filter-default" class="search-bar__input" placeholder="Search studies...">
+                <button class="search-bar__clear-btn" type="button" aria-label="Clear search">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+                </button>
+              </div>
+              <button class="search-bar__filter-btn" type="button" aria-label="Open advanced filters">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                Filters
+              </button>
+            </div>
+        </div>
+
+        <div class="state-group">
+            <h3>With Input & Focused</h3>
+            <div class="search-bar search-bar--with-input search-bar--focused">
+                <div class="search-bar__wrapper">
+                  <label for="search-filter-active" class="visually-hidden">Search</label>
+                  <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0s.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                  <input type="search" id="search-filter-active" class="search-bar__input" value="CT Scan">
+                  <button class="search-bar__clear-btn" type="button" aria-label="Clear search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+                  </button>
+                </div>
+                <button class="search-bar__filter-btn" type="button" aria-label="Open advanced filters">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                  Filters
+                </button>
+            </div>
+        </div>
+    </div>
+  </main>
+</body>
+</html>

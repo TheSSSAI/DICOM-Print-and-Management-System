@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modal Dialog Component</title>
+  <style>
+    /* Global Styles & Design Tokens */
+    :root {
+      --font-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-size-h3: 20px;
+      --font-weight-medium: 500;
+      --font-size-body: 16px;
+      --line-height-body: 1.6;
+
+      --color-primary-500: #3F51B5;
+      --color-primary-600: #3949AB;
+      --color-primary-700: #303F9F;
+      --color-primary-50: #E8EAF6;
+
+      --color-neutral-white: #FFFFFF;
+      --color-neutral-100: #F5F5F5;
+      --color-neutral-500: #9E9E9E;
+      --color-neutral-900: #212121;
+      --color-semantic-error: #F44336;
+
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+
+      --border-radius-md: 4px;
+      --shadow-2dp: 0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12);
+      --transition-speed: 0.2s;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: var(--spacing-lg);
+    }
+    
+    .showcase {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 24px;
+      background: white;
+      border-radius: 8px;
+    }
+    
+    .showcase h1 {
+        border-bottom: 2px solid var(--color-primary-500);
+        padding-bottom: 8px;
+        margin-bottom: 24px;
+    }
+
+    .showcase h2 {
+      margin-top: 32px;
+      margin-bottom: 16px;
+    }
+    
+    .showcase p {
+        margin-bottom: 16px;
+        color: #4a5568;
+    }
+
+
+    /* Component Base: Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(33, 33, 33, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--transition-speed) ease, visibility var(--transition-speed) ease;
+      z-index: 1000;
+    }
+
+    .modal-overlay.is-visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Component Base: Dialog */
+    .modal {
+      background-color: var(--color-neutral-white);
+      border-radius: var(--border-radius-md);
+      box-shadow: var(--shadow-2dp);
+      width: 90%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform var(--transition-speed) ease;
+    }
+
+    .modal-overlay.is-visible .modal {
+        transform: scale(1);
+    }
+
+    /* Component Structure */
+    .modal__header {
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--color-neutral-100);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .modal__title {
+      font-size: var(--font-size-h3);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-neutral-900);
+      margin: 0;
+    }
+
+    .modal__close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 0;
+      border-radius: 50%;
+      color: var(--color-neutral-500);
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .modal__close-btn:hover {
+        background-color: var(--color-neutral-100);
+        color: var(--color-neutral-900);
+    }
+
+    .modal__close-btn:focus-visible {
+        outline: 2px solid var(--color-primary-700);
+        outline-offset: 2px;
+    }
+
+    .modal__body {
+      padding: var(--spacing-lg);
+      overflow-y: auto;
+      font-size: var(--font-size-body);
+      line-height: var(--line-height-body);
+      color: var(--color-neutral-900);
+    }
+
+    .modal__footer {
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-top: 1px solid var(--color-neutral-100);
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-md);
+      background-color: #fafafa;
+      flex-shrink: 0;
+    }
+
+    /* Component Variants */
+    .modal--small { max-width: 400px; }
+    .modal--medium { max-width: 600px; }
+    .modal--large { max-width: 800px; }
+
+    /* Dependent Component Mockups */
+    .form-group {
+        margin-bottom: var(--spacing-lg);
+    }
+    .form-group:last-of-type {
+        margin-bottom: 0;
+    }
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: var(--font-weight-medium);
+        margin-bottom: 8px;
+        color: var(--color-neutral-900);
+    }
+    .form-group input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 16px;
+        border: 1px solid #c4c4c4;
+        border-radius: var(--border-radius-md);
+        font-size: var(--font-size-body);
+        transition: border-color 0.2s;
+    }
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--color-primary-500);
+        box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+    }
+    
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 10px 24px; border-radius: var(--border-radius-md); font-weight: var(--font-weight-medium); 
+      border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: all 0.2s ease; min-height: 44px;
+      font-size: 15px;
+    }
+    .btn--primary { background: var(--color-primary-500); color: var(--color-neutral-white); border-color: var(--color-primary-500); }
+    .btn--primary:hover { background: var(--color-primary-600); border-color: var(--color-primary-600); }
+    .btn--secondary { background: var(--color-neutral-white); color: var(--color-primary-500); border: 1px solid var(--color-neutral-500);}
+    .btn--secondary:hover { background: var(--color-primary-50); border-color: var(--color-primary-500); }
+    .btn--danger { background: var(--color-semantic-error); color: var(--color-neutral-white); border-color: var(--color-semantic-error); }
+    .btn--danger:hover { background: #d32f2f; border-color: #d32f2f; }
+
+    .btn:focus-visible { outline: 2px solid var(--color-primary-700); outline-offset: 2px;}
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      .modal, .modal-overlay {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="showcase">
+    <h1>Modal Dialog Showcase</h1>
+    <p>This page demonstrates the various states and variants of the Modal Dialog component. In a real application, JavaScript would be used to toggle the visibility and manage focus.</p>
+  </div>
+  
+  <!-- The component is rendered here, with the 'is-visible' class applied for demonstration -->
+  <div class="modal-overlay is-visible" id="modal-showcase">
+  
+    <!-- Variant: Confirmation Dialog (Small) -->
+    <div role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-body" class="modal modal--small">
+      <header class="modal__header">
+        <h2 id="confirm-title" class="modal__title">Confirm Deletion</h2>
+        <button class="modal__close-btn" aria-label="Close dialog">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </header>
+      <div id="confirm-body" class="modal__body">
+        <p>Are you sure you want to permanently delete this study? This action cannot be undone.</p>
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn btn--secondary">Cancel</button>
+        <button type="button" class="btn btn--danger">Delete Study</button>
+      </footer>
+    </div>
+    
+  </div>
+
+  <div class="showcase">
+    <h2>Component Variations</h2>
+    <p>Below are the different structural and size variants of the modal dialog component.</p>
+    
+    <div>
+        <h3>Variant Name: "Confirmation Dialog" (Small)</h3>
+        <p>Used for short, critical confirmation prompts where the user must make a simple choice. It is the smallest size variant.</p>
+        <div class="modal modal--small" style="position: relative; margin-bottom: 24px; z-index: 1;">
+            <header class="modal__header">
+              <h2 class="modal__title">Confirm Action</h2>
+              <button class="modal__close-btn" aria-label="Close dialog" tabindex="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </header>
+            <div class="modal__body">Are you sure you want to proceed?</div>
+            <footer class="modal__footer">
+              <button type="button" class="btn btn--secondary" tabindex="-1">Cancel</button>
+              <button type="button" class="btn btn--primary" tabindex="-1">Confirm</button>
+            </footer>
+        </div>
+    </div>
+    
+    <div>
+        <h3>Variant Name: "Informational Dialog" (Medium)</h3>
+        <p>The default size, suitable for displaying more detailed information or simple forms. This is the most common variant.</p>
+        <div class="modal modal--medium" style="position: relative; margin-bottom: 24px; z-index: 1;">
+            <header class="modal__header">
+              <h2 class="modal__title">System Update Available</h2>
+            </header>
+            <div class="modal__body">
+              <p>A new version of the application is available. Please save your work and update to receive the latest features and security improvements. The update process will take approximately 2 minutes.</p>
+            </div>
+            <footer class="modal__footer">
+              <button type="button" class="btn btn--primary" tabindex="-1">OK</button>
+            </footer>
+        </div>
+    </div>
+
+    <div>
+        <h3>Variant Name: "Form Dialog" (Large)</h3>
+        <p>The largest variant, designed to contain complex forms or detailed content without excessive scrolling. It provides ample space for multiple input fields and instructions.</p>
+        <div class="modal modal--large" style="position: relative; z-index: 1;">
+            <header class="modal__header">
+              <h2 class="modal__title">Create New User Account</h2>
+              <button class="modal__close-btn" aria-label="Close dialog" tabindex="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </header>
+            <div class="modal__body">
+              <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="e.g., jsmith">
+              </div>
+              <div class="form-group">
+                <label for="role">User Role</label>
+                <select id="role" name="role" style="width: 100%; box-sizing: border-box; padding: 12px 16px; border: 1px solid #c4c4c4; border-radius: var(--border-radius-md); font-size: var(--font-size-body);">
+                    <option>Technician</option>
+                    <option>Administrator</option>
+                </select>
+              </div>
+            </div>
+            <footer class="modal__footer">
+              <button type="button" class="btn btn--secondary" tabindex="-1">Cancel</button>
+              <button type="button" class="btn btn--primary" tabindex="-1">Create User</button>
+            </footer>
+        </div>
+    </div>
+  </div>
+
+</body>
+</html>

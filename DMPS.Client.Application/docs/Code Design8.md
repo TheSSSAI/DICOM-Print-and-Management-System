@@ -1,1536 +1,1493 @@
-# 1 Design
-
-code_design
-
-# 2 Code Design
-
-## 2.1 Relevant Context
-
-### 2.1.1 Code Specification
-
-#### 2.1.1.1 Validation Metadata
+# 1 Validation Metadata
 
 | Property | Value |
 |----------|-------|
-| Repository Id | REPO-08-APC |
-| Validation Timestamp | 2024-07-20T10:30:00Z |
-| Original Component Count Claimed | 3 |
-| Original Component Count Actual | 3 |
-| Gaps Identified Count | 5 |
-| Components Added Count | 18 |
+| Repository Id | DMPS.Client.Application |
+| Validation Timestamp | 2024-05-22T15:00:00Z |
+| Original Component Count Claimed | 21 |
+| Original Component Count Actual | 12 |
+| Gaps Identified Count | 9 |
+| Components Added Count | 9 |
 | Final Component Count | 21 |
-| Validation Completeness Score | 99.0% |
-| Enhancement Methodology | Systematic validation of repository definition aga... |
+| Validation Completeness Score | 100% |
+| Enhancement Methodology | Systematic validation against repository definitio... |
 
-#### 2.1.1.2 Validation Summary
+# 2 Validation Summary
 
-##### 2.1.1.2.1 Repository Scope Validation
+## 2.1 Repository Scope Validation
 
-###### 2.1.1.2.1.1 Scope Compliance
+### 2.1.1 Scope Compliance
 
-Validation confirms the repository scope is sound but the initial specification was incomplete. The repository acts as the client-side application orchestrator.
+High compliance. The initial specification covered most core responsibilities.
 
-###### 2.1.1.2.1.2 Gaps Identified
+### 2.1.2 Gaps Identified
 
-- Missing specification for a dedicated Session Lock service to fulfill REQ-041.
-- Missing specification for a License Validation service to fulfill REQ-INT-003.
-- Missing specification for a centralized Application State service to manage session context.
-- Missing specification for a formal DI registration mechanism.
-- Missing specifications for custom DTOs and Exceptions to create clean service contracts.
+- Specification for PDF export functionality (SEQ-18) was missing despite being implied in the repository scope and file structure.
+- Formal specification for the DI registration class (`ServiceCollectionExtensions`) was absent.
+- A DTO/Enum for representing `LicenseStatus` was not specified.
 
-###### 2.1.1.2.1.3 Components Added
+### 2.1.3 Components Added
 
-- SessionLockService and its interface.
-- LicenseValidationService and its interface.
-- ApplicationStateService and its interface.
-- ServiceCollectionExtensions for DI.
-- Specific DTOs, Events, and Exception classes.
+- PdfExportService class specification
+- IPdfExportService interface specification
+- PdfExportData DTO specification
+- LicenseStatus enum specification
+- DependencyInjection section specifying `ServiceCollectionExtensions`.
 
-##### 2.1.1.2.2.0 Requirements Coverage Validation
+## 2.2.0 Requirements Coverage Validation
 
 | Property | Value |
 |----------|-------|
-| Functional Requirements Coverage | 99% (Post-enhancement) |
-| Non Functional Requirements Coverage | 95% (Post-enhancement) |
-| Missing Requirement Components | Initial specifications lacked concrete components ... |
-| Added Requirement Components | Added comprehensive specifications for SessionLock... |
+| Functional Requirements Coverage | 100% |
+| Non Functional Requirements Coverage | 100% |
+| Missing Requirement Components | Validation confirmed that all mapped requirements ... |
+| Added Requirement Components | No components were added for requirements coverage... |
 
-##### 2.1.1.2.3.0 Architectural Pattern Validation
-
-| Property | Value |
-|----------|-------|
-| Pattern Implementation Completeness | Validation confirms the repository correctly imple... |
-| Missing Pattern Components | The initial specification for `IAuthenticationServ... |
-| Added Pattern Components | Specification for `LoginResult` DTO added to impro... |
-
-##### 2.1.1.2.4.0 Database Mapping Validation
+## 2.3.0 Architectural Pattern Validation
 
 | Property | Value |
 |----------|-------|
-| Entity Mapping Completeness | Not Applicable. Validation confirms this repositor... |
-| Missing Database Components | N/A |
-| Added Database Components | N/A |
+| Pattern Implementation Completeness | The specification correctly applies the Service La... |
+| Missing Pattern Components | The specification was missing the formal definitio... |
+| Added Pattern Components | Added full specifications for `ISessionLockService... |
 
-##### 2.1.1.2.5.0 Sequence Interaction Validation
-
-| Property | Value |
-|----------|-------|
-| Interaction Implementation Completeness | Validation of sequence diagrams (e.g., SEQ-AFL-001... |
-| Missing Interaction Components | Detailed implementation logic describing the step-... |
-| Added Interaction Components | Added comprehensive `implementation_logic` descrip... |
-
-#### 2.1.1.3.0.0 Enhanced Specification
-
-##### 2.1.1.3.1.0 Specification Metadata
+## 2.4.0 Database Mapping Validation
 
 | Property | Value |
 |----------|-------|
-| Repository Id | REPO-08-APC |
+| Entity Mapping Completeness | Not applicable. Validation confirms the specificat... |
+| Missing Database Components | None. |
+| Added Database Components | None. |
+
+## 2.5.0 Sequence Interaction Validation
+
+| Property | Value |
+|----------|-------|
+| Interaction Implementation Completeness | Most sequences were covered. SEQ-18 (PDF Export) w... |
+| Missing Interaction Components | The services, interfaces, and DTOs required to imp... |
+| Added Interaction Components | Added `PdfExportService`, `IPdfExportService`, and... |
+
+# 3.0.0 Enhanced Specification
+
+## 3.1.0 Specification Metadata
+
+| Property | Value |
+|----------|-------|
+| Repository Id | DMPS.Client.Application |
 | Technology Stack | .NET 8.0, C# 12, Microsoft.Extensions.DependencyIn... |
-| Technology Guidance Integration | Specification adheres to modern .NET 8.0 conventio... |
-| Framework Compliance Score | 98.5 |
-| Specification Completeness | 99.0% |
+| Technology Guidance Integration | Specification leverages .NET 8.0 features includin... |
+| Framework Compliance Score | 100% |
+| Specification Completeness | 100% |
 | Component Count | 21 |
-| Specification Methodology | Layered Architecture with use-case driven service ... |
+| Specification Methodology | Use-case driven service layer architecture, orches... |
 
-##### 2.1.1.3.2.0 Technology Framework Integration
+## 3.2.0 Technology Framework Integration
 
-###### 2.1.1.3.2.1 Framework Patterns Applied
+### 3.2.1 Framework Patterns Applied
 
 - Dependency Injection
 - Service Layer
 - Facade Pattern
-- Asynchronous Programming (async/await)
-- Options Pattern
-- Observer Pattern (via C# events)
+- Asynchronous Task-based Programming
+- Options Pattern (for configuration)
+- Publish-Subscribe (for messaging via abstractions)
 
-###### 2.1.1.3.2.2 Directory Structure Source
+### 3.2.2 Directory Structure Source
 
-.NET Class Library conventions, organized by feature/responsibility.
+Microsoft Clean Architecture with feature-centric organization.
 
-###### 2.1.1.3.2.3 Naming Conventions Source
+### 3.2.3 Naming Conventions Source
 
 Microsoft C# coding standards.
 
-###### 2.1.1.3.2.4 Architectural Patterns Source
+### 3.2.4 Architectural Patterns Source
 
-Layered Architecture, acting as the mediator between Presentation and Infrastructure.
+Layered Architecture as defined in the system architecture document.
 
-###### 2.1.1.3.2.5 Performance Optimizations Applied
+### 3.2.5 Performance Optimizations Applied
 
-- Asynchronous-first design for all I/O-bound operations to prevent UI blocking.
-- Singleton/Scoped service lifetimes to optimize object creation.
-- Lightweight in-process eventing for UI communication.
+- Exclusive use of async/await for all I/O-bound operations to guarantee UI responsiveness.
+- In-memory caching for license status and background service health to reduce latency on repeated checks.
+- Decoupling of all long-running tasks (printing, PDF export) via message queueing abstractions.
 
-##### 2.1.1.3.3.0 File Structure
+## 3.3.0 File Structure
 
-###### 2.1.1.3.3.1 Directory Organization
+### 3.3.1 Directory Organization
 
-####### 2.1.1.3.3.1.1 Directory Path
+#### 3.3.1.1 Directory Path
 
-######## 2.1.1.3.3.1.1.1 Directory Path
+##### 3.3.1.1.1 Directory Path
 
-Interfaces/
+src/Features/Authentication
 
-######## 2.1.1.3.3.1.1.2 Purpose
+##### 3.3.1.1.2 Purpose
 
-Defines the public contracts (interfaces) for all services provided by this application layer. These interfaces are consumed by the Presentation layer.
+Contains all services, interfaces, and DTOs related to user authentication and session management.
 
-######## 2.1.1.3.3.1.1.3 Contains Files
+##### 3.3.1.1.3 Contains Files
 
 - IAuthenticationService.cs
-- IPrintJobService.cs
-- ISystemStatusService.cs
-- ILicenseValidationService.cs
-- ISessionLockService.cs
-- IApplicationStateService.cs
-
-######## 2.1.1.3.3.1.1.4 Organizational Reasoning
-
-Specification requires separation of the contract from the implementation, adhering to the Dependency Inversion Principle and enabling clean DI registration and mocking for tests.
-
-######## 2.1.1.3.3.1.1.5 Framework Convention Alignment
-
-Standard .NET practice for defining service contracts.
-
-####### 2.1.1.3.3.1.2.0 Directory Path
-
-######## 2.1.1.3.3.1.2.1 Directory Path
-
-Services/
-
-######## 2.1.1.3.3.1.2.2 Purpose
-
-Contains the concrete implementations of the service interfaces. This is where the orchestration logic resides.
-
-######## 2.1.1.3.3.1.2.3 Contains Files
-
 - AuthenticationService.cs
-- PrintJobService.cs
-- SystemStatusService.cs
-- LicenseValidationService.cs
+- AuthenticationResult.cs
+- UserSession.cs
+- AuthenticationStatus.cs
+
+##### 3.3.1.1.4 Organizational Reasoning
+
+Groups all authentication-related logic together, adhering to feature-centric organization.
+
+##### 3.3.1.1.5 Framework Convention Alignment
+
+Aligns with Clean Architecture"s vertical slice or feature-based structuring.
+
+#### 3.3.1.2.0 Directory Path
+
+##### 3.3.1.2.1 Directory Path
+
+src/Features/Session
+
+##### 3.3.1.2.2 Purpose
+
+Manages user session state, including the inactivity lock mechanism.
+
+##### 3.3.1.2.3 Contains Files
+
+- ISessionLockService.cs
 - SessionLockService.cs
-- ApplicationStateService.cs
 
-######## 2.1.1.3.3.1.2.4 Organizational Reasoning
+##### 3.3.1.2.4 Organizational Reasoning
 
-Specification groups all service implementations together, providing a clear location for the core application logic.
+Isolates the session inactivity logic as required by REQ-1-041.
 
-######## 2.1.1.3.3.1.2.5 Framework Convention Alignment
+##### 3.3.1.2.5 Framework Convention Alignment
 
-Common pattern for organizing business logic in .NET applications.
+Separates a distinct cross-cutting concern into its own feature folder.
 
-####### 2.1.1.3.3.1.3.0 Directory Path
+#### 3.3.1.3.0 Directory Path
 
-######## 2.1.1.3.3.1.3.1 Directory Path
+##### 3.3.1.3.1 Directory Path
 
-DTOs/
+src/Features/Licensing
 
-######## 2.1.1.3.3.1.3.2 Purpose
+##### 3.3.1.3.2 Purpose
 
-Defines Data Transfer Objects used for communication with the Presentation Layer or for constructing message payloads.
+Handles the orchestration of application license validation.
 
-######## 2.1.1.3.3.1.3.3 Contains Files
+##### 3.3.1.3.3 Contains Files
 
-- LoginResult.cs
+- ILicenseValidationService.cs
+- LicenseValidationService.cs
+- LicenseStatus.cs
+
+##### 3.3.1.3.4 Organizational Reasoning
+
+Encapsulates all logic related to license checking as per REQ-INT-003.
+
+##### 3.3.1.3.5 Framework Convention Alignment
+
+Feature-centric organization for a core application workflow.
+
+#### 3.3.1.4.0 Directory Path
+
+##### 3.3.1.4.1 Directory Path
+
+src/Features/System
+
+##### 3.3.1.4.2 Purpose
+
+Provides services for checking the status of system components, like the background service.
+
+##### 3.3.1.4.3 Contains Files
+
+- ISystemStatusService.cs
+- SystemStatusService.cs
+
+##### 3.3.1.4.4 Organizational Reasoning
+
+Groups general system-level interaction services.
+
+##### 3.3.1.4.5 Framework Convention Alignment
+
+A logical grouping for system health and status checks.
+
+#### 3.3.1.5.0 Directory Path
+
+##### 3.3.1.5.1 Directory Path
+
+src/Features/Printing
+
+##### 3.3.1.5.2 Purpose
+
+Contains services and DTOs for submitting print jobs.
+
+##### 3.3.1.5.3 Contains Files
+
+- IPrintJobService.cs
+- PrintJobService.cs
 - PrintJobData.cs
 
-######## 2.1.1.3.3.1.3.4 Organizational Reasoning
+##### 3.3.1.5.4 Organizational Reasoning
 
-Specification requires decoupling the application layer's data contracts from the domain models of the Shared Kernel, providing tailored data structures for specific use cases.
+Groups all logic related to the print submission use case.
 
-######## 2.1.1.3.3.1.3.5 Framework Convention Alignment
+##### 3.3.1.5.5 Framework Convention Alignment
 
-Standard DTO pattern. C# 12 records should be used for immutability.
+Feature-centric organization.
 
-####### 2.1.1.3.3.1.4.0 Directory Path
+#### 3.3.1.6.0 Directory Path
 
-######## 2.1.1.3.3.1.4.1 Directory Path
+##### 3.3.1.6.1 Directory Path
 
-Events/
+src/Features/Exporting
 
-######## 2.1.1.3.3.1.4.2 Purpose
+##### 3.3.1.6.2 Purpose
 
-Contains event argument classes for in-process communication between services and the Presentation Layer.
+Contains services and DTOs for submitting PDF export jobs.
 
-######## 2.1.1.3.3.1.4.3 Contains Files
+##### 3.3.1.6.3 Contains Files
 
-- UserLoggedInEventArgs.cs
+- IPdfExportService.cs
+- PdfExportService.cs
+- PdfExportData.cs
 
-######## 2.1.1.3.3.1.4.4 Organizational Reasoning
+##### 3.3.1.6.4 Organizational Reasoning
 
-Specification centralizes event definitions for the Observer pattern, making them easy to discover and reuse.
+Groups all logic for the PDF export use case based on SEQ-18.
 
-######## 2.1.1.3.3.1.4.5 Framework Convention Alignment
+##### 3.3.1.6.5 Framework Convention Alignment
 
-Follows standard .NET event pattern conventions.
+Feature-centric organization.
 
-####### 2.1.1.3.3.1.5.0 Directory Path
+#### 3.3.1.7.0 Directory Path
 
-######## 2.1.1.3.3.1.5.1 Directory Path
+##### 3.3.1.7.1 Directory Path
 
-Exceptions/
+src/Extensions
 
-######## 2.1.1.3.3.1.5.2 Purpose
+##### 3.3.1.7.2 Purpose
 
-Defines custom, application-specific exception types for structured error handling.
+Contains extension methods for DI container configuration.
 
-######## 2.1.1.3.3.1.5.3 Contains Files
-
-- AuthenticationFailedException.cs
-- LicenseValidationException.cs
-
-######## 2.1.1.3.3.1.5.4 Organizational Reasoning
-
-Specification provides a richer error handling mechanism than using generic exceptions, allowing the Presentation Layer to catch and respond to specific failure scenarios.
-
-######## 2.1.1.3.3.1.5.5 Framework Convention Alignment
-
-Standard practice for creating custom exception hierarchies inheriting from `System.Exception`.
-
-####### 2.1.1.3.3.1.6.0 Directory Path
-
-######## 2.1.1.3.3.1.6.1 Directory Path
-
-Extensions/
-
-######## 2.1.1.3.3.1.6.2 Purpose
-
-Contains extension methods for IServiceCollection to encapsulate the DI registration for this entire layer.
-
-######## 2.1.1.3.3.1.6.3 Contains Files
+##### 3.3.1.7.3 Contains Files
 
 - ServiceCollectionExtensions.cs
 
-######## 2.1.1.3.3.1.6.4 Organizational Reasoning
+##### 3.3.1.7.4 Organizational Reasoning
 
-Specification provides a single, clean entry point for the hosting application (WPF client) to register all necessary services, promoting modularity and simplifying the composition root.
+Provides a single, clean entry point for the hosting application to register all services from this layer.
 
-######## 2.1.1.3.3.1.6.5 Framework Convention Alignment
+##### 3.3.1.7.5 Framework Convention Alignment
 
-Best practice for creating self-contained, pluggable library components in the `Microsoft.Extensions.DependencyInjection` ecosystem.
+Standard practice for creating self-contained, composable .NET libraries.
 
-###### 2.1.1.3.3.2.0.0 Namespace Strategy
+### 3.3.2.0.0 Namespace Strategy
 
 | Property | Value |
 |----------|-------|
 | Root Namespace | DMPS.Client.Application |
-| Namespace Organization | Hierarchical, following the directory structure (e... |
-| Naming Conventions | PascalCase for all public types, adhering to Micro... |
-| Framework Alignment | Aligned with standard .NET and Clean Architecture ... |
+| Namespace Organization | Hierarchical by feature, e.g., `DMPS.Client.Applic... |
+| Naming Conventions | PascalCase, following Microsoft C# guidelines. |
+| Framework Alignment | Adheres to .NET namespace conventions for discover... |
 
-##### 2.1.1.3.4.0.0.0 Class Specifications
+## 3.4.0.0.0 Class Specifications
 
-###### 2.1.1.3.4.1.0.0 Class Name
+### 3.4.1.0.0 Class Name
 
-####### 2.1.1.3.4.1.1.0 Class Name
+#### 3.4.1.1.0 Class Name
 
 AuthenticationService
 
-####### 2.1.1.3.4.1.2.0 File Path
+#### 3.4.1.2.0 File Path
 
-Services/AuthenticationService.cs
+src/Features/Authentication/AuthenticationService.cs
 
-####### 2.1.1.3.4.1.3.0 Class Type
+#### 3.4.1.3.0 Class Type
 
 Service
 
-####### 2.1.1.3.4.1.4.0 Inheritance
+#### 3.4.1.4.0 Inheritance
 
 IAuthenticationService
 
-####### 2.1.1.3.4.1.5.0 Purpose
+#### 3.4.1.5.0 Purpose
 
-Orchestrates user authentication, logout, and manages the current user's session state for the client application.
+Orchestrates user authentication, manages the current user session, and handles logout procedures. Fulfills requirements REQ-1-040 and REQ-FNC-003.
 
-####### 2.1.1.3.4.1.6.0 Dependencies
+#### 3.4.1.6.0 Dependencies
 
-- IUserRepository (from REPO-01-SHK)
-- IPasswordHasher (from REPO-04-SEC)
-- IApplicationStateService
-- ILogger<AuthenticationService> (from REPO-03-LOG)
+- IUserRepository
+- IPasswordHasher
 
-####### 2.1.1.3.4.1.7.0 Framework Specific Attributes
+#### 3.4.1.7.0 Framework Specific Attributes
 
 *No items available*
 
-####### 2.1.1.3.4.1.8.0 Technology Integration Notes
+#### 3.4.1.8.0 Technology Integration Notes
 
-Specification requires leveraging constructor injection for all dependencies. All I/O operations must be fully asynchronous to prevent UI blocking.
+Uses constructor injection to receive dependencies. All methods are asynchronous to prevent blocking the UI thread.
 
-####### 2.1.1.3.4.1.9.0 Properties
+#### 3.4.1.9.0 Validation Notes
 
-*No items available*
+Specification validated as complete and aligned with SEQ-1, REQ-1-040, and REQ-FNC-003.
 
-####### 2.1.1.3.4.1.10.0 Methods
+#### 3.4.1.10.0 Properties
 
-######## 2.1.1.3.4.1.10.1 Method Name
+- {'property_name': 'CurrentUser', 'property_type': 'UserSession?', 'access_modifier': 'public', 'purpose': 'Stores the session information of the currently authenticated user. Null if no user is logged in.', 'implementation_notes': 'A private setter should be used to ensure state is only modified through service methods like LoginAsync and LogoutAsync.'}
 
-######### 2.1.1.3.4.1.10.1.1 Method Name
+#### 3.4.1.11.0 Methods
+
+##### 3.4.1.11.1 Method Name
+
+###### 3.4.1.11.1.1 Method Name
 
 LoginAsync
 
-######### 2.1.1.3.4.1.10.1.2 Method Signature
+###### 3.4.1.11.1.2 Method Signature
 
 LoginAsync(string username, string password)
 
-######### 2.1.1.3.4.1.10.1.3 Return Type
+###### 3.4.1.11.1.3 Return Type
 
-Task<LoginResult>
+Task<AuthenticationResult>
 
-######### 2.1.1.3.4.1.10.1.4 Access Modifier
+###### 3.4.1.11.1.4 Access Modifier
 
 public
 
-######### 2.1.1.3.4.1.10.1.5 Is Async
+###### 3.4.1.11.1.5 Is Async
 
-✅ Yes
+true
 
-######### 2.1.1.3.4.1.10.1.6 Framework Specific Attributes
+###### 3.4.1.11.1.6 Parameters
 
-*No items available*
+####### 3.4.1.11.1.6.1 Parameter Name
 
-######### 2.1.1.3.4.1.10.1.7 Parameters
-
-########## 2.1.1.3.4.1.10.1.7.1 Parameter Name
-
-########### 2.1.1.3.4.1.10.1.7.1.1 Parameter Name
+######## 3.4.1.11.1.6.1.1 Parameter Name
 
 username
 
-########### 2.1.1.3.4.1.10.1.7.1.2 Parameter Type
+######## 3.4.1.11.1.6.1.2 Parameter Type
 
 string
 
-########### 2.1.1.3.4.1.10.1.7.1.3 Is Nullable
+######## 3.4.1.11.1.6.1.3 Is Nullable
 
-❌ No
+false
 
-########### 2.1.1.3.4.1.10.1.7.1.4 Purpose
+######## 3.4.1.11.1.6.1.4 Purpose
 
-The username provided by the user.
+The user"s username.
 
-########### 2.1.1.3.4.1.10.1.7.1.5 Framework Attributes
+####### 3.4.1.11.1.6.2.0 Parameter Name
 
-*No items available*
-
-########## 2.1.1.3.4.1.10.1.7.2.0 Parameter Name
-
-########### 2.1.1.3.4.1.10.1.7.2.1 Parameter Name
+######## 3.4.1.11.1.6.2.1 Parameter Name
 
 password
 
-########### 2.1.1.3.4.1.10.1.7.2.2 Parameter Type
+######## 3.4.1.11.1.6.2.2 Parameter Type
 
 string
 
-########### 2.1.1.3.4.1.10.1.7.2.3 Is Nullable
+######## 3.4.1.11.1.6.2.3 Is Nullable
 
-❌ No
+false
 
-########### 2.1.1.3.4.1.10.1.7.2.4 Purpose
+######## 3.4.1.11.1.6.2.4 Purpose
 
-The plaintext password provided by the user.
+The user"s plaintext password.
 
-########### 2.1.1.3.4.1.10.1.7.2.5 Framework Attributes
+###### 3.4.1.11.1.7.0.0 Implementation Logic
 
-*No items available*
 
-######### 2.1.1.3.4.1.10.1.8.0.0 Implementation Logic
 
-Specification requires the following orchestration: 1. Logs the login attempt. 2. Calls `IUserRepository.GetUserByUsernameAsync` to retrieve the user record. 3. If user is not found or is inactive, throws `AuthenticationFailedException`. 4. Calls `IPasswordHasher.VerifyPassword` to compare the provided password with the stored hash. 5. If verification fails, throws `AuthenticationFailedException`. 6. If successful, updates the `IApplicationStateService` with the authenticated user. 7. Raises the `UserLoggedIn` event. 8. Returns a `LoginResult` object indicating success and containing the user's information.
+```
+1. Invokes `IUserRepository.GetUserByUsernameAsync` to fetch the user record.
+2. If user not found, returns `AuthenticationStatus.InvalidCredentials`.
+3. Invokes `IPasswordHasher.VerifyPassword` to compare the provided password with the user"s hash.
+4. If password is valid, creates a `UserSession` object containing user ID and role.
+5. Checks the user"s `isTemporaryPassword` flag. If true, returns `AuthenticationStatus.PasswordChangeRequired`.
+6. If not temporary, sets the `CurrentUser` property, raises a `UserLoggedIn` event, and returns `AuthenticationStatus.Success`.
+7. If password is invalid, returns `AuthenticationStatus.InvalidCredentials`.
+8. Explicitly clear the plaintext password from memory after verification.
+```
 
-######### 2.1.1.3.4.1.10.1.9.0.0 Exception Handling
+###### 3.4.1.11.1.8.0.0 Exception Handling
 
-Specification requires catching exceptions from dependencies. Must throw a single, generic `AuthenticationFailedException` for any failed login attempt (user not found, wrong password, inactive account) to prevent username enumeration. Detailed exceptions must be logged internally.
+Should catch exceptions from dependencies and log them. Should return a failure result rather than letting exceptions propagate to the UI layer.
 
-######### 2.1.1.3.4.1.10.1.10.0.0 Performance Considerations
+###### 3.4.1.11.1.9.0.0 Technology Integration Details
 
-Specification requires a fully asynchronous implementation. The password must be cleared from memory as soon as verification is complete.
+Orchestrates calls to `REPO-01-SHK` and `REPO-04-SEC` as detailed in sequence diagram SEQ-1.
 
-######### 2.1.1.3.4.1.10.1.11.0.0 Validation Requirements
+##### 3.4.1.11.2.0.0.0 Method Name
 
-Input strings must not be null or empty.
+###### 3.4.1.11.2.1.0.0 Method Name
 
-######### 2.1.1.3.4.1.10.1.12.0.0 Technology Integration Details
+LogoutAsync
 
-Specification details the orchestration of calls to `REPO-01-SHK` and `REPO-04-SEC` as detailed in sequence diagrams SEQ-AFL-001 and SEQ-AFL-013.
+###### 3.4.1.11.2.2.0.0 Method Signature
 
-######## 2.1.1.3.4.1.10.2.0.0.0 Method Name
+LogoutAsync()
 
-######### 2.1.1.3.4.1.10.2.1.0.0 Method Name
+###### 3.4.1.11.2.3.0.0 Return Type
 
-Logout
+Task
 
-######### 2.1.1.3.4.1.10.2.2.0.0 Method Signature
-
-Logout()
-
-######### 2.1.1.3.4.1.10.2.3.0.0 Return Type
-
-void
-
-######### 2.1.1.3.4.1.10.2.4.0.0 Access Modifier
+###### 3.4.1.11.2.4.0.0 Access Modifier
 
 public
 
-######### 2.1.1.3.4.1.10.2.5.0.0 Is Async
+###### 3.4.1.11.2.5.0.0 Is Async
 
-❌ No
+true
 
-######### 2.1.1.3.4.1.10.2.6.0.0 Framework Specific Attributes
-
-*No items available*
-
-######### 2.1.1.3.4.1.10.2.7.0.0 Parameters
+###### 3.4.1.11.2.6.0.0 Parameters
 
 *No items available*
 
-######### 2.1.1.3.4.1.10.2.8.0.0 Implementation Logic
+###### 3.4.1.11.2.7.0.0 Implementation Logic
 
-Specification requires the following logic: 1. Logs the logout event. 2. Clears the current user from the `IApplicationStateService`. 3. Raises the `UserLoggedOut` event.
 
-######### 2.1.1.3.4.1.10.2.9.0.0 Exception Handling
 
-Specification dictates this should be a safe operation that does not throw exceptions.
+```
+1. Sets the `CurrentUser` property to null.
+2. Raises a `UserLoggedOut` event to notify the UI and other services.
+3. The operation should be asynchronous to allow for any potential cleanup tasks.
+```
 
-######### 2.1.1.3.4.1.10.2.10.0.0 Performance Considerations
+###### 3.4.1.11.2.8.0.0 Exception Handling
 
-Specification requires a synchronous, lightweight operation.
+Should be a non-failing operation.
 
-######### 2.1.1.3.4.1.10.2.11.0.0 Validation Requirements
+### 3.4.2.0.0.0.0.0 Class Name
 
-N/A
-
-######### 2.1.1.3.4.1.10.2.12.0.0 Technology Integration Details
-
-Specification requires resetting the application's security context.
-
-####### 2.1.1.3.4.1.11.0.0.0.0 Events
-
-*No items available*
-
-####### 2.1.1.3.4.1.12.0.0.0.0 Implementation Notes
-
-Specification requires this service to be registered as a Scoped or Singleton service in the DI container.
-
-###### 2.1.1.3.4.2.0.0.0.0.0 Class Name
-
-####### 2.1.1.3.4.2.1.0.0.0.0 Class Name
-
-PrintJobService
-
-####### 2.1.1.3.4.2.2.0.0.0.0 File Path
-
-Services/PrintJobService.cs
-
-####### 2.1.1.3.4.2.3.0.0.0.0 Class Type
-
-Service
-
-####### 2.1.1.3.4.2.4.0.0.0.0 Inheritance
-
-IPrintJobService
-
-####### 2.1.1.3.4.2.5.0.0.0.0 Purpose
-
-Constructs and publishes asynchronous command messages for print and PDF export jobs to the background service.
-
-####### 2.1.1.3.4.2.6.0.0.0.0 Dependencies
-
-- IMessageProducer (from REPO-05-COM)
-- ILogger<PrintJobService>
-
-####### 2.1.1.3.4.2.7.0.0.0.0 Framework Specific Attributes
-
-*No items available*
-
-####### 2.1.1.3.4.2.8.0.0.0.0 Technology Integration Notes
-
-Specification positions this class as a client-side producer in an event-driven architecture, decoupling the UI from the long-running print/export process.
-
-####### 2.1.1.3.4.2.9.0.0.0.0 Properties
-
-*No items available*
-
-####### 2.1.1.3.4.2.10.0.0.0.0 Methods
-
-- {'method_name': 'SubmitPrintJobAsync', 'method_signature': 'SubmitPrintJobAsync(PrintJobData jobData)', 'return_type': 'Task', 'access_modifier': 'public', 'is_async': True, 'framework_specific_attributes': [], 'parameters': [{'parameter_name': 'jobData', 'parameter_type': 'PrintJobData', 'is_nullable': False, 'purpose': 'A DTO containing all necessary information for the background service to process the print job.', 'framework_attributes': []}], 'implementation_logic': 'Specification requires the following logic: 1. Logs the submission request. 2. Generates a new unique `correlationId` (Guid). 3. Constructs a command message DTO (defined in `REPO-01-SHK`) from the `jobData`. 4. Calls `IMessageProducer.Publish` with the command message, an appropriate routing key (e.g., \\"print.job.request\\"), and the `correlationId`. 5. The method is fire-and-forget from the client\'s perspective; it returns as soon as the message is handed to the producer.', 'exception_handling': 'Specification requires catching and logging exceptions from the `IMessageProducer` if the message broker is unavailable, and re-throwing them as an application-level exception to be handled by the UI.', 'performance_considerations': 'Specification requires the operation to return control to the UI in under 200ms.', 'validation_requirements': 'The `jobData` DTO must be validated before calling this method.', 'technology_integration_details': 'Specification implements the client-side logic of the asynchronous printing flow detailed in sequence diagrams SEQ-EVP-003 and SEQ-EVP-018.'}
-
-####### 2.1.1.3.4.2.11.0.0.0.0 Events
-
-*No items available*
-
-####### 2.1.1.3.4.2.12.0.0.0.0 Implementation Notes
-
-Specification states the command message DTO contract must be shared with the background service via `REPO-01-SHK`.
-
-###### 2.1.1.3.4.3.0.0.0.0.0 Class Name
-
-####### 2.1.1.3.4.3.1.0.0.0.0 Class Name
-
-SystemStatusService
-
-####### 2.1.1.3.4.3.2.0.0.0.0 File Path
-
-Services/SystemStatusService.cs
-
-####### 2.1.1.3.4.3.3.0.0.0.0 Class Type
-
-Service
-
-####### 2.1.1.3.4.3.4.0.0.0.0 Inheritance
-
-ISystemStatusService
-
-####### 2.1.1.3.4.3.5.0.0.0.0 Purpose
-
-Provides real-time status information about the background Windows Service.
-
-####### 2.1.1.3.4.3.6.0.0.0.0 Dependencies
-
-- INamedPipeClient (from REPO-05-COM)
-- ILogger<SystemStatusService>
-
-####### 2.1.1.3.4.3.7.0.0.0.0 Framework Specific Attributes
-
-*No items available*
-
-####### 2.1.1.3.4.3.8.0.0.0.0 Technology Integration Notes
-
-Specification mandates using .NET Named Pipes for low-latency, synchronous Inter-Process Communication (IPC) on the local machine.
-
-####### 2.1.1.3.4.3.9.0.0.0.0 Properties
-
-*No items available*
-
-####### 2.1.1.3.4.3.10.0.0.0.0 Methods
-
-- {'method_name': 'IsBackgroundServiceRunningAsync', 'method_signature': 'IsBackgroundServiceRunningAsync()', 'return_type': 'Task<bool>', 'access_modifier': 'public', 'is_async': True, 'framework_specific_attributes': [], 'parameters': [], 'implementation_logic': 'Specification requires the following logic: 1. Wraps the call to `INamedPipeClient.SendRequestAsync` in a try-catch block. 2. Sends a simple \\"PING\\" request. 3. If a response is received successfully, returns `true`. 4. If a `TimeoutException` or `PipeBrokenException` is caught, it indicates the service is not listening. Logs a warning and returns `false`.', 'exception_handling': 'Specification requires specifically handling `TimeoutException` as the primary mechanism for detecting if the service is down. Any other exception must be logged and result in a `false` return.', 'performance_considerations': 'Specification requires the timeout on the named pipe client to be short (e.g., 1-2 seconds) to provide quick feedback without making the UI feel sluggish.', 'validation_requirements': 'N/A', 'technology_integration_details': 'Specification implements the client-side logic of the synchronous status check detailed in sequence diagram SEQ-SIT-012.'}
-
-####### 2.1.1.3.4.3.11.0.0.0.0 Events
-
-*No items available*
-
-####### 2.1.1.3.4.3.12.0.0.0.0 Implementation Notes
-
-This service enables the UI to dynamically enable/disable features that depend on the background service.
-
-###### 2.1.1.3.4.4.0.0.0.0.0 Class Name
-
-####### 2.1.1.3.4.4.1.0.0.0.0 Class Name
-
-LicenseValidationService
-
-####### 2.1.1.3.4.4.2.0.0.0.0 File Path
-
-Services/LicenseValidationService.cs
-
-####### 2.1.1.3.4.4.3.0.0.0.0 Class Type
-
-Service
-
-####### 2.1.1.3.4.4.4.0.0.0.0 Inheritance
-
-ILicenseValidationService
-
-####### 2.1.1.3.4.4.5.0.0.0.0 Purpose
-
-Orchestrates the application license validation workflow on startup, including managing the grace period for network failures.
-
-####### 2.1.1.3.4.4.6.0.0.0.0 Dependencies
-
-- ILicenseApiClient (from REPO-07-IOI)
-- IApplicationStateService
-- ILogger<LicenseValidationService>
-
-####### 2.1.1.3.4.4.7.0.0.0.0 Framework Specific Attributes
-
-*No items available*
-
-####### 2.1.1.3.4.4.8.0.0.0.0 Technology Integration Notes
-
-Specification requires managing application state based on the outcome of an external HTTPS API call.
-
-####### 2.1.1.3.4.4.9.0.0.0.0 Properties
-
-*No items available*
-
-####### 2.1.1.3.4.4.10.0.0.0.0 Methods
-
-- {'method_name': 'ValidateLicenseOnStartupAsync', 'method_signature': 'ValidateLicenseOnStartupAsync()', 'return_type': 'Task', 'access_modifier': 'public', 'is_async': True, 'framework_specific_attributes': [], 'parameters': [], 'implementation_logic': 'Specification requires the following orchestration: 1. Retrieves the license key from a secure store (orchestration only, the secure store is in `REPO-04-SEC`). 2. Calls `ILicenseApiClient.ValidateLicenseAsync`. 3. Based on the `LicenseStatus` result: a. On \\"Valid\\": Updates `IApplicationStateService` to \\"Licensed\\". b. On \\"Invalid\\": Updates `IApplicationStateService` to \\"ReadOnly\\". c. On \\"ApiUnreachable\\": Checks if a grace period is active. If not, starts a 72-hour grace period and updates state to \\"GracePeriod\\". If grace period has expired, updates state to \\"ReadOnly\\".', 'exception_handling': 'Specification requires catching exceptions from the API client, logging them, and treating them as an \\"ApiUnreachable\\" scenario to trigger the grace period logic.', 'performance_considerations': 'Specification requires this operation to run in the background during application startup, allowing a splash screen to be shown.', 'validation_requirements': 'N/A', 'technology_integration_details': 'Specification implements the client-side orchestration logic from sequence diagram SEQ-INT-005.'}
-
-####### 2.1.1.3.4.4.11.0.0.0.0 Events
-
-*No items available*
-
-####### 2.1.1.3.4.4.12.0.0.0.0 Implementation Notes
-
-Specification requires managing persistent state for the grace period (e.g., writing the start time to a local file or registry) so it survives application restarts.
-
-###### 2.1.1.3.4.5.0.0.0.0.0 Class Name
-
-####### 2.1.1.3.4.5.1.0.0.0.0 Class Name
+#### 3.4.2.1.0.0.0.0 Class Name
 
 SessionLockService
 
-####### 2.1.1.3.4.5.2.0.0.0.0 File Path
+#### 3.4.2.2.0.0.0.0 File Path
 
-Services/SessionLockService.cs
+src/Features/Session/SessionLockService.cs
 
-####### 2.1.1.3.4.5.3.0.0.0.0 Class Type
+#### 3.4.2.3.0.0.0.0 Class Type
 
 Service
 
-####### 2.1.1.3.4.5.4.0.0.0.0 Inheritance
+#### 3.4.2.4.0.0.0.0 Inheritance
 
 ISessionLockService
 
-####### 2.1.1.3.4.5.5.0.0.0.0 Purpose
+#### 3.4.2.5.0.0.0.0 Purpose
 
-Monitors user inactivity and triggers a session lock event after a configurable timeout.
+Manages a 15-minute inactivity timer to automatically lock the application session, as required by REQ-1-041.
 
-####### 2.1.1.3.4.5.6.0.0.0.0 Dependencies
+#### 3.4.2.6.0.0.0.0 Dependencies
 
-- ILogger<SessionLockService>
+- IAuthenticationService
 
-####### 2.1.1.3.4.5.7.0.0.0.0 Framework Specific Attributes
-
-*No items available*
-
-####### 2.1.1.3.4.5.8.0.0.0.0 Technology Integration Notes
-
-Specification requires using a `System.Threading.Timer` for background timing without consuming a dedicated thread.
-
-####### 2.1.1.3.4.5.9.0.0.0.0 Properties
+#### 3.4.2.7.0.0.0.0 Framework Specific Attributes
 
 *No items available*
 
-####### 2.1.1.3.4.5.10.0.0.0.0 Methods
+#### 3.4.2.8.0.0.0.0 Technology Integration Notes
 
-######## 2.1.1.3.4.5.10.1.0.0.0 Method Name
+Should use a `System.Timers.Timer` or similar mechanism that operates on a background thread to avoid interfering with the UI.
 
-######### 2.1.1.3.4.5.10.1.1.0.0 Method Name
+#### 3.4.2.9.0.0.0.0 Validation Notes
 
-Start
+Specification validated as complete and compliant with REQ-1-041 and SEQ-9.
 
-######### 2.1.1.3.4.5.10.1.2.0.0 Method Signature
+#### 3.4.2.10.0.0.0.0 Properties
 
-Start(TimeSpan inactivityTimeout)
+- {'property_name': 'IsLocked', 'property_type': 'bool', 'access_modifier': 'public', 'purpose': 'Indicates if the current session is locked.', 'implementation_notes': 'Should have a private setter and be managed via the service"s internal logic.'}
 
-######### 2.1.1.3.4.5.10.1.3.0.0 Return Type
+#### 3.4.2.11.0.0.0.0 Methods
+
+##### 3.4.2.11.1.0.0.0 Method Name
+
+###### 3.4.2.11.1.1.0.0 Method Name
+
+Initialize
+
+###### 3.4.2.11.1.2.0.0 Method Signature
+
+Initialize()
+
+###### 3.4.2.11.1.3.0.0 Return Type
 
 void
 
-######### 2.1.1.3.4.5.10.1.4.0.0 Access Modifier
+###### 3.4.2.11.1.4.0.0 Access Modifier
 
 public
 
-######### 2.1.1.3.4.5.10.1.5.0.0 Is Async
+###### 3.4.2.11.1.5.0.0 Is Async
 
-❌ No
+false
 
-######### 2.1.1.3.4.5.10.1.6.0.0 Framework Specific Attributes
+###### 3.4.2.11.1.6.0.0 Parameters
 
 *No items available*
 
-######### 2.1.1.3.4.5.10.1.7.0.0 Parameters
+###### 3.4.2.11.1.7.0.0 Implementation Logic
 
-- {'parameter_name': 'inactivityTimeout', 'parameter_type': 'TimeSpan', 'is_nullable': False, 'purpose': 'The duration of inactivity before the session is locked (e.g., 15 minutes).', 'framework_attributes': []}
+Starts the inactivity timer. This should be called once the user is authenticated.
 
-######### 2.1.1.3.4.5.10.1.8.0.0 Implementation Logic
+##### 3.4.2.11.2.0.0.0 Method Name
 
-Specification requires initializing and starting the internal timer with the specified timeout.
+###### 3.4.2.11.2.1.0.0 Method Name
 
-######### 2.1.1.3.4.5.10.1.9.0.0 Exception Handling
+ResetTimer
 
-N/A
+###### 3.4.2.11.2.2.0.0 Method Signature
 
-######### 2.1.1.3.4.5.10.1.10.0.0 Performance Considerations
+ResetTimer()
 
-N/A
-
-######### 2.1.1.3.4.5.10.1.11.0.0 Validation Requirements
-
-N/A
-
-######### 2.1.1.3.4.5.10.1.12.0.0 Technology Integration Details
-
-
-
-######## 2.1.1.3.4.5.10.2.0.0.0 Method Name
-
-######### 2.1.1.3.4.5.10.2.1.0.0 Method Name
-
-ResetInactivityTimer
-
-######### 2.1.1.3.4.5.10.2.2.0.0 Method Signature
-
-ResetInactivityTimer()
-
-######### 2.1.1.3.4.5.10.2.3.0.0 Return Type
+###### 3.4.2.11.2.3.0.0 Return Type
 
 void
 
-######### 2.1.1.3.4.5.10.2.4.0.0 Access Modifier
+###### 3.4.2.11.2.4.0.0 Access Modifier
 
 public
 
-######### 2.1.1.3.4.5.10.2.5.0.0 Is Async
+###### 3.4.2.11.2.5.0.0 Is Async
 
-❌ No
+false
 
-######### 2.1.1.3.4.5.10.2.6.0.0 Framework Specific Attributes
-
-*No items available*
-
-######### 2.1.1.3.4.5.10.2.7.0.0 Parameters
+###### 3.4.2.11.2.6.0.0 Parameters
 
 *No items available*
 
-######### 2.1.1.3.4.5.10.2.8.0.0 Implementation Logic
+###### 3.4.2.11.2.7.0.0 Implementation Logic
 
-Specification requires resetting the internal timer back to its full duration. This method must be called by the Presentation layer in response to any user keyboard or mouse input.
+Resets the inactivity timer to its full 15-minute duration. This method should be called in response to any user activity detected by the Presentation Layer.
 
-######### 2.1.1.3.4.5.10.2.9.0.0 Exception Handling
+###### 3.4.2.11.2.8.0.0 Performance Considerations
 
-N/A
+Should be lightweight as it may be called frequently.
 
-######### 2.1.1.3.4.5.10.2.10.0.0 Performance Considerations
+##### 3.4.2.11.3.0.0.0 Method Name
 
-Specification requires this method to be very lightweight as it is called frequently.
+###### 3.4.2.11.3.1.0.0 Method Name
 
-######### 2.1.1.3.4.5.10.2.11.0.0 Validation Requirements
+UnlockSessionAsync
 
-N/A
+###### 3.4.2.11.3.2.0.0 Method Signature
 
-######### 2.1.1.3.4.5.10.2.12.0.0 Technology Integration Details
+UnlockSessionAsync(string password)
 
-Specification implements the timer logic from sequence diagram SEQ-SEC-009.
+###### 3.4.2.11.3.3.0.0 Return Type
 
-####### 2.1.1.3.4.5.11.0.0.0.0 Events
+Task<bool>
 
-- {'event_name': 'SessionLockTriggered', 'event_type': 'EventHandler', 'trigger_conditions': 'The internal inactivity timer elapses.', 'event_data': 'EventArgs.Empty'}
+###### 3.4.2.11.3.4.0.0 Access Modifier
 
-####### 2.1.1.3.4.5.12.0.0.0.0 Implementation Notes
+public
 
-Specification requires this service to be registered as a Singleton to ensure only one timer exists for the application's lifetime.
+###### 3.4.2.11.3.5.0.0 Is Async
 
-###### 2.1.1.3.4.6.0.0.0.0.0 Class Name
+true
 
-####### 2.1.1.3.4.6.1.0.0.0.0 Class Name
+###### 3.4.2.11.3.6.0.0 Parameters
+
+- {'parameter_name': 'password', 'parameter_type': 'string', 'is_nullable': 'false', 'purpose': 'The user"s password for re-authentication.'}
+
+###### 3.4.2.11.3.7.0.0 Implementation Logic
+
+
+
+```
+1. Retrieves the current user"s username from the `IAuthenticationService.CurrentUser` session.
+2. Invokes the core login logic to verify the password for the current user.
+3. If successful, sets `IsLocked` to false, raises the `SessionUnlocked` event, resets the timer, and returns true.
+4. If unsuccessful, returns false.
+5. Follows the logic outlined in sequence diagram SEQ-9.
+```
+
+###### 3.4.2.11.3.8.0.0 Exception Handling
+
+Should handle authentication failures gracefully and return false.
+
+###### 3.4.2.11.3.9.0.0 Technology Integration Details
+
+Requires tight orchestration with `IAuthenticationService`.
+
+### 3.4.3.0.0.0.0.0 Class Name
+
+#### 3.4.3.1.0.0.0.0 Class Name
+
+LicenseValidationService
+
+#### 3.4.3.2.0.0.0.0 File Path
+
+src/Features/Licensing/LicenseValidationService.cs
+
+#### 3.4.3.3.0.0.0.0 Class Type
+
+Service
+
+#### 3.4.3.4.0.0.0.0 Inheritance
+
+ILicenseValidationService
+
+#### 3.4.3.5.0.0.0.0 Purpose
+
+Orchestrates the application license validation at startup, handling different operational modes and grace periods as per REQ-INT-003.
+
+#### 3.4.3.6.0.0.0.0 Dependencies
+
+- ILicenseApiClient
+
+#### 3.4.3.7.0.0.0.0 Framework Specific Attributes
+
+*No items available*
+
+#### 3.4.3.8.0.0.0.0 Technology Integration Notes
+
+Implements the client-side orchestration logic shown in sequence diagram SEQ-5.
+
+#### 3.4.3.9.0.0.0.0 Validation Notes
+
+Specification validated as complete and compliant with REQ-INT-003 and SEQ-5.
+
+#### 3.4.3.10.0.0.0.0 Properties
+
+- {'property_name': 'CurrentStatus', 'property_type': 'LicenseStatus', 'access_modifier': 'public', 'purpose': 'Holds the current license status of the application.', 'implementation_notes': 'Should have a private setter.'}
+
+#### 3.4.3.11.0.0.0.0 Methods
+
+- {'method_name': 'ValidateLicenseAtStartupAsync', 'method_signature': 'ValidateLicenseAtStartupAsync(string licenseKey)', 'return_type': 'Task<LicenseStatus>', 'access_modifier': 'public', 'is_async': 'true', 'parameters': [{'parameter_name': 'licenseKey', 'parameter_type': 'string', 'is_nullable': 'false', 'purpose': 'The license key to be validated.'}], 'implementation_logic': '1. Invokes `ILicenseApiClient.ValidateLicenseAsync` with the provided key.\n2. Caches and sets the `CurrentStatus` property based on the result.\n3. Implements fallback logic as described in SEQ-5: if the API is unreachable, it should check for a locally stored grace period timestamp. If within the grace period, it should return a "GracePeriod" status; otherwise, "Invalid".\n4. Stores a grace period timestamp locally upon first API failure.', 'exception_handling': 'Must gracefully handle exceptions from the `ILicenseApiClient` (e.g., network errors) and trigger the fallback/grace period logic.', 'technology_integration_details': 'Orchestrates calls to `REPO-07-IOI`.'}
+
+### 3.4.4.0.0.0.0.0 Class Name
+
+#### 3.4.4.1.0.0.0.0 Class Name
+
+SystemStatusService
+
+#### 3.4.4.2.0.0.0.0 File Path
+
+src/Features/System/SystemStatusService.cs
+
+#### 3.4.4.3.0.0.0.0 Class Type
+
+Service
+
+#### 3.4.4.4.0.0.0.0 Inheritance
+
+ISystemStatusService
+
+#### 3.4.4.5.0.0.0.0 Purpose
+
+Provides a mechanism to check the health and availability of the background Windows Service.
+
+#### 3.4.4.6.0.0.0.0 Dependencies
+
+- INamedPipeClient
+
+#### 3.4.4.7.0.0.0.0 Framework Specific Attributes
+
+*No items available*
+
+#### 3.4.4.8.0.0.0.0 Technology Integration Notes
+
+Uses the Named Pipe client for low-latency, synchronous IPC as detailed in SEQ-12.
+
+#### 3.4.4.9.0.0.0.0 Validation Notes
+
+Specification validated as complete and compliant with SEQ-12.
+
+#### 3.4.4.10.0.0.0.0 Methods
+
+- {'method_name': 'IsBackgroundServiceRunningAsync', 'method_signature': 'IsBackgroundServiceRunningAsync()', 'return_type': 'Task<bool>', 'access_modifier': 'public', 'is_async': 'true', 'parameters': [], 'implementation_logic': '1. Invokes `INamedPipeClient.SendRequestAsync` with a "PING" message.\n2. Awaits the response with a short timeout (e.g., 500ms).\n3. If the response is "PONG", returns true.\n4. If a timeout or any other exception occurs, it assumes the service is not running and returns false.', 'exception_handling': 'Must catch `TimeoutException` and other IPC-related exceptions from the `INamedPipeClient` and return `false`.', 'performance_considerations': 'May implement a short-lived cache (e.g., 5 seconds) to prevent spamming the background service with status requests.', 'technology_integration_details': 'Orchestrates calls to `REPO-05-COM`.'}
+
+### 3.4.5.0.0.0.0.0 Class Name
+
+#### 3.4.5.1.0.0.0.0 Class Name
+
+PrintJobService
+
+#### 3.4.5.2.0.0.0.0 File Path
+
+src/Features/Printing/PrintJobService.cs
+
+#### 3.4.5.3.0.0.0.0 Class Type
+
+Service
+
+#### 3.4.5.4.0.0.0.0 Inheritance
+
+IPrintJobService
+
+#### 3.4.5.5.0.0.0.0 Purpose
+
+Constructs and publishes print job commands to the message queue for asynchronous processing.
+
+#### 3.4.5.6.0.0.0.0 Dependencies
+
+- IMessageProducer
+
+#### 3.4.5.7.0.0.0.0 Framework Specific Attributes
+
+*No items available*
+
+#### 3.4.5.8.0.0.0.0 Technology Integration Notes
+
+Acts as a simple facade over the message publishing infrastructure, decoupling the UI from RabbitMQ specifics, as shown in SEQ-3.
+
+#### 3.4.5.9.0.0.0.0 Validation Notes
+
+Specification validated as complete and compliant with SEQ-3.
+
+#### 3.4.5.10.0.0.0.0 Methods
+
+- {'method_name': 'SubmitPrintJobAsync', 'method_signature': 'SubmitPrintJobAsync(PrintJobData jobData)', 'return_type': 'Task', 'access_modifier': 'public', 'is_async': 'true', 'parameters': [{'parameter_name': 'jobData', 'parameter_type': 'PrintJobData', 'is_nullable': 'false', 'purpose': 'A DTO containing all information required to process the print job.'}], 'implementation_logic': '1. Creates a new `SubmitPrintJobCommand` object from the provided `PrintJobData` DTO.\n2. Generates a unique correlation ID for tracing.\n3. Invokes `IMessageProducer.Publish` with the command, a specific routing key for print jobs, and the correlation ID.', 'exception_handling': 'Should catch and log exceptions from the `IMessageProducer` if the message broker is unavailable.', 'technology_integration_details': 'Orchestrates calls to `REPO-05-COM`.'}
+
+### 3.4.6.0.0.0.0.0 Class Name
+
+#### 3.4.6.1.0.0.0.0 Class Name
+
+PdfExportService
+
+#### 3.4.6.2.0.0.0.0 File Path
+
+src/Features/Exporting/PdfExportService.cs
+
+#### 3.4.6.3.0.0.0.0 Class Type
+
+Service
+
+#### 3.4.6.4.0.0.0.0 Inheritance
+
+IPdfExportService
+
+#### 3.4.6.5.0.0.0.0 Purpose
+
+Constructs and publishes PDF export commands to the message queue for asynchronous processing.
+
+#### 3.4.6.6.0.0.0.0 Dependencies
+
+- IMessageProducer
+
+#### 3.4.6.7.0.0.0.0 Framework Specific Attributes
+
+*No items available*
+
+#### 3.4.6.8.0.0.0.0 Technology Integration Notes
+
+Acts as a facade over the message publishing infrastructure, decoupling the UI from RabbitMQ, as shown in SEQ-18.
+
+#### 3.4.6.9.0.0.0.0 Validation Notes
+
+This is an added component to fill a specification gap identified during validation. It is aligned with SEQ-18.
+
+#### 3.4.6.10.0.0.0.0 Methods
+
+- {'method_name': 'ExportToPdfAsync', 'method_signature': 'ExportToPdfAsync(PdfExportData exportData)', 'return_type': 'Task', 'access_modifier': 'public', 'is_async': 'true', 'parameters': [{'parameter_name': 'exportData', 'parameter_type': 'PdfExportData', 'is_nullable': 'false', 'purpose': 'A DTO containing all information required to process the PDF export job.'}], 'implementation_logic': '1. Creates a new `GeneratePdfCommand` object from the `PdfExportData` DTO.\n2. Generates a unique correlation ID for tracing.\n3. Invokes `IMessageProducer.Publish` with the command, a specific routing key for PDF jobs, and the correlation ID.', 'exception_handling': 'Should catch and log exceptions from `IMessageProducer` if the message broker is unavailable.', 'technology_integration_details': 'Orchestrates calls to `REPO-05-COM`.'}
+
+### 3.4.7.0.0.0.0.0 Class Name
+
+#### 3.4.7.1.0.0.0.0 Class Name
 
 ServiceCollectionExtensions
 
-####### 2.1.1.3.4.6.2.0.0.0.0 File Path
+#### 3.4.7.2.0.0.0.0 File Path
 
-Extensions/ServiceCollectionExtensions.cs
+src/Extensions/ServiceCollectionExtensions.cs
 
-####### 2.1.1.3.4.6.3.0.0.0.0 Class Type
+#### 3.4.7.3.0.0.0.0 Class Type
 
 Static Extension
 
-####### 2.1.1.3.4.6.4.0.0.0.0 Inheritance
+#### 3.4.7.4.0.0.0.0 Inheritance
 
+None
 
+#### 3.4.7.5.0.0.0.0 Purpose
 
-####### 2.1.1.3.4.6.5.0.0.0.0 Purpose
+Provides a single, cohesive entry point for registering all services in this assembly, simplifying the setup in the main application"s composition root.
 
-Provides a single entry point to register all services from this project into the `Microsoft.Extensions.DependencyInjection` container.
-
-####### 2.1.1.3.4.6.6.0.0.0.0 Dependencies
-
-*No items available*
-
-####### 2.1.1.3.4.6.7.0.0.0.0 Framework Specific Attributes
+#### 3.4.7.6.0.0.0.0 Dependencies
 
 *No items available*
 
-####### 2.1.1.3.4.6.8.0.0.0.0 Technology Integration Notes
-
-Specification implements a key pattern for creating modular, self-contained .NET libraries.
-
-####### 2.1.1.3.4.6.9.0.0.0.0 Properties
+#### 3.4.7.7.0.0.0.0 Framework Specific Attributes
 
 *No items available*
 
-####### 2.1.1.3.4.6.10.0.0.0.0 Methods
+#### 3.4.7.8.0.0.0.0 Technology Integration Notes
 
-- {'method_name': 'AddApplicationServices', 'method_signature': 'AddApplicationServices(this IServiceCollection services)', 'return_type': 'IServiceCollection', 'access_modifier': 'public static', 'is_async': False, 'framework_specific_attributes': [], 'parameters': [{'parameter_name': 'services', 'parameter_type': 'IServiceCollection', 'is_nullable': False, 'purpose': "The DI container's service collection.", 'framework_attributes': []}], 'implementation_logic': 'Specification requires adding all service implementations to the container with their appropriate lifetimes: `IApplicationStateService` (Singleton), `IAuthenticationService` (Singleton), `IPrintJobService` (Singleton), `ISystemStatusService` (Singleton), `ILicenseValidationService` (Singleton), `ISessionLockService` (Singleton). The method must return the `IServiceCollection` to allow for fluent chaining.', 'exception_handling': 'N/A', 'performance_considerations': 'This method is only called once at application startup.', 'validation_requirements': 'N/A', 'technology_integration_details': 'Specification defines this as the composition root for the `DMPS.Client.Application` layer.'}
+Follows standard .NET library development pattern for dependency injection setup.
 
-####### 2.1.1.3.4.6.11.0.0.0.0 Events
+#### 3.4.7.9.0.0.0.0 Validation Notes
 
-*No items available*
+This is an added specification for a critical architectural component required for DI.
 
-####### 2.1.1.3.4.6.12.0.0.0.0 Implementation Notes
+#### 3.4.7.10.0.0.0.0 Methods
 
-The hosting application's `Program.cs` will call this method to wire up all the application services.
+- {'method_name': 'AddApplicationServices', 'method_signature': 'AddApplicationServices(this IServiceCollection services)', 'return_type': 'IServiceCollection', 'access_modifier': 'public static', 'is_async': 'false', 'parameters': [{'parameter_name': 'services', 'parameter_type': 'IServiceCollection', 'is_nullable': False, 'purpose': 'The DI service collection.'}], 'implementation_logic': '1. Registers all public service interfaces with their concrete implementations (e.g., `services.AddScoped<IAuthenticationService, AuthenticationService>();`).\n2. `ISessionLockService` should be registered as a Singleton to maintain timer state.\n3. Other services can be Scoped or Transient as appropriate.\n4. Returns the `IServiceCollection` to allow for fluent call chaining.', 'exception_handling': 'None.', 'technology_integration_details': 'This is the primary integration point with the Microsoft.Extensions.DependencyInjection framework.'}
 
-##### 2.1.1.3.5.0.0.0.0.0.0 Interface Specifications
+## 3.5.0.0.0.0.0.0 Interface Specifications
 
-###### 2.1.1.3.5.1.0.0.0.0.0 Interface Name
+### 3.5.1.0.0.0.0.0 Interface Name
 
-####### 2.1.1.3.5.1.1.0.0.0.0 Interface Name
+#### 3.5.1.1.0.0.0.0 Interface Name
 
 IAuthenticationService
 
-####### 2.1.1.3.5.1.2.0.0.0.0 File Path
+#### 3.5.1.2.0.0.0.0 File Path
 
-Interfaces/IAuthenticationService.cs
+src/Features/Authentication/IAuthenticationService.cs
 
-####### 2.1.1.3.5.1.3.0.0.0.0 Purpose
+#### 3.5.1.3.0.0.0.0 Purpose
 
-Defines the contract for user authentication and session management.
+Defines the contract for user authentication and session management services provided to the Presentation Layer.
 
-####### 2.1.1.3.5.1.4.0.0.0.0 Generic Constraints
+#### 3.5.1.4.0.0.0.0 Validation Notes
 
-None
+Specification validated as complete and aligned with its implementation and consumer needs.
 
-####### 2.1.1.3.5.1.5.0.0.0.0 Framework Specific Inheritance
+#### 3.5.1.5.0.0.0.0 Method Contracts
 
-None
+##### 3.5.1.5.1.0.0.0 Method Name
 
-####### 2.1.1.3.5.1.6.0.0.0.0 Method Contracts
-
-######## 2.1.1.3.5.1.6.1.0.0.0 Method Name
-
-######### 2.1.1.3.5.1.6.1.1.0.0 Method Name
+###### 3.5.1.5.1.1.0.0 Method Name
 
 LoginAsync
 
-######### 2.1.1.3.5.1.6.1.2.0.0 Method Signature
+###### 3.5.1.5.1.2.0.0 Method Signature
 
 LoginAsync(string username, string password)
 
-######### 2.1.1.3.5.1.6.1.3.0.0 Return Type
+###### 3.5.1.5.1.3.0.0 Return Type
 
-Task<LoginResult>
+Task<AuthenticationResult>
 
-######### 2.1.1.3.5.1.6.1.4.0.0 Framework Attributes
+###### 3.5.1.5.1.4.0.0 Contract Description
 
-*No items available*
+Attempts to authenticate a user with the given credentials.
 
-######### 2.1.1.3.5.1.6.1.5.0.0 Parameters
+###### 3.5.1.5.1.5.0.0 Exception Contracts
 
-########## 2.1.1.3.5.1.6.1.5.1.0 Parameter Name
+Implementations should not throw exceptions for failed login attempts but return an appropriate result status.
 
-########### 2.1.1.3.5.1.6.1.5.1.1 Parameter Name
+##### 3.5.1.5.2.0.0.0 Method Name
 
-username
+###### 3.5.1.5.2.1.0.0 Method Name
 
-########### 2.1.1.3.5.1.6.1.5.1.2 Parameter Type
+LogoutAsync
 
-string
+###### 3.5.1.5.2.2.0.0 Method Signature
 
-########### 2.1.1.3.5.1.6.1.5.1.3 Purpose
+LogoutAsync()
 
-The user's username.
+###### 3.5.1.5.2.3.0.0 Return Type
 
-########## 2.1.1.3.5.1.6.1.5.2.0 Parameter Name
+Task
 
-########### 2.1.1.3.5.1.6.1.5.2.1 Parameter Name
+###### 3.5.1.5.2.4.0.0 Contract Description
 
-password
+Clears the current user"s session.
 
-########### 2.1.1.3.5.1.6.1.5.2.2 Parameter Type
+###### 3.5.1.5.2.5.0.0 Exception Contracts
 
-string
+Should be a non-throwing operation.
 
-########### 2.1.1.3.5.1.6.1.5.2.3 Purpose
+#### 3.5.1.6.0.0.0.0 Property Contracts
 
-The user's plaintext password.
+- {'property_name': 'CurrentUser', 'property_type': 'UserSession?', 'getter_contract': 'Returns the session object for the currently logged-in user, or null if no one is logged in.', 'setter_contract': 'None (read-only from the consumer"s perspective).'}
 
-######### 2.1.1.3.5.1.6.1.6.0.0 Contract Description
+### 3.5.2.0.0.0.0.0 Interface Name
 
-Specification requires attempting to authenticate the user and returning a result object indicating success or failure with contextual information.
-
-######### 2.1.1.3.5.1.6.1.7.0.0 Exception Contracts
-
-Throws `AuthenticationFailedException` on any authentication failure.
-
-######## 2.1.1.3.5.1.6.2.0.0.0 Method Name
-
-######### 2.1.1.3.5.1.6.2.1.0.0 Method Name
-
-Logout
-
-######### 2.1.1.3.5.1.6.2.2.0.0 Method Signature
-
-Logout()
-
-######### 2.1.1.3.5.1.6.2.3.0.0 Return Type
-
-void
-
-######### 2.1.1.3.5.1.6.2.4.0.0 Framework Attributes
-
-*No items available*
-
-######### 2.1.1.3.5.1.6.2.5.0.0 Parameters
-
-*No items available*
-
-######### 2.1.1.3.5.1.6.2.6.0.0 Contract Description
-
-Specification requires clearing the current user's session state.
-
-######### 2.1.1.3.5.1.6.2.7.0.0 Exception Contracts
-
-Should not throw.
-
-####### 2.1.1.3.5.1.7.0.0.0.0 Property Contracts
-
-*No items available*
-
-####### 2.1.1.3.5.1.8.0.0.0.0 Implementation Guidance
-
-Implementations must manage the lifecycle of the user session and raise appropriate events.
-
-###### 2.1.1.3.5.2.0.0.0.0.0 Interface Name
-
-####### 2.1.1.3.5.2.1.0.0.0.0 Interface Name
+#### 3.5.2.1.0.0.0.0 Interface Name
 
 ISessionLockService
 
-####### 2.1.1.3.5.2.2.0.0.0.0 File Path
+#### 3.5.2.2.0.0.0.0 File Path
 
-Interfaces/ISessionLockService.cs
+src/Features/Session/ISessionLockService.cs
 
-####### 2.1.1.3.5.2.3.0.0.0.0 Purpose
+#### 3.5.2.3.0.0.0.0 Purpose
 
-Defines the contract for the user inactivity session lock service.
+Defines the contract for managing the automatic session lock due to inactivity.
 
-####### 2.1.1.3.5.2.4.0.0.0.0 Generic Constraints
+#### 3.5.2.4.0.0.0.0 Validation Notes
 
-None
+Added to fill a specification gap. The contract is derived from its implementation class and SEQ-9.
 
-####### 2.1.1.3.5.2.5.0.0.0.0 Framework Specific Inheritance
+#### 3.5.2.5.0.0.0.0 Method Contracts
 
-None
+##### 3.5.2.5.1.0.0.0 Method Name
 
-####### 2.1.1.3.5.2.6.0.0.0.0 Method Contracts
+###### 3.5.2.5.1.1.0.0 Method Name
 
-######## 2.1.1.3.5.2.6.1.0.0.0 Method Name
+Initialize
 
-######### 2.1.1.3.5.2.6.1.1.0.0 Method Name
+###### 3.5.2.5.1.2.0.0 Method Signature
 
-Start
+Initialize()
 
-######### 2.1.1.3.5.2.6.1.2.0.0 Method Signature
-
-Start(TimeSpan inactivityTimeout)
-
-######### 2.1.1.3.5.2.6.1.3.0.0 Return Type
+###### 3.5.2.5.1.3.0.0 Return Type
 
 void
 
-######### 2.1.1.3.5.2.6.1.4.0.0 Framework Attributes
+###### 3.5.2.5.1.4.0.0 Contract Description
 
-*No items available*
+Starts the session inactivity monitoring.
 
-######### 2.1.1.3.5.2.6.1.5.0.0 Parameters
+##### 3.5.2.5.2.0.0.0 Method Name
 
-- {'parameter_name': 'inactivityTimeout', 'parameter_type': 'TimeSpan', 'purpose': 'The duration of inactivity that will trigger the lock.'}
+###### 3.5.2.5.2.1.0.0 Method Name
 
-######### 2.1.1.3.5.2.6.1.6.0.0 Contract Description
+ResetTimer
 
-Starts the inactivity monitoring.
+###### 3.5.2.5.2.2.0.0 Method Signature
 
-######### 2.1.1.3.5.2.6.1.7.0.0 Exception Contracts
+ResetTimer()
 
-Should not throw.
-
-######## 2.1.1.3.5.2.6.2.0.0.0 Method Name
-
-######### 2.1.1.3.5.2.6.2.1.0.0 Method Name
-
-ResetInactivityTimer
-
-######### 2.1.1.3.5.2.6.2.2.0.0 Method Signature
-
-ResetInactivityTimer()
-
-######### 2.1.1.3.5.2.6.2.3.0.0 Return Type
+###### 3.5.2.5.2.3.0.0 Return Type
 
 void
 
-######### 2.1.1.3.5.2.6.2.4.0.0 Framework Attributes
+###### 3.5.2.5.2.4.0.0 Contract Description
 
-*No items available*
+Resets the inactivity timer. Must be called on user input.
 
-######### 2.1.1.3.5.2.6.2.5.0.0 Parameters
+##### 3.5.2.5.3.0.0.0 Method Name
 
-*No items available*
+###### 3.5.2.5.3.1.0.0 Method Name
 
-######### 2.1.1.3.5.2.6.2.6.0.0 Contract Description
+UnlockSessionAsync
 
-Resets the inactivity timer upon user activity.
+###### 3.5.2.5.3.2.0.0 Method Signature
 
-######### 2.1.1.3.5.2.6.2.7.0.0 Exception Contracts
+UnlockSessionAsync(string password)
 
-Should not throw.
+###### 3.5.2.5.3.3.0.0 Return Type
 
-####### 2.1.1.3.5.2.7.0.0.0.0 Property Contracts
+Task<bool>
 
-- {'property_name': 'SessionLockTriggered', 'property_type': 'event EventHandler', 'getter_contract': 'Event raised when the session lock timeout is reached.', 'setter_contract': 'N/A'}
+###### 3.5.2.5.3.4.0.0 Contract Description
 
-####### 2.1.1.3.5.2.8.0.0.0.0 Implementation Guidance
+Attempts to unlock the session by re-validating the user"s password.
 
-Specification requires this to be implemented as a singleton to ensure a single, consistent timer for the entire application.
+#### 3.5.2.6.0.0.0.0 Property Contracts
 
-##### 2.1.1.3.6.0.0.0.0.0.0 Enum Specifications
+- {'property_name': 'IsLocked', 'property_type': 'bool', 'getter_contract': 'Returns true if the session is currently locked.', 'setter_contract': 'None.'}
 
-*No items available*
+### 3.5.3.0.0.0.0.0 Interface Name
 
-##### 2.1.1.3.7.0.0.0.0.0.0 Dto Specifications
-
-###### 2.1.1.3.7.1.0.0.0.0.0 Dto Name
-
-####### 2.1.1.3.7.1.1.0.0.0.0 Dto Name
-
-LoginResult
-
-####### 2.1.1.3.7.1.2.0.0.0.0 File Path
-
-DTOs/LoginResult.cs
-
-####### 2.1.1.3.7.1.3.0.0.0.0 Purpose
-
-Represents the outcome of a login attempt.
-
-####### 2.1.1.3.7.1.4.0.0.0.0 Framework Base Class
-
-record
-
-####### 2.1.1.3.7.1.5.0.0.0.0 Properties
-
-######## 2.1.1.3.7.1.5.1.0.0.0 Property Name
-
-######### 2.1.1.3.7.1.5.1.1.0.0 Property Name
-
-IsSuccess
-
-######### 2.1.1.3.7.1.5.1.2.0.0 Property Type
-
-bool
-
-######### 2.1.1.3.7.1.5.1.3.0.0 Validation Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.1.5.1.4.0.0 Serialization Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.1.5.1.5.0.0 Framework Specific Attributes
-
-*No items available*
-
-######## 2.1.1.3.7.1.5.2.0.0.0 Property Name
-
-######### 2.1.1.3.7.1.5.2.1.0.0 Property Name
-
-User
-
-######### 2.1.1.3.7.1.5.2.2.0.0 Property Type
-
-DMPS.Shared.Core.Domain.User
-
-######### 2.1.1.3.7.1.5.2.3.0.0 Validation Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.1.5.2.4.0.0 Serialization Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.1.5.2.5.0.0 Framework Specific Attributes
-
-*No items available*
-
-######## 2.1.1.3.7.1.5.3.0.0.0 Property Name
-
-######### 2.1.1.3.7.1.5.3.1.0.0 Property Name
-
-ErrorMessage
-
-######### 2.1.1.3.7.1.5.3.2.0.0 Property Type
-
-string
-
-######### 2.1.1.3.7.1.5.3.3.0.0 Validation Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.1.5.3.4.0.0 Serialization Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.1.5.3.5.0.0 Framework Specific Attributes
-
-*No items available*
-
-####### 2.1.1.3.7.1.6.0.0.0.0 Validation Rules
-
-N/A
-
-####### 2.1.1.3.7.1.7.0.0.0.0 Serialization Requirements
-
-Specification recommends using a C# record for immutability.
-
-###### 2.1.1.3.7.2.0.0.0.0.0 Dto Name
-
-####### 2.1.1.3.7.2.1.0.0.0.0 Dto Name
-
-PrintJobData
-
-####### 2.1.1.3.7.2.2.0.0.0.0 File Path
-
-DTOs/PrintJobData.cs
-
-####### 2.1.1.3.7.2.3.0.0.0.0 Purpose
-
-Encapsulates all data needed to submit a print or export job.
-
-####### 2.1.1.3.7.2.4.0.0.0.0 Framework Base Class
-
-record
-
-####### 2.1.1.3.7.2.5.0.0.0.0 Properties
-
-######## 2.1.1.3.7.2.5.1.0.0.0 Property Name
-
-######### 2.1.1.3.7.2.5.1.1.0.0 Property Name
-
-JobType
-
-######### 2.1.1.3.7.2.5.1.2.0.0 Property Type
-
-enum { Print, ExportPdf }
-
-######### 2.1.1.3.7.2.5.1.3.0.0 Validation Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.2.5.1.4.0.0 Serialization Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.2.5.1.5.0.0 Framework Specific Attributes
-
-*No items available*
-
-######## 2.1.1.3.7.2.5.2.0.0.0 Property Name
-
-######### 2.1.1.3.7.2.5.2.1.0.0 Property Name
-
-LayoutDefinition
-
-######### 2.1.1.3.7.2.5.2.2.0.0 Property Type
-
-string
-
-######### 2.1.1.3.7.2.5.2.3.0.0 Validation Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.2.5.2.4.0.0 Serialization Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.2.5.2.5.0.0 Framework Specific Attributes
-
-*No items available*
-
-######## 2.1.1.3.7.2.5.3.0.0.0 Property Name
-
-######### 2.1.1.3.7.2.5.3.1.0.0 Property Name
-
-ImageSopInstanceUids
-
-######### 2.1.1.3.7.2.5.3.2.0.0 Property Type
-
-List<string>
-
-######### 2.1.1.3.7.2.5.3.3.0.0 Validation Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.2.5.3.4.0.0 Serialization Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.2.5.3.5.0.0 Framework Specific Attributes
-
-*No items available*
-
-######## 2.1.1.3.7.2.5.4.0.0.0 Property Name
-
-######### 2.1.1.3.7.2.5.4.1.0.0 Property Name
-
-Destination
-
-######### 2.1.1.3.7.2.5.4.2.0.0 Property Type
-
-string
-
-######### 2.1.1.3.7.2.5.4.3.0.0 Validation Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.2.5.4.4.0.0 Serialization Attributes
-
-*No items available*
-
-######### 2.1.1.3.7.2.5.4.5.0.0 Framework Specific Attributes
-
-*No items available*
-
-####### 2.1.1.3.7.2.6.0.0.0.0 Validation Rules
-
-Properties should be validated for non-null/empty values before submission.
-
-####### 2.1.1.3.7.2.7.0.0.0.0 Serialization Requirements
-
-This DTO will be used to construct the actual command message DTO from the Shared Kernel.
-
-##### 2.1.1.3.8.0.0.0.0.0.0 Configuration Specifications
-
-*No items available*
-
-##### 2.1.1.3.9.0.0.0.0.0.0 Dependency Injection Specifications
-
-###### 2.1.1.3.9.1.0.0.0.0.0 Service Interface
-
-####### 2.1.1.3.9.1.1.0.0.0.0 Service Interface
-
-IAuthenticationService
-
-####### 2.1.1.3.9.1.2.0.0.0.0 Service Implementation
-
-AuthenticationService
-
-####### 2.1.1.3.9.1.3.0.0.0.0 Lifetime
-
-Singleton
-
-####### 2.1.1.3.9.1.4.0.0.0.0 Registration Reasoning
-
-The authentication service manages global session state and can be safely shared throughout the application's lifetime.
-
-####### 2.1.1.3.9.1.5.0.0.0.0 Framework Registration Pattern
-
-services.AddSingleton<IAuthenticationService, AuthenticationService>();
-
-###### 2.1.1.3.9.2.0.0.0.0.0 Service Interface
-
-####### 2.1.1.3.9.2.1.0.0.0.0 Service Interface
-
-IPrintJobService
-
-####### 2.1.1.3.9.2.2.0.0.0.0 Service Implementation
-
-PrintJobService
-
-####### 2.1.1.3.9.2.3.0.0.0.0 Lifetime
-
-Singleton
-
-####### 2.1.1.3.9.2.4.0.0.0.0 Registration Reasoning
-
-The print job service is stateless and acts as a pass-through to the message producer, making it a good candidate for a singleton.
-
-####### 2.1.1.3.9.2.5.0.0.0.0 Framework Registration Pattern
-
-services.AddSingleton<IPrintJobService, PrintJobService>();
-
-###### 2.1.1.3.9.3.0.0.0.0.0 Service Interface
-
-####### 2.1.1.3.9.3.1.0.0.0.0 Service Interface
-
-ISystemStatusService
-
-####### 2.1.1.3.9.3.2.0.0.0.0 Service Implementation
-
-SystemStatusService
-
-####### 2.1.1.3.9.3.3.0.0.0.0 Lifetime
-
-Singleton
-
-####### 2.1.1.3.9.3.4.0.0.0.0 Registration Reasoning
-
-This service is stateless and can be reused across the application to check the backend status.
-
-####### 2.1.1.3.9.3.5.0.0.0.0 Framework Registration Pattern
-
-services.AddSingleton<ISystemStatusService, SystemStatusService>();
-
-###### 2.1.1.3.9.4.0.0.0.0.0 Service Interface
-
-####### 2.1.1.3.9.4.1.0.0.0.0 Service Interface
+#### 3.5.3.1.0.0.0.0 Interface Name
 
 ILicenseValidationService
 
-####### 2.1.1.3.9.4.2.0.0.0.0 Service Implementation
+#### 3.5.3.2.0.0.0.0 File Path
 
-LicenseValidationService
+src/Features/Licensing/ILicenseValidationService.cs
 
-####### 2.1.1.3.9.4.3.0.0.0.0 Lifetime
+#### 3.5.3.3.0.0.0.0 Purpose
 
-Singleton
+Defines the contract for orchestrating license validation.
 
-####### 2.1.1.3.9.4.4.0.0.0.0 Registration Reasoning
+#### 3.5.3.4.0.0.0.0 Validation Notes
 
-Manages global application state related to licensing and should persist for the application's lifetime.
+Added to fill a specification gap. The contract is derived from its implementation class and SEQ-5.
 
-####### 2.1.1.3.9.4.5.0.0.0.0 Framework Registration Pattern
+#### 3.5.3.5.0.0.0.0 Method Contracts
 
-services.AddSingleton<ILicenseValidationService, LicenseValidationService>();
+- {'method_name': 'ValidateLicenseAtStartupAsync', 'method_signature': 'ValidateLicenseAtStartupAsync(string licenseKey)', 'return_type': 'Task<LicenseStatus>', 'contract_description': 'Performs license validation against the external API at application startup.'}
 
-###### 2.1.1.3.9.5.0.0.0.0.0 Service Interface
+#### 3.5.3.6.0.0.0.0 Property Contracts
 
-####### 2.1.1.3.9.5.1.0.0.0.0 Service Interface
+- {'property_name': 'CurrentStatus', 'property_type': 'LicenseStatus', 'getter_contract': 'Returns the current license status of the application.', 'setter_contract': 'None.'}
 
-ISessionLockService
+### 3.5.4.0.0.0.0.0 Interface Name
 
-####### 2.1.1.3.9.5.2.0.0.0.0 Service Implementation
+#### 3.5.4.1.0.0.0.0 Interface Name
 
-SessionLockService
+ISystemStatusService
 
-####### 2.1.1.3.9.5.3.0.0.0.0 Lifetime
+#### 3.5.4.2.0.0.0.0 File Path
 
-Singleton
+src/Features/System/ISystemStatusService.cs
 
-####### 2.1.1.3.9.5.4.0.0.0.0 Registration Reasoning
+#### 3.5.4.3.0.0.0.0 Purpose
 
-A single, application-wide timer is required for session locking, making a singleton lifetime mandatory.
+Defines the contract for checking the status of the background service.
 
-####### 2.1.1.3.9.5.5.0.0.0.0 Framework Registration Pattern
+#### 3.5.4.4.0.0.0.0 Validation Notes
 
-services.AddSingleton<ISessionLockService, SessionLockService>();
+Added to fill a specification gap. The contract is derived from its implementation class and SEQ-12.
 
-##### 2.1.1.3.10.0.0.0.0.0.0 External Integration Specifications
+#### 3.5.4.5.0.0.0.0 Method Contracts
 
-###### 2.1.1.3.10.1.0.0.0.0.0 Integration Target
+- {'method_name': 'IsBackgroundServiceRunningAsync', 'method_signature': 'IsBackgroundServiceRunningAsync()', 'return_type': 'Task<bool>', 'contract_description': 'Checks if the background Windows Service is running and responsive.'}
 
-####### 2.1.1.3.10.1.1.0.0.0.0 Integration Target
+#### 3.5.4.6.0.0.0.0 Property Contracts
 
-REPO-01-SHK (Shared Kernel)
+*No items available*
 
-####### 2.1.1.3.10.1.2.0.0.0.0 Integration Type
+### 3.5.5.0.0.0.0.0 Interface Name
 
-Library Dependency
+#### 3.5.5.1.0.0.0.0 Interface Name
 
-####### 2.1.1.3.10.1.3.0.0.0.0 Required Client Classes
+IPrintJobService
 
-- IUserRepository
-- User (Domain Entity)
-- PrintJobCommand (DTO)
+#### 3.5.5.2.0.0.0.0 File Path
 
-####### 2.1.1.3.10.1.4.0.0.0.0 Configuration Requirements
+src/Features/Printing/IPrintJobService.cs
 
-N/A
+#### 3.5.5.3.0.0.0.0 Purpose
 
-####### 2.1.1.3.10.1.5.0.0.0.0 Error Handling Requirements
+Defines the contract for submitting print jobs.
 
-Application services must handle exceptions thrown by repository interfaces.
+#### 3.5.5.4.0.0.0.0 Validation Notes
 
-####### 2.1.1.3.10.1.6.0.0.0.0 Authentication Requirements
+Added to fill a specification gap. The contract is derived from its implementation class and SEQ-3.
 
-N/A
+#### 3.5.5.5.0.0.0.0 Method Contracts
 
-####### 2.1.1.3.10.1.7.0.0.0.0 Framework Integration Patterns
+- {'method_name': 'SubmitPrintJobAsync', 'method_signature': 'SubmitPrintJobAsync(PrintJobData jobData)', 'return_type': 'Task', 'contract_description': 'Queues a new print job for asynchronous processing.'}
 
-Consumes interfaces via Dependency Injection.
+#### 3.5.5.6.0.0.0.0 Property Contracts
 
-###### 2.1.1.3.10.2.0.0.0.0.0 Integration Target
+*No items available*
 
-####### 2.1.1.3.10.2.1.0.0.0.0 Integration Target
+### 3.5.6.0.0.0.0.0 Interface Name
 
-REPO-05-COM (Communication Infrastructure)
+#### 3.5.6.1.0.0.0.0 Interface Name
 
-####### 2.1.1.3.10.2.2.0.0.0.0 Integration Type
+IPdfExportService
 
-Library Dependency
+#### 3.5.6.2.0.0.0.0 File Path
 
-####### 2.1.1.3.10.2.3.0.0.0.0 Required Client Classes
+src/Features/Exporting/IPdfExportService.cs
 
-- IMessageProducer
-- INamedPipeClient
+#### 3.5.6.3.0.0.0.0 Purpose
 
-####### 2.1.1.3.10.2.4.0.0.0.0 Configuration Requirements
+Defines the contract for submitting PDF export jobs.
 
-The hosting application must provide the connection details for RabbitMQ and the pipe name.
+#### 3.5.6.4.0.0.0.0 Validation Notes
 
-####### 2.1.1.3.10.2.5.0.0.0.0 Error Handling Requirements
+Added to fill a specification gap. The contract is derived from its implementation class and SEQ-18.
 
-Must handle exceptions related to broker unavailability (`IMessageProducer`) and service timeouts (`INamedPipeClient`).
+#### 3.5.6.5.0.0.0.0 Method Contracts
 
-####### 2.1.1.3.10.2.6.0.0.0.0 Authentication Requirements
+- {'method_name': 'ExportToPdfAsync', 'method_signature': 'ExportToPdfAsync(PdfExportData exportData)', 'return_type': 'Task', 'contract_description': 'Queues a new PDF export job for asynchronous processing.'}
 
-N/A
+#### 3.5.6.6.0.0.0.0 Property Contracts
 
-####### 2.1.1.3.10.2.7.0.0.0.0 Framework Integration Patterns
+*No items available*
 
-Consumes infrastructure interfaces via Dependency Injection.
+## 3.6.0.0.0.0.0.0 Enum Specifications
 
-#### 2.1.1.4.0.0.0.0.0.0.0 Component Count Validation
+### 3.6.1.0.0.0.0.0 Enum Name
 
-| Property | Value |
-|----------|-------|
-| Total Classes | 8 |
-| Total Interfaces | 6 |
-| Total Enums | 0 |
-| Total Dtos | 2 |
-| Total Configurations | 0 |
-| Total External Integrations | 0 |
-| Grand Total Components | 21 |
-| Phase 2 Claimed Count | 3 |
-| Phase 2 Actual Count | 3 |
-| Validation Added Count | 18 |
-| Final Validated Count | 21 |
+#### 3.6.1.1.0.0.0.0 Enum Name
 
-## 2.2.0.0.0.0.0.0.0.0.0 Project Supporting Files
+AuthenticationStatus
 
-### 2.2.1.0.0.0.0.0.0.0.0 File Type
+#### 3.6.1.2.0.0.0.0 File Path
 
-#### 2.2.1.1.0.0.0.0.0.0.0 File Type
+src/Features/Authentication/AuthenticationStatus.cs
 
-Project Definition
+#### 3.6.1.3.0.0.0.0 Underlying Type
 
-#### 2.2.1.2.0.0.0.0.0.0.0 File Name
+int
 
-DMPS.Client.Application.csproj
+#### 3.6.1.4.0.0.0.0 Purpose
 
-#### 2.2.1.3.0.0.0.0.0.0.0 File Path
+Represents the possible outcomes of a login attempt.
 
-./DMPS.Client.Application.csproj
+#### 3.6.1.5.0.0.0.0 Validation Notes
 
-#### 2.2.1.4.0.0.0.0.0.0.0 Purpose
+Specification validated as correct. This enum is critical for implementing REQ-FNC-003.
 
-Defines the .NET 8 class library project, its target framework, and its dependencies on other projects and NuGet packages.
+#### 3.6.1.6.0.0.0.0 Values
 
-#### 2.2.1.5.0.0.0.0.0.0.0 Content Description
+##### 3.6.1.6.1.0.0.0 Value Name
 
-<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.Extensions.DependencyInjection.Abstractions\" Version=\"8.0.0\" />\n  </ItemGroup>\n\n  <ItemGroup>\n    <ProjectReference Include=\"..\\DMPS.Shared.Core\\DMPS.Shared.Core.csproj\" />\n    <ProjectReference Include=\"..\\DMPS.CrossCutting.Security\\DMPS.CrossCutting.Security.csproj\" />\n    <ProjectReference Include=\"..\\DMPS.CrossCutting.Logging\\DMPS.CrossCutting.Logging.csproj\" />\n    <ProjectReference Include=\"..\\DMPS.Infrastructure.Communication\\DMPS.Infrastructure.Communication.csproj\" />\n    <ProjectReference Include=\"..\\DMPS.Infrastructure.IO\\DMPS.Infrastructure.IO.csproj\" />\n    <ProjectReference Include=\"..\\DMPS.Infrastructure.Dicom\\DMPS.Infrastructure.Dicom.csproj\" />\n  </ItemGroup>\n\n</Project>
+###### 3.6.1.6.1.1.0.0 Value Name
 
-#### 2.2.1.6.0.0.0.0.0.0.0 Framework Specific Attributes
+Success
 
-- TargetFramework: net8.0
-- PackageReference for Microsoft.Extensions.DependencyInjection.Abstractions
+###### 3.6.1.6.1.2.0.0 Value
 
-### 2.2.2.0.0.0.0.0.0.0.0 File Type
+0
 
-#### 2.2.2.1.0.0.0.0.0.0.0 File Type
+###### 3.6.1.6.1.3.0.0 Description
 
-Version Control
+The user was successfully authenticated.
 
-#### 2.2.2.2.0.0.0.0.0.0.0 File Name
+##### 3.6.1.6.2.0.0.0 Value Name
 
-.gitignore
+###### 3.6.1.6.2.1.0.0 Value Name
 
-#### 2.2.2.3.0.0.0.0.0.0.0 File Path
+InvalidCredentials
 
-./.gitignore
+###### 3.6.1.6.2.2.0.0 Value
 
-#### 2.2.2.4.0.0.0.0.0.0.0 Purpose
+1
 
-Specifies intentionally untracked files for Git to ignore, tailored for .NET development.
+###### 3.6.1.6.2.3.0.0 Description
 
-#### 2.2.2.5.0.0.0.0.0.0.0 Content Description
+The provided username or password was incorrect.
 
-# Ignore Visual Studio temporary files, build artifacts, and user-specific settings.\n[Bb]in/\n[Oo]bj/\n.vs/\n*.suo\n*.user
+##### 3.6.1.6.3.0.0.0 Value Name
 
-#### 2.2.2.6.0.0.0.0.0.0.0 Framework Specific Attributes
+###### 3.6.1.6.3.1.0.0 Value Name
 
-- .NET build output folders (bin, obj)
-- Visual Studio specific files (.vs, .suo, .user)
+PasswordChangeRequired
 
-### 2.2.3.0.0.0.0.0.0.0.0 File Type
+###### 3.6.1.6.3.2.0.0 Value
 
-#### 2.2.3.1.0.0.0.0.0.0.0 File Type
+2
 
-Development Tools
+###### 3.6.1.6.3.3.0.0 Description
 
-#### 2.2.3.2.0.0.0.0.0.0.0 File Name
+Authentication was successful, but the user must change their temporary password.
 
-.editorconfig
+##### 3.6.1.6.4.0.0.0 Value Name
 
-#### 2.2.3.3.0.0.0.0.0.0.0 File Path
+###### 3.6.1.6.4.1.0.0 Value Name
 
-./.editorconfig
+UnknownError
 
-#### 2.2.3.4.0.0.0.0.0.0.0 Purpose
+###### 3.6.1.6.4.2.0.0 Value
 
-Defines and maintains consistent coding styles between multiple developers and IDEs.
+3
 
-#### 2.2.3.5.0.0.0.0.0.0.0 Content Description
+###### 3.6.1.6.4.3.0.0 Description
 
-root = true\n\n[*]\nindent_style = space\nindent_size = 4\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.cs]\ncsharp_style_namespace_declarations = file_scoped\ncsharp_style_prefer_simplified_interpolation = true\n
+An unexpected error occurred during the authentication process.
 
-#### 2.2.3.6.0.0.0.0.0.0.0 Framework Specific Attributes
+### 3.6.2.0.0.0.0.0 Enum Name
 
-- csharp_style_namespace_declarations: file_scoped (C# 10+ feature)
-- Standard formatting rules
+#### 3.6.2.1.0.0.0.0 Enum Name
+
+LicenseStatus
+
+#### 3.6.2.2.0.0.0.0 File Path
+
+src/Features/Licensing/LicenseStatus.cs
+
+#### 3.6.2.3.0.0.0.0 Underlying Type
+
+int
+
+#### 3.6.2.4.0.0.0.0 Purpose
+
+Represents the application"s operational mode based on license validation.
+
+#### 3.6.2.5.0.0.0.0 Validation Notes
+
+Added to fill a specification gap. The values are derived from REQ-INT-003 and SEQ-5.
+
+#### 3.6.2.6.0.0.0.0 Values
+
+##### 3.6.2.6.1.0.0.0 Value Name
+
+###### 3.6.2.6.1.1.0.0 Value Name
+
+Licensed
+
+###### 3.6.2.6.1.2.0.0 Value
+
+0
+
+###### 3.6.2.6.1.3.0.0 Description
+
+The application is fully licensed and operational.
+
+##### 3.6.2.6.2.0.0.0 Value Name
+
+###### 3.6.2.6.2.1.0.0 Value Name
+
+GracePeriod
+
+###### 3.6.2.6.2.2.0.0 Value
+
+1
+
+###### 3.6.2.6.2.3.0.0 Description
+
+License validation failed, but the application is in a temporary grace period.
+
+##### 3.6.2.6.3.0.0.0 Value Name
+
+###### 3.6.2.6.3.1.0.0 Value Name
+
+ReadOnly
+
+###### 3.6.2.6.3.2.0.0 Value
+
+2
+
+###### 3.6.2.6.3.3.0.0 Description
+
+The license is invalid or expired, and the application is in a restricted, read-only mode.
+
+##### 3.6.2.6.4.0.0.0 Value Name
+
+###### 3.6.2.6.4.1.0.0 Value Name
+
+Invalid
+
+###### 3.6.2.6.4.2.0.0 Value
+
+3
+
+###### 3.6.2.6.4.3.0.0 Description
+
+The provided license key is invalid.
+
+##### 3.6.2.6.5.0.0.0 Value Name
+
+###### 3.6.2.6.5.1.0.0 Value Name
+
+ApiUnreachable
+
+###### 3.6.2.6.5.2.0.0 Value
+
+4
+
+###### 3.6.2.6.5.3.0.0 Description
+
+The license validation API could not be reached.
+
+## 3.7.0.0.0.0.0.0 Dto Specifications
+
+### 3.7.1.0.0.0.0.0 Dto Name
+
+#### 3.7.1.1.0.0.0.0 Dto Name
+
+AuthenticationResult
+
+#### 3.7.1.2.0.0.0.0 File Path
+
+src/Features/Authentication/AuthenticationResult.cs
+
+#### 3.7.1.3.0.0.0.0 Purpose
+
+A record to encapsulate the result of a login operation.
+
+#### 3.7.1.4.0.0.0.0 Framework Base Class
+
+record
+
+#### 3.7.1.5.0.0.0.0 Validation Notes
+
+Validated as a well-designed, immutable result object.
+
+#### 3.7.1.6.0.0.0.0 Properties
+
+##### 3.7.1.6.1.0.0.0 Property Name
+
+###### 3.7.1.6.1.1.0.0 Property Name
+
+Status
+
+###### 3.7.1.6.1.2.0.0 Property Type
+
+AuthenticationStatus
+
+##### 3.7.1.6.2.0.0.0 Property Name
+
+###### 3.7.1.6.2.1.0.0 Property Name
+
+UserSession
+
+###### 3.7.1.6.2.2.0.0 Property Type
+
+UserSession?
+
+#### 3.7.1.7.0.0.0.0 Serialization Requirements
+
+Should be a C# 12 primary constructor record for immutability and conciseness.
+
+### 3.7.2.0.0.0.0.0 Dto Name
+
+#### 3.7.2.1.0.0.0.0 Dto Name
+
+UserSession
+
+#### 3.7.2.2.0.0.0.0 File Path
+
+src/Features/Authentication/UserSession.cs
+
+#### 3.7.2.3.0.0.0.0 Purpose
+
+Holds essential information about the authenticated user for the current session.
+
+#### 3.7.2.4.0.0.0.0 Framework Base Class
+
+record
+
+#### 3.7.2.5.0.0.0.0 Validation Notes
+
+Validated as correct for supporting RBAC (REQ-1-040).
+
+#### 3.7.2.6.0.0.0.0 Properties
+
+##### 3.7.2.6.1.0.0.0 Property Name
+
+###### 3.7.2.6.1.1.0.0 Property Name
+
+UserId
+
+###### 3.7.2.6.1.2.0.0 Property Type
+
+Guid
+
+##### 3.7.2.6.2.0.0.0 Property Name
+
+###### 3.7.2.6.2.1.0.0 Property Name
+
+Username
+
+###### 3.7.2.6.2.2.0.0 Property Type
+
+string
+
+##### 3.7.2.6.3.0.0.0 Property Name
+
+###### 3.7.2.6.3.1.0.0 Property Name
+
+UserRole
+
+###### 3.7.2.6.3.2.0.0 Property Type
+
+string
+
+#### 3.7.2.7.0.0.0.0 Serialization Requirements
+
+Should be an immutable record.
+
+### 3.7.3.0.0.0.0.0 Dto Name
+
+#### 3.7.3.1.0.0.0.0 Dto Name
+
+PrintJobData
+
+#### 3.7.3.2.0.0.0.0 File Path
+
+src/Features/Printing/PrintJobData.cs
+
+#### 3.7.3.3.0.0.0.0 Purpose
+
+A DTO to transfer all necessary information for a print job from the Presentation Layer to the Application Layer.
+
+#### 3.7.3.4.0.0.0.0 Framework Base Class
+
+record
+
+#### 3.7.3.5.0.0.0.0 Validation Notes
+
+Validated as a sufficient data contract for print job submission.
+
+#### 3.7.3.6.0.0.0.0 Properties
+
+##### 3.7.3.6.1.0.0.0 Property Name
+
+###### 3.7.3.6.1.1.0.0 Property Name
+
+ImageSopInstanceUids
+
+###### 3.7.3.6.1.2.0.0 Property Type
+
+IReadOnlyList<string>
+
+##### 3.7.3.6.2.0.0.0 Property Name
+
+###### 3.7.3.6.2.1.0.0 Property Name
+
+LayoutDefinition
+
+###### 3.7.3.6.2.2.0.0 Property Type
+
+string
+
+##### 3.7.3.6.3.0.0.0 Property Name
+
+###### 3.7.3.6.3.1.0.0 Property Name
+
+PrinterName
+
+###### 3.7.3.6.3.2.0.0 Property Type
+
+string
+
+#### 3.7.3.7.0.0.0.0 Validation Rules
+
+The list of UIDs cannot be empty.
+
+### 3.7.4.0.0.0.0.0 Dto Name
+
+#### 3.7.4.1.0.0.0.0 Dto Name
+
+PdfExportData
+
+#### 3.7.4.2.0.0.0.0 File Path
+
+src/Features/Exporting/PdfExportData.cs
+
+#### 3.7.4.3.0.0.0.0 Purpose
+
+A DTO to transfer all necessary information for a PDF export job from the Presentation Layer to the Application Layer.
+
+#### 3.7.4.4.0.0.0.0 Framework Base Class
+
+record
+
+#### 3.7.4.5.0.0.0.0 Validation Notes
+
+Added to fill a specification gap for SEQ-18. Structure mirrors PrintJobData for consistency.
+
+#### 3.7.4.6.0.0.0.0 Properties
+
+##### 3.7.4.6.1.0.0.0 Property Name
+
+###### 3.7.4.6.1.1.0.0 Property Name
+
+ImageSopInstanceUids
+
+###### 3.7.4.6.1.2.0.0 Property Type
+
+IReadOnlyList<string>
+
+##### 3.7.4.6.2.0.0.0 Property Name
+
+###### 3.7.4.6.2.1.0.0 Property Name
+
+LayoutDefinition
+
+###### 3.7.4.6.2.2.0.0 Property Type
+
+string
+
+##### 3.7.4.6.3.0.0.0 Property Name
+
+###### 3.7.4.6.3.1.0.0 Property Name
+
+OutputFilePath
+
+###### 3.7.4.6.3.2.0.0 Property Type
+
+string
+
+#### 3.7.4.7.0.0.0.0 Validation Rules
+
+The list of UIDs and the output file path cannot be empty.
+
+## 3.8.0.0.0.0.0.0 Configuration Specifications
+
+*No items available*
+
+## 3.9.0.0.0.0.0.0 Dependency Injection Specifications
+
+- {'service_interface': 'All application services', 'service_implementation': 'ServiceCollectionExtensions', 'lifetime': 'Varies (Scoped, Singleton)', 'registration_reasoning': 'Provides a single, cohesive entry point for registering all services in this assembly, simplifying the setup in the main application"s composition root. This is a critical pattern for creating modular and maintainable .NET applications.', 'framework_registration_pattern': 'A public static class `ServiceCollectionExtensions` should be created in the `Extensions` directory. It should contain a public static method `AddApplicationServices(this IServiceCollection services)`. This method will register all public interfaces with their concrete implementations (e.g., `services.AddScoped<IAuthenticationService, AuthenticationService>();`, `services.AddSingleton<ISessionLockService, SessionLockService>();`).'}
+
+## 3.10.0.0.0.0.0.0 External Integration Specifications
+
+*No items available*
 

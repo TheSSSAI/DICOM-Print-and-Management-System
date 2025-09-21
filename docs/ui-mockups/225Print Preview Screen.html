@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Preview Screen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Design System Foundation (as CSS Custom Properties) */
+        :root {
+            /* Typography */
+            --font-family-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            --font-size-h2: 24px;
+            --font-size-h3: 20px;
+            --font-size-h4: 18px;
+            --font-size-body: 16px;
+            --font-size-caption: 14px;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+            --font-weight-bold: 700;
+
+            /* Color Palette */
+            --color-primary-50: #E8EAF6;
+            --color-primary-500: #3F51B5;
+            --color-primary-600: #3949AB;
+            --color-primary-700: #303F9F;
+            --color-neutral-white: #FFFFFF;
+            --color-neutral-gray-50: #FAFAFA;
+            --color-neutral-gray-100: #F5F5F5;
+            --color-neutral-gray-200: #EEEEEE;
+            --color-neutral-gray-300: #E0E0E0;
+            --color-neutral-gray-500: #9E9E9E;
+            --color-neutral-gray-700: #616161;
+            --color-neutral-gray-900: #212121;
+            --color-semantic-success: #4CAF50;
+            --color-semantic-error: #F44336;
+
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+
+            /* Misc */
+            --border-radius-sm: 2px;
+            --border-radius-md: 4px;
+            --shadow-2dp: 0 2px 4px rgba(0, 0, 0, 0.12);
+            --shadow-4dp: 0 4px 8px rgba(0, 0, 0, 0.15);
+            --shadow-8dp: 0 8px 16px rgba(0, 0, 0, 0.15);
+            --transition-speed: 0.2s;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-body);
+            background-color: var(--color-neutral-gray-50);
+            color: var(--color-neutral-gray-900);
+            line-height: 1.6;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        
+        /* Screen Layout */
+        .screen-print-preview {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--color-neutral-gray-100);
+        }
+
+        .screen-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background-color: var(--color-neutral-white);
+            border-bottom: 1px solid var(--color-neutral-gray-300);
+            flex-shrink: 0;
+        }
+
+        .screen-header__title {
+            font-size: var(--font-size-h3);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .screen-header__actions {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        .screen-main {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden; /* Key for two-panel layout */
+        }
+        
+        .preview-area {
+            flex-grow: 1;
+            padding: var(--spacing-lg);
+            overflow: auto; /* Allow scrolling for canvas if needed */
+            background-color: var(--color-neutral-gray-200);
+        }
+
+        .options-area {
+            width: 380px;
+            flex-shrink: 0;
+            background-color: var(--color-neutral-white);
+            border-left: 1px solid var(--color-neutral-gray-300);
+            overflow-y: auto;
+        }
+
+        /* Component: PrintOptionsPanel */
+        .print-options-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .options-section {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-neutral-gray-300);
+        }
+        .options-section:last-child {
+            border-bottom: none;
+        }
+
+        .options-section__title {
+            font-size: var(--font-size-h4);
+            font-weight: var(--font-weight-medium);
+            margin-bottom: var(--spacing-md);
+            color: var(--color-neutral-gray-900);
+        }
+        
+        .layout-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+        }
+
+        .layout-template {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            border: 2px solid var(--color-neutral-gray-300);
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+        }
+        .layout-template:hover {
+            border-color: var(--color-primary-500);
+            background-color: var(--color-primary-50);
+        }
+        .layout-template.is-active {
+            border-color: var(--color-primary-700);
+            background-color: var(--color-primary-50);
+            box-shadow: 0 0 0 2px var(--color-primary-500);
+        }
+
+        .layout-template__icon {
+            width: 60px;
+            height: 40px;
+            border: 1px solid var(--color-neutral-gray-700);
+            background-color: var(--color-neutral-white);
+            display: grid;
+            gap: 2px;
+            padding: 2px;
+        }
+        .layout-template__icon--1x1 { grid-template-columns: 1fr; }
+        .layout-template__icon--2x2 { grid-template-columns: 1fr 1fr; }
+        .layout-template__icon--1p3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .layout-template__icon span { background-color: var(--color-neutral-gray-700); }
+        .layout-template__icon--1p3 span:first-child { grid-row: 1 / 3; }
+
+        .layout-template__label {
+            font-size: var(--font-size-caption);
+            font-weight: var(--font-weight-medium);
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: var(--font-weight-medium);
+            margin-bottom: var(--spacing-sm);
+            font-size: var(--font-size-caption);
+            color: var(--color-neutral-gray-700);
+        }
+
+        .form-group select, .form-group input[type="text"] {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: var(--font-size-body);
+            border: 1px solid var(--color-neutral-gray-500);
+            border-radius: var(--border-radius-md);
+            background-color: var(--color-neutral-white);
+            transition: border-color var(--transition-speed) ease;
+        }
+        .form-group select:focus, .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+            box-shadow: 0 0 0 2px var(--color-primary-50);
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Component: Button */
+        .btn {
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-caption);
+            font-weight: var(--font-weight-bold);
+            padding: 10px 20px;
+            border-radius: var(--border-radius-md);
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all var(--transition-speed) ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+        .btn:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: 2px;
+        }
+
+        .btn--primary {
+            background-color: var(--color-primary-500);
+            color: var(--color-neutral-white);
+        }
+        .btn--primary:hover {
+            background-color: var(--color-primary-600);
+            box-shadow: var(--shadow-4dp);
+        }
+        .btn--primary:active {
+            background-color: var(--color-primary-700);
+            transform: scale(0.98);
+        }
+        .btn--primary:disabled {
+            background-color: rgba(0,0,0,0.12);
+            color: rgba(0,0,0,0.26);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .btn--secondary {
+            background-color: var(--color-neutral-white);
+            color: var(--color-primary-500);
+            border: 1px solid var(--color-primary-500);
+        }
+        .btn--secondary:hover {
+            background-color: var(--color-primary-50);
+        }
+        .btn--secondary:active {
+            background-color: var(--color-primary-50);
+            transform: scale(0.98);
+        }
+
+        /*
+         * Component: PrintPreviewCanvas
+         * Sourced directly from component specification MU-specialized-001
+        */
+        .print-preview-canvas {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: var(--spacing-lg);
+            border: 1px solid var(--color-neutral-gray-300);
+            overflow: auto;
+            min-height: 100%;
+            position: relative;
+        }
+        .print-preview-canvas__page {
+            background-color: var(--color-neutral-white);
+            box-shadow: var(--shadow-8dp);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            max-height: 95%; /* Adjust based on parent padding */
+            transition: box-shadow var(--transition-speed) ease;
+        }
+        .print-preview-canvas__page--a4-portrait {
+            aspect-ratio: 210 / 297;
+            width: 700px; /* will scale down */
+        }
+        .print-preview-canvas__page-content {
+            flex-grow: 1;
+            padding: 15mm;
+            display: flex;
+            flex-direction: column;
+        }
+        .page-header, .page-footer {
+            position: absolute;
+            left: 15mm;
+            right: 15mm;
+            font-size: 10px;
+            color: var(--color-neutral-gray-900);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-header { top: 10mm; }
+        .page-footer { bottom: 10mm; }
+        .page-header__logo {
+            height: 10mm;
+            width: auto;
+            opacity: 0.8;
+            background-color: #ddd; /* Placeholder color */
+            display: inline-block;
+            width: 80px;
+            text-align: center;
+            line-height: 10mm;
+            font-size: 10px;
+        }
+        .page-grid {
+            display: grid;
+            flex-grow: 1;
+            gap: 4mm;
+        }
+        .page-grid--2x2 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+        .image-placeholder {
+            background-color: var(--color-neutral-gray-900);
+            border: 1px solid var(--color-neutral-gray-500);
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-neutral-gray-500);
+            font-size: var(--font-size-caption);
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+        }
+        .image-placeholder:active { cursor: grabbing; }
+        .deid-mask {
+            position: absolute;
+            background-color: black;
+            border: 1px dashed rgba(255,255,255,0.3);
+        }
+        .deid-mask--rect-1 {
+            top: 5%;
+            left: 5%;
+            width: 30%;
+            height: 10%;
+        }
+        .skeleton-loader {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            z-index: 10;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* State: Loading */
+        .is-loading .print-preview-canvas__page {
+            box-shadow: none;
+            background-color: transparent;
+        }
+        .is-loading .print-preview-canvas__page > * {
+            visibility: hidden;
+        }
+        .is-loading .options-area {
+            position: relative;
+        }
+        .is-loading .options-area::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+    <div id="default-state">
+        <div class="screen-print-preview">
+            <header class="screen-header">
+                <h1 class="screen-header__title">Print Preview</h1>
+                <div class="screen-header__actions">
+                    <button class="btn btn--secondary" type="button">Export to PDF</button>
+                    <button class="btn btn--primary" type="button">Print</button>
+                </div>
+            </header>
+            <main class="screen-main">
+                <div class="preview-area">
+                    <div class="print-preview-canvas" aria-label="Print preview: 2x2 grid on A4 Portrait paper">
+                        <div class="print-preview-canvas__page print-preview-canvas__page--a4-portrait">
+                            <header class="page-header">
+                                <div class="page-header__logo">LOGO</div>
+                                <span>Patient ID: [PatientID], Name: [PatientName]</span>
+                            </header>
+                            <div class="print-preview-canvas__page-content">
+                                <div class="page-grid page-grid--2x2">
+                                    <div class="image-placeholder">
+                                        <span>Image 1</span>
+                                        <div class="deid-mask deid-mask--rect-1"></div>
+                                    </div>
+                                    <div class="image-placeholder"><span>Image 2</span></div>
+                                    <div class="image-placeholder"><span>Image 3</span></div>
+                                    <div class="image-placeholder"><span>Image 4</span></div>
+                                </div>
+                            </div>
+                            <footer class="page-footer">
+                                <span>Study Date: [StudyDate]</span>
+                                <span>Page 1 of 1</span>
+                            </footer>
+                        </div>
+                    </div>
+                </div>
+                <aside class="options-area">
+                    <div class="print-options-panel">
+                        <section class="options-section">
+                            <h2 class="options-section__title">Page Layout</h2>
+                            <div class="layout-selector">
+                                <div class="layout-template">
+                                    <div class="layout-template__icon layout-template__icon--1x1"><span></span></div>
+                                    <span class="layout-template__label">1x1</span>
+                                </div>
+                                <div class="layout-template is-active">
+                                    <div class="layout-template__icon layout-template__icon--2x2"><span></span><span></span><span></span><span></span></div>
+                                    <span class="layout-template__label">2x2</span>
+                                </div>
+                                <div class="layout-template">
+                                    <div class="layout-template__icon layout-template__icon--1p3"><span></span><span></span><span></span></div>
+                                    <span class="layout-template__label">1+3</span>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="options-section">
+                            <h2 class="options-section__title">Page Options</h2>
+                            <div class="form-group">
+                                <label for="orientation">Orientation</label>
+                                <select id="orientation">
+                                    <option>Portrait</option>
+                                    <option>Landscape</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="scaling">Image Scaling</label>
+                                <select id="scaling">
+                                    <option>Fit-to-Page</option>
+                                    <option>Actual Size</option>
+                                </select>
+                            </div>
+                        </section>
+                        <section class="options-section">
+                            <h2 class="options-section__title">Branding & Overlays</h2>
+                            <div class="form-group">
+                                <div class="toggle-switch">
+                                    <label for="show-logo">Show Custom Logo</label>
+                                    <input type="checkbox" id="show-logo" checked>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="header-text">Header Text (supports [variables])</label>
+                                <input type="text" id="header-text" value="Patient ID: [PatientID], Name: [PatientName]">
+                            </div>
+                        </section>
+                        <section class="options-section">
+                            <h2 class="options-section__title">De-Identification</h2>
+                             <div class="form-group">
+                                <label for="deid-template">Apply Overlay Template</label>
+                                <select id="deid-template">
+                                    <option>None</option>
+                                    <option selected>Chest X-Ray De-ID</option>
+                                </select>
+                            </div>
+                        </section>
+                    </div>
+                </aside>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Screen Variations Section -->
+    <div class="screen-variations" style="display: none; /* Hidden by default, for documentation purposes */">
+        <h2>Screen Variations</h2>
+        
+        <div class="variation-group">
+            <h3>Variant Name: "Default State"</h3>
+            <normal>The standard, interactive view of the Print Preview screen after all data has been loaded and rendered.</normal>
+            <!-- The mockup above serves as the default state demonstration -->
+        </div>
+        
+        <div class="variation-group">
+            <h3>Variant Name: "Loading State"</h3>
+            <normal>Shown when the screen is first opened and the initial DICOM images and layout data are being processed. The preview canvas shows a skeleton loader, and the options panel is disabled to prevent interaction.</normal>
+            
+            <div id="loading-state" style="height: 100vh; position: relative; border: 2px solid #ccc; margin-top: 20px; overflow: hidden;">
+                <div class="screen-print-preview is-loading">
+                    <header class="screen-header">
+                        <h1 class="screen-header__title">Print Preview</h1>
+                        <div class="screen-header__actions">
+                            <button class="btn btn--secondary" type="button" disabled>Export to PDF</button>
+                            <button class="btn btn--primary" type="button" disabled>Print</button>
+                        </div>
+                    </header>
+                    <main class="screen-main">
+                        <div class="preview-area">
+                            <div class="print-preview-canvas" aria-label="Print preview loading" aria-busy="true">
+                                <div class="print-preview-canvas__page print-preview-canvas__page--a4-portrait">
+                                     <div class="skeleton-loader"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="options-area">
+                            <!-- Options are visually disabled by the overlay from the .is-loading class -->
+                            <div class="print-options-panel">
+                                <section class="options-section">
+                                    <h2 class="options-section__title">Page Layout</h2>
+                                </section>
+                                <section class="options-section">
+                                    <h2 class="options-section__title">Page Options</h2>
+                                </section>
+                                <section class="options-section">
+                                    <h2 class="options-section__title">Branding & Overlays</h2>
+                                </section>
+                                <section class="options-section">
+                                    <h2 class="options-section__title">De-Identification</h2>
+                                </section>
+                            </div>
+                        </aside>
+                    </main>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

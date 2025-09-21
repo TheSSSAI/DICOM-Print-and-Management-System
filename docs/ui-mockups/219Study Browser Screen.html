@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Browser</title>
+    <style>
+        /* CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Design System Foundation: Custom Properties */
+        :root {
+            /* Typography */
+            --font-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            --font-size-h2: 24px;
+            --font-size-body: 16px;
+            --font-size-caption: 14px;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+
+            /* Color Palette */
+            --color-primary-50: #E8EAF6;
+            --color-primary-500: #3F51B5;
+            --color-primary-600: #3949AB;
+            --color-primary-700: #303F9F;
+            --color-neutral-white: #FFFFFF;
+            --color-neutral-gray-50: #FAFAFA;
+            --color-neutral-gray-100: #F5F5F5;
+            --color-neutral-gray-300: #E0E0E0;
+            --color-neutral-gray-500: #9E9E9E;
+            --color-neutral-gray-700: #616161;
+            --color-neutral-gray-900: #212121;
+            --color-semantic-error: #F44336;
+            --color-semantic-info: #2196F3;
+
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+
+            /* Borders */
+            --border-radius-sm: 4px;
+            --border-radius-md: 8px;
+
+            /* Shadows */
+            --shadow-2dp: 0 2px 4px rgba(0,0,0,0.12);
+            --shadow-4dp: 0 4px 8px rgba(0,0,0,0.15);
+            --shadow-8dp: 0 8px 16px rgba(0,0,0,0.18);
+            
+            /* Transitions */
+            --transition-speed: 0.2s;
+        }
+
+        /* Base Styles */
+        body {
+            font-family: var(--font-primary);
+            font-size: var(--font-size-body);
+            line-height: 1.6;
+            color: var(--color-neutral-gray-900);
+            background-color: var(--color-neutral-gray-100);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* Main Screen Layout */
+        .screen-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--color-neutral-white);
+        }
+
+        .screen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-md) var(--space-lg);
+            background-color: var(--color-neutral-white);
+            border-bottom: 1px solid var(--color-neutral-gray-300);
+            flex-shrink: 0;
+        }
+
+        .screen-header__title {
+            font-size: var(--font-size-h2);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .screen-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-md) var(--space-lg);
+            border-bottom: 1px solid var(--color-neutral-gray-300);
+            background-color: var(--color-neutral-gray-50);
+            flex-shrink: 0;
+        }
+
+        .screen-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .action-group {
+            display: flex;
+            gap: var(--space-md);
+        }
+        
+        /* Button Component */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            font-family: var(--font-primary);
+            font-size: var(--font-size-caption);
+            font-weight: var(--font-weight-medium);
+            border-radius: var(--border-radius-sm);
+            border: 1px solid transparent;
+            padding: var(--space-sm) var(--space-md);
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: 2px;
+        }
+
+        .btn--primary {
+            background-color: var(--color-primary-500);
+            color: var(--color-neutral-white);
+        }
+        .btn--primary:hover {
+            background-color: var(--color-primary-600);
+            box-shadow: var(--shadow-4dp);
+        }
+        .btn--primary:active {
+            background-color: var(--color-primary-700);
+            transform: scale(0.98);
+        }
+
+        .btn--secondary {
+            background-color: transparent;
+            color: var(--color-primary-500);
+            border-color: var(--color-primary-500);
+        }
+        .btn--secondary:hover {
+            background-color: var(--color-primary-50);
+        }
+
+        .btn--icon {
+            padding: var(--space-sm);
+            background-color: transparent;
+            border-color: var(--color-neutral-gray-300);
+            color: var(--color-neutral-gray-700);
+        }
+        .btn--icon:hover {
+            background-color: var(--color-neutral-gray-100);
+            border-color: var(--color-neutral-gray-500);
+        }
+        .btn--icon.is-active {
+             background-color: var(--color-primary-50);
+             color: var(--color-primary-500);
+             border-color: var(--color-primary-500);
+        }
+        .btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* SearchBar Component */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid var(--color-neutral-gray-300);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--color-neutral-white);
+        }
+        .search-bar:focus-within {
+             border-color: var(--color-primary-500);
+             box-shadow: 0 0 0 2px var(--color-primary-50);
+        }
+        .search-bar__icon {
+            padding: 0 var(--space-md);
+            color: var(--color-neutral-gray-500);
+        }
+        .search-bar__input {
+            width: 100%;
+            border: none;
+            padding: 10px 0;
+            font-size: var(--font-size-body);
+            background: transparent;
+        }
+        .search-bar__input:focus {
+            outline: none;
+        }
+        
+        /* State Containers */
+        .state-container {
+            display: none; /* Hidden by default */
+            padding: var(--space-xl);
+        }
+        
+        .status-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: var(--color-neutral-gray-700);
+        }
+        .status-message__icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: var(--space-lg);
+            color: var(--color-neutral-gray-500);
+        }
+        .status-message__title {
+            font-size: 20px;
+            font-weight: var(--font-weight-medium);
+            margin-bottom: var(--space-sm);
+            color: var(--color-neutral-gray-900);
+        }
+        .status-message__description {
+            max-width: 400px;
+        }
+        .status-message--error .status-message__icon {
+            color: var(--color-semantic-error);
+        }
+
+        /* View Toggling Logic */
+        .view-container.view--list .list-view { display: block; }
+        .view-container.view--thumbnail .thumbnail-view { display: block; }
+        .view-container.is-loading .loading-state { display: block; }
+        .view-container.is-empty .empty-state { display: flex; }
+        .view-container.has-error .error-state { display: flex; }
+
+        .view-container.is-loading .list-view,
+        .view-container.is-loading .thumbnail-view,
+        .view-container.is-loading .empty-state,
+        .view-container.is-loading .error-state,
+        .view-container.is-empty .list-view,
+        .view-container.is-empty .thumbnail-view,
+        .view-container.is-empty .loading-state,
+        .view-container.is-empty .error-state,
+        .view-container.has-error .list-view,
+        .view-container.has-error .thumbnail-view,
+        .view-container.has-error .loading-state,
+        .view-container.has-error .empty-state {
+            display: none;
+        }
+
+        /* List View (DataGrid) */
+        .study-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .study-table th, .study-table td {
+            padding: 12px var(--space-lg);
+            text-align: left;
+            border-bottom: 1px solid var(--color-neutral-gray-300);
+        }
+        .study-table thead {
+            background-color: var(--color-neutral-gray-50);
+        }
+        .study-table th {
+            font-size: var(--font-size-caption);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-neutral-gray-700);
+            text-transform: uppercase;
+        }
+        .study-table tbody tr {
+            cursor: pointer;
+            transition: background-color var(--transition-speed) ease;
+        }
+        .study-table tbody tr:hover {
+            background-color: var(--color-primary-50);
+        }
+        .study-table tbody tr:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: -2px;
+        }
+        .study-table .patient-name {
+            font-weight: var(--font-weight-medium);
+        }
+        .study-table .metadata {
+            font-size: var(--font-size-caption);
+            color: var(--color-neutral-gray-700);
+        }
+
+        /* Thumbnail View (ItemsControl) */
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-lg);
+            padding: var(--space-lg);
+        }
+        .study-card {
+            background-color: var(--color-neutral-white);
+            border: 1px solid var(--color-neutral-gray-300);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-2dp);
+            padding: var(--space-md);
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .study-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-8dp);
+            border-color: var(--color-primary-500);
+        }
+        .study-card:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: 2px;
+        }
+        .study-card__preview {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            background-color: var(--color-neutral-gray-900);
+            color: var(--color-neutral-gray-500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: var(--space-md);
+            font-size: var(--font-size-caption);
+        }
+        .study-card__title {
+            font-size: 18px;
+            font-weight: var(--font-weight-medium);
+            margin-bottom: var(--space-sm);
+        }
+        .study-card__info {
+            font-size: var(--font-size-caption);
+            color: var(--color-neutral-gray-700);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--space-xs);
+        }
+
+        /* Skeleton Loader */
+        .skeleton {
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: var(--border-radius-sm);
+            color: transparent;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .skeleton-text {
+            height: 1em;
+            width: 75%;
+        }
+        .skeleton-text--short { width: 40%; }
+        .skeleton-text--long { width: 90%; }
+        
+        /* Skeleton specific to List View */
+        .study-table .skeleton-row td > div { margin-bottom: 8px; }
+
+        /* Skeleton specific to Thumbnail View */
+        .study-card.is-skeleton .study-card__preview { background: #e0e0e0; animation: shimmer 1.5s infinite linear; }
+        .study-card.is-skeleton .study-card__title div { margin-bottom: 12px; }
+        .study-card.is-skeleton .study-card__info div { height: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="screen-container">
+        <header class="screen-header">
+            <h1 class="screen-header__title">Study Browser</h1>
+            <div class="action-group">
+                <button type="button" class="btn btn--secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                    <span>Import</span>
+                </button>
+                <button type="button" class="btn btn--primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span>Export</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="screen-toolbar">
+            <div class="search-bar">
+                <div class="search-bar__icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                <input type="search" class="search-bar__input" placeholder="Search by Patient Name, ID, or Modality...">
+            </div>
+            <div class="action-group">
+                <button type="button" class="btn btn--icon is-active" aria-label="List View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <button type="button" class="btn btn--icon" aria-label="Thumbnail View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <main class="screen-content">
+            <div class="view-container view--list">
+                <!-- Loaded List View (Default) -->
+                <div class="state-container list-view">
+                    <table class="study-table" aria-label="List of DICOM Studies">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Study Description</th>
+                                <th>Modality</th>
+                                <th>Study Date</th>
+                                <th>Images</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr tabindex="0">
+                                <td class="patient-name">DOE, JOHN</td>
+                                <td>
+                                    <div>CHEST (PA AND LAT)</div>
+                                    <div class="metadata">ID: 123456789</div>
+                                </td>
+                                <td>CR</td>
+                                <td>2024-05-20</td>
+                                <td>2</td>
+                            </tr>
+                            <tr tabindex="0">
+                                <td class="patient-name">SMITH, JANE</td>
+                                <td>
+                                    <div>CT CHEST W/O CONTRAST</div>
+                                    <div class="metadata">ID: 987654321</div>
+                                </td>
+                                <td>CT</td>
+                                <td>2024-05-19</td>
+                                <td>354</td>
+                            </tr>
+                            <tr tabindex="0">
+                                <td class="patient-name">WILLIAMS, ROBERT</td>
+                                <td>
+                                    <div>MRI BRAIN W/O CONTRAST</div>
+                                    <div class="metadata">ID: 456123789</div>
+                                </td>
+                                <td>MR</td>
+                                <td>2024-05-18</td>
+                                <td>180</td>
+                            </tr>
+                            <tr tabindex="0">
+                                <td class="patient-name">BROWN, EMILY</td>
+                                <td>
+                                    <div>US PELVIS</div>
+                                    <div class="metadata">ID: 789123456</div>
+                                </td>
+                                <td>US</td>
+                                <td>2024-05-17</td>
+                                <td>45</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Loaded Thumbnail View (Hidden by default) -->
+                <div class="state-container thumbnail-view">
+                    <!-- This content is shown in the variations below -->
+                </div>
+                
+                <!-- Other states (hidden by default) -->
+                <div class="state-container loading-state"></div>
+                <div class="state-container empty-state"></div>
+                <div class="state-container error-state"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Screen Variations Section -->
+    <div class="screen-variations" style="padding: 2rem; background-color: #f1f5f9;">
+        <h2 style="font-size: 2rem; margin-bottom: 2rem; border-bottom: 2px solid #ddd; padding-bottom: 1rem;">Screen Variations</h2>
+        
+        <div class="variation-group" style="margin-bottom: 3rem;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Variant Name: "Loading State (List View)"</h3>
+            <p style="margin-bottom: 1.5rem; color: #555;">Shows a skeleton loader matching the table layout while data is being fetched.</p>
+            <div class="screen-container" style="height: 400px; border: 1px solid #ddd;">
+                <main class="screen-content">
+                    <table class="study-table">
+                        <thead>
+                            <tr><th>Patient Name</th><th>Study Description</th><th>Modality</th><th>Study Date</th><th>Images</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="skeleton-row" aria-hidden="true">
+                                <td><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text skeleton-text--short"></div></td>
+                                <td><div class="skeleton skeleton-text skeleton-text--long"></div><div class="skeleton skeleton-text"></div></td>
+                                <td><div class="skeleton skeleton-text skeleton-text--short"></div></td>
+                                <td><div class="skeleton skeleton-text"></div></td>
+                                <td><div class="skeleton skeleton-text skeleton-text--short"></div></td>
+                            </tr>
+                            <tr class="skeleton-row" aria-hidden="true">
+                                <td><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text skeleton-text--short"></div></td>
+                                <td><div class="skeleton skeleton-text skeleton-text--long"></div><div class="skeleton skeleton-text"></div></td>
+                                <td><div class="skeleton skeleton-text skeleton-text--short"></div></td>
+                                <td><div class="skeleton skeleton-text"></div></td>
+                                <td><div class="skeleton skeleton-text skeleton-text--short"></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </main>
+            </div>
+        </div>
+
+        <div class="variation-group" style="margin-bottom: 3rem;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Variant Name: "Loading State (Thumbnail View)"</h3>
+            <p style="margin-bottom: 1.5rem; color: #555;">Shows skeleton cards matching the thumbnail layout while data is being fetched.</p>
+            <div class="screen-container" style="height: 400px; border: 1px solid #ddd;">
+                <main class="screen-content">
+                     <div class="thumbnail-grid">
+                        <div class="study-card is-skeleton" aria-hidden="true">
+                            <div class="study-card__preview"></div>
+                            <div class="study-card__title"><div class="skeleton skeleton-text"></div></div>
+                            <div class="study-card__info"><div class="skeleton skeleton-text skeleton-text--short"></div></div>
+                            <div class="study-card__info"><div class="skeleton skeleton-text skeleton-text--short"></div></div>
+                        </div>
+                        <div class="study-card is-skeleton" aria-hidden="true">
+                            <div class="study-card__preview"></div>
+                            <div class="study-card__title"><div class="skeleton skeleton-text"></div></div>
+                            <div class="study-card__info"><div class="skeleton skeleton-text skeleton-text--short"></div></div>
+                            <div class="study-card__info"><div class="skeleton skeleton-text skeleton-text--short"></div></div>
+                        </div>
+                     </div>
+                </main>
+            </div>
+        </div>
+        
+        <div class="variation-group" style="margin-bottom: 3rem;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Variant Name: "Empty State"</h3>
+            <p style="margin-bottom: 1.5rem; color: #555;">Displayed when a search yields no results or there are no studies in the system.</p>
+            <div class="screen-container" style="height: 400px; border: 1px solid #ddd;">
+                <main class="screen-content">
+                    <div class="status-message" role="status">
+                        <svg class="status-message__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <h2 class="status-message__title">No Studies Found</h2>
+                        <p class="status-message__description">Your search did not match any studies. Try adjusting your search criteria or import new studies.</p>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <div class="variation-group" style="margin-bottom: 3rem;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Variant Name: "Error State"</h3>
+            <p style="margin-bottom: 1.5rem; color: #555;">Displayed when the system fails to load studies from the database.</p>
+            <div class="screen-container" style="height: 400px; border: 1px solid #ddd;">
+                <main class="screen-content">
+                    <div class="status-message status-message--error" role="alert">
+                        <svg class="status-message__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <h2 class="status-message__title">Could Not Load Studies</h2>
+                        <p class="status-message__description">An error occurred while trying to connect to the database. Please check the service status and try again.</p>
+                    </div>
+                </main>
+            </div>
+        </div>
+        
+        <div class="variation-group" style="margin-bottom: 3rem;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Variant Name: "Loaded State (Thumbnail View)"</h3>
+            <p style="margin-bottom: 1.5rem; color: #555;">Shows the studies as a grid of interactive cards, providing a more visual overview.</p>
+            <div class="screen-container" style="height: 600px; border: 1px solid #ddd;">
+                <main class="screen-content">
+                     <div class="thumbnail-grid">
+                        <div class="study-card" tabindex="0">
+                            <div class="study-card__preview">CR</div>
+                            <div class="study-card__title">DOE, JOHN</div>
+                            <div class="study-card__info"><span>ID: 123456789</span><span>2 images</span></div>
+                            <div class="study-card__info"><span>2024-05-20</span><span>CHEST (PA AND LAT)</span></div>
+                        </div>
+                        <div class="study-card" tabindex="0">
+                            <div class="study-card__preview">CT</div>
+                            <div class="study-card__title">SMITH, JANE</div>
+                            <div class="study-card__info"><span>ID: 987654321</span><span>354 images</span></div>
+                            <div class="study-card__info"><span>2024-05-19</span><span>CT CHEST W/O CONTRAST</span></div>
+                        </div>
+                        <div class="study-card" tabindex="0">
+                            <div class="study-card__preview">MR</div>
+                            <div class="study-card__title">WILLIAMS, ROBERT</div>
+                            <div class="study-card__info"><span>ID: 456123789</span><span>180 images</span></div>
+                            <div class="study-card__info"><span>2024-05-18</span><span>MRI BRAIN W/O CONTRAST</span></div>
+                        </div>
+                     </div>
+                </main>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

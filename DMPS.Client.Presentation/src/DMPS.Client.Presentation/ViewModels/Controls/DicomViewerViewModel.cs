@@ -1,90 +1,103 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DMPS.Client.Application.Services;
-using DMPS.Client.Presentation.ViewModels.Base;
-using DMPS.Shared.Core.Models;
+using DMPS.Client.Application.Interfaces;
+using DMPS.Core.Business.Entities;
+using DMPS.Core.Business.ValueObjects;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace DMPS.Client.Presentation.ViewModels.Controls
 {
-    public sealed partial class DicomViewerViewModel : ViewModelBase
+    public sealed partial class DicomViewerViewModel : ObservableObject
     {
-        private readonly IDicomProcessingService _dicomProcessingService;
-        
+        private readonly IDicomImageService _dicomImageService;
+
         [ObservableProperty]
         private DicomImage? _currentImage;
 
         [ObservableProperty]
-        private double _zoomFactor = 1.0;
-        
-        [ObservableProperty]
-        private double _panX = 0;
+        private double _zoom = 1.0;
 
         [ObservableProperty]
-        private double _panY = 0;
+        private double _panX;
 
         [ObservableProperty]
-        private int _windowWidth = 400;
+        private double _panY;
 
         [ObservableProperty]
-        private int _windowCenter = 40;
-        
-        public DicomViewerViewModel(IDicomProcessingService dicomProcessingService)
+        private double _windowWidth;
+
+        [ObservableProperty]
+        private double _windowCenter;
+
+        [ObservableProperty]
+        private bool _isBusy;
+
+        public ObservableCollection<WindowLevelPreset> Presets { get; } = new();
+
+        public DicomViewerViewModel(IDicomImageService dicomImageService)
         {
-            _dicomProcessingService = dicomProcessingService;
+            _dicomImageService = dicomImageService;
+            // In a real app, presets would be loaded from a service
+            Presets.Add(new WindowLevelPreset("Default", 2000, 0));
+            Presets.Add(new WindowLevelPreset("Lung", 1500, -600));
+            Presets.Add(new WindowLevelPreset("Bone", 2500, 480));
+            Presets.Add(new WindowLevelPreset("Brain", 80, 40));
         }
 
-        public async Task LoadImageAsync(DicomImage image)
+        public async Task LoadImageAsync(string imageSopInstanceUid)
         {
-            CurrentImage = image;
-            // In a real application, this might involve more complex logic,
-            // like fetching pixel data or applying default presets.
-            await ApplyDefaultPresetAsync();
+            IsBusy = true;
+            try
+            {
+                var image = await _dicomImageService.GetDicomImageAsync(imageSopInstanceUid);
+                CurrentImage = image;
+                if (image != null)
+                {
+                    WindowWidth = image.DefaultWindowWidth;
+                    WindowCenter = image.DefaultWindowCenter;
+                    ResetView();
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
-        private void ZoomIn() => ZoomFactor *= 1.1;
-
-        [RelayCommand]
-        private void ZoomOut() => ZoomFactor /= 1.1;
-        
-        [RelayCommand]
-        private void ResetZoomAndPan()
+        private void ResetView()
         {
-            ZoomFactor = 1.0;
+            Zoom = 1.0;
             PanX = 0;
             PanY = 0;
+            if (CurrentImage != null)
+            {
+                WindowWidth = CurrentImage.DefaultWindowWidth;
+                WindowCenter = CurrentImage.DefaultWindowCenter;
+            }
         }
 
-        [RelayCommand]
-        private async Task ApplyDefaultPresetAsync()
-        {
-            if (CurrentImage is null) return;
-
-            var preset = await _dicomProcessingService.GetDefaultWindowLevelAsync(CurrentImage.Modality);
-            WindowWidth = preset.Width;
-            WindowCenter = preset.Center;
-        }
-        
         [RelayCommand]
         private void ApplyPreset(WindowLevelPreset preset)
         {
-            WindowWidth = preset.Width;
-            WindowCenter = preset.Center;
+            if (preset != null)
+            {
+                WindowWidth = preset.Width;
+                WindowCenter = preset.Center;
+            }
         }
 
-        // Methods to be called from the View's code-behind for mouse interactions
-        public void Pan(double deltaX, double deltaY)
+        [RelayCommand]
+        private void Rotate(int degrees)
         {
-            PanX += deltaX / ZoomFactor;
-            PanY += deltaY / ZoomFactor;
+            // Logic to update rotation property would go here
         }
-
-        public void Update WindowLevel(double deltaX, double deltaY)
+        
+        [RelayCommand]
+        private void Flip(string direction)
         {
-            // A common mapping: horizontal movement adjusts width, vertical adjusts center
-            WindowWidth += (int)deltaX;
-            WindowCenter += (int)deltaY;
+            // Logic to update flip property (horizontal/vertical) would go here
         }
     }
 }

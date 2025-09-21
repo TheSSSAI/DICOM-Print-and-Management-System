@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dialog Action Bar Component</title>
+  <style>
+    /* Global Styles & Design System Tokens */
+    :root {
+      /* Colors */
+      --color-primary-50: #E8EAF6;
+      --color-primary-500: #3F51B5;
+      --color-primary-600: #3949AB;
+      --color-primary-700: #303F9F;
+      --color-white: #FFFFFF;
+      --color-disabled-bg: rgba(0,0,0,0.12);
+      --color-disabled-text: rgba(0,0,0,0.26);
+      --color-neutral-border: #E0E0E0;
+      --color-focus: var(--color-primary-700);
+      --color-body-bg: #F5F5F5;
+      --color-body-text: #212121;
+      --color-component-bg: #FFFFFF;
+
+      /* Spacing */
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      
+      /* Typography */
+      --font-family-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-size-body: 16px;
+      --font-weight-medium: 500;
+
+      /* Borders & Shadows */
+      --border-radius-sm: 4px;
+      --border-radius-md: 8px;
+      --shadow-1: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+      --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-body-bg);
+      color: var(--color-body-text);
+      margin: 0;
+      padding: var(--spacing-lg);
+    }
+
+    /* Showcase Layout Styles */
+    .showcase {
+      max-width: 700px;
+      margin: 40px auto;
+    }
+    .component-container {
+      background-color: var(--color-component-bg);
+      border-radius: var(--border-radius-md);
+      box-shadow: var(--shadow-2);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+    .variant-title {
+      margin: 0 0 var(--spacing-md) 0;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--color-primary-700);
+      border-bottom: 1px solid var(--color-neutral-border);
+      padding-bottom: 8px;
+    }
+    .variant-description {
+        margin: -8px 0 var(--spacing-md) 0;
+        font-size: 14px;
+        color: #616161;
+    }
+
+
+    /* Button Component Base (Dependency) */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: var(--border-radius-sm);
+      font-family: var(--font-family-primary);
+      font-size: var(--font-size-body);
+      font-weight: var(--font-weight-medium);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+      min-height: 44px;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+
+    /* Button States (Dependency) */
+    .btn:hover:not(:disabled) {
+      box-shadow: var(--shadow-1);
+    }
+    .btn:active:not(:disabled) {
+      transform: scale(0.98);
+      box-shadow: none;
+    }
+    .btn:focus-visible {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+    .btn:disabled,
+    .btn[disabled] {
+      background-color: var(--color-disabled-bg) !important;
+      color: var(--color-disabled-text) !important;
+      border-color: transparent !important;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Button Variants (Dependency) */
+    .btn--primary {
+      background-color: var(--color-primary-500);
+      color: var(--color-white);
+    }
+    .btn--primary:hover:not(:disabled) {
+      background-color: var(--color-primary-600);
+    }
+    .btn--primary:active:not(:disabled) {
+      background-color: var(--color-primary-700);
+    }
+
+    .btn--secondary {
+      background-color: transparent;
+      color: var(--color-primary-500);
+      border-color: var(--color-primary-500);
+    }
+    .btn--secondary:hover:not(:disabled) {
+      background-color: var(--color-primary-50);
+    }
+
+    /* DialogActionBar Component */
+    .dialog-action-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: var(--spacing-md);
+      padding-top: var(--spacing-lg);
+      margin-top: var(--spacing-lg);
+      border-top: 1px solid var(--color-neutral-border);
+      width: 100%;
+    }
+    
+    /* Dummy content for context */
+    .dialog-content-placeholder {
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="showcase">
+    <div class="component-container">
+      <div class="dialog-content-placeholder">
+        This area represents the content of a dialog. The action bar below provides the final actions for this dialog.
+      </div>
+      
+      <div class="dialog-action-bar">
+        <button class="btn btn--secondary">Cancel</button>
+        <button class="btn btn--primary">Confirm</button>
+      </div>
+    </div>
+    
+    <div>
+      <h2 class="variant-title">Component Variations</h2>
+
+      <div class="component-container">
+        <h3 class="variant-title">Confirm & Cancel</h3>
+        <p class="variant-description">Standard layout for confirmation dialogs, featuring a primary (affirmative) and a secondary (dismissive) action.</p>
+        <div class="dialog-action-bar">
+          <button class="btn btn--secondary">Cancel</button>
+          <button class="btn btn--primary">Save Changes</button>
+        </div>
+      </div>
+
+      <div class="component-container">
+        <h3 class="variant-title">OK Only</h3>
+        <p class="variant-description">Used for informational dialogs where only a single acknowledgment action is required.</p>
+        <div class="dialog-action-bar">
+          <button class="btn btn--primary">OK</button>
+        </div>
+      </div>
+
+      <div class="component-container">
+        <h3 class="variant-title">State: Disabled Action</h3>
+        <p class="variant-description">Demonstrates the action bar when the primary action is disabled, for example, due to invalid form input in the dialog.</p>
+        <div class="dialog-action-bar">
+          <button class="btn btn--secondary">Cancel</button>
+          <button class="btn btn--primary" disabled>Submit</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

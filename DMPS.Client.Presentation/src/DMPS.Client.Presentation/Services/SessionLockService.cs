@@ -1,134 +1,118 @@
 using DMPS.Client.Presentation.Services.Interfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Runtime.InteropServices;
+using System.Windows.Threading;
 
-namespace DMPS.Client.Presentation.Services;
-
-/// <summary>
-/// A service to monitor user inactivity and request a session lock.
-/// Implements REQ-1-041 (Automatic Session Lock).
-/// </summary>
-public sealed class SessionLockService : ISessionLockService, IDisposable
+namespace DMPS.Client.Presentation.Services
 {
-    private readonly ILogger<SessionLockService> _logger;
-    private readonly TimeSpan _inactivityTimeout;
-    private readonly Timer _timer;
-    private bool _isLocked;
-    private bool _isDisposed;
-
-    /// <inheritdoc />
-    public event Action? SessionLockRequested;
-
-    public SessionLockService(IConfiguration configuration, ILogger<SessionLockService> logger)
+    /// <summary>
+    /// Manages the user inactivity timer and controls the locked state of the UI.
+    /// This service uses P/Invoke to query the system for the last user input time.
+    /// </summary>
+    public sealed class SessionLockService : ISessionLockService, IDisposable
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        
-        if (!int.TryParse(configuration["ApplicationSettings:InactivityTimeoutMinutes"], out var timeoutMinutes))
+        private readonly ILogger<SessionLockService> _logger;
+        private DispatcherTimer? _inactivityTimer;
+        private TimeSpan _inactivityTimeout;
+
+        /// <inheritdoc />
+        public event EventHandler? SessionLockTriggered;
+
+        public SessionLockService(ILogger<SessionLockService> logger)
         {
-            timeoutMinutes = 15; // Default value as per REQ-1-041
-            _logger.LogWarning("InactivityTimeoutMinutes not found or invalid in configuration. Using default value of {DefaultMinutes} minutes.", timeoutMinutes);
-        }
-        _inactivityTimeout = TimeSpan.FromMinutes(timeoutMinutes);
-        
-        // Use a timer that checks periodically instead of hooking global events, which is less intrusive.
-        _timer = new Timer(CheckInactivity, null, Timeout.Infinite, Timeout.Infinite);
-        _logger.LogInformation("SessionLockService created with a timeout of {Timeout} minutes.", timeoutMinutes);
-    }
-
-    /// <inheritdoc />
-    public void Start()
-    {
-        if (_isDisposed) throw new ObjectDisposedException(nameof(SessionLockService));
-        
-        _logger.LogInformation("Session lock monitoring started.");
-        _isLocked = false;
-        // Check every 5 seconds.
-        _timer.Change(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
-    }
-
-    /// <inheritdoc />
-    public void Stop()
-    {
-        if (_isDisposed) return;
-
-        _logger.LogInformation("Session lock monitoring stopped.");
-        _timer.Change(Timeout.Infinite, Timeout.Infinite);
-    }
-
-    /// <inheritdoc />
-    public void Unlock()
-    {
-        if (_isDisposed) return;
-
-        _logger.LogInformation("Session unlocked by user. Resuming inactivity monitoring.");
-        _isLocked = false;
-        // The timer continues running, so no need to restart it, it will just start passing the check again.
-    }
-
-    private void CheckInactivity(object? state)
-    {
-        if (_isLocked || _isDisposed)
-        {
-            return;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        try
+        /// <inheritdoc />
+        public void Start(TimeSpan inactivityTimeout)
         {
-            var idleTime = GetIdleTime();
-            if (idleTime >= _inactivityTimeout)
+            if (inactivityTimeout <= TimeSpan.Zero)
             {
-                _logger.LogInformation("User has been idle for {IdleTime}. Requesting session lock.", idleTime);
-                _isLocked = true; // Prevent multiple lock requests
-                SessionLockRequested?.Invoke();
+                _logger.LogWarning("Session lock timeout is zero or negative. Session locking will be disabled.");
+                return;
+            }
+
+            _inactivityTimeout = inactivityTimeout;
+
+            if (_inactivityTimer is not null && _inactivityTimer.IsEnabled)
+            {
+                _inactivityTimer.Stop();
+            }
+
+            _inactivityTimer = new DispatcherTimer(
+                TimeSpan.FromSeconds(1), // Check every second
+                DispatcherPriority.ApplicationIdle,
+                OnTimerTick,
+                Dispatcher.CurrentDispatcher);
+            
+            _logger.LogInformation("Session lock service started with a timeout of {TimeoutMinutes} minutes.", _inactivityTimeout.TotalMinutes);
+            _inactivityTimer.Start();
+        }
+
+        /// <inheritdoc />
+        public void Stop()
+        {
+            if (_inactivityTimer is not null)
+            {
+                _inactivityTimer.Stop();
+                _inactivityTimer.Tick -= OnTimerTick;
+                _inactivityTimer = null;
+                _logger.LogInformation("Session lock service stopped.");
             }
         }
-        catch (Exception ex)
+
+        private void OnTimerTick(object? sender, EventArgs e)
         {
-            _logger.LogError(ex, "Error while checking user inactivity.");
-            Stop(); // Stop the timer on error to prevent log spam.
+            try
+            {
+                var idleTime = GetIdleTime();
+                if (idleTime >= _inactivityTimeout)
+                {
+                    Stop();
+                    _logger.LogInformation("User inactivity detected. Triggering session lock.");
+                    SessionLockTriggered?.Invoke(this, EventArgs.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during the session lock timer tick.");
+                Stop(); // Stop the timer to prevent repeated errors.
+            }
+        }
+
+        private static TimeSpan GetIdleTime()
+        {
+            var lastInputInfo = new LASTINPUTINFO();
+            lastInputInfo.cbSize = (uint)Marshal.SizeOf(lastInputInfo);
+
+            if (!GetLastInputInfo(ref lastInputInfo))
+            {
+                // Could throw a Win32Exception but for this purpose, we can just return zero.
+                return TimeSpan.Zero;
+            }
+
+            uint ticks = (uint)Environment.TickCount;
+            uint idleTime = ticks - lastInputInfo.dwTime;
+
+            return TimeSpan.FromMilliseconds(idleTime);
+        }
+
+        #region P/Invoke
+        [StructLayout(LayoutKind.Sequential)]
+        private struct LASTINPUTINFO
+        {
+            public uint cbSize;
+            public uint dwTime;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+        #endregion
+
+        public void Dispose()
+        {
+            Stop();
         }
     }
-
-    private static TimeSpan GetIdleTime()
-    {
-        var lastInputInfo = new LASTINPUTINFO();
-        lastInputInfo.cbSize = (uint)Marshal.SizeOf(lastInputInfo);
-        
-        if (!GetLastInputInfo(ref lastInputInfo))
-        {
-            throw new InvalidOperationException($"Win32 GetLastInputInfo failed with error code {Marshal.GetLastWin32Error()}");
-        }
-
-        uint ticks = (uint)Environment.TickCount;
-        uint lastInputTicks = lastInputInfo.dwTime;
-
-        uint idleTicks = ticks - lastInputTicks;
-
-        return TimeSpan.FromMilliseconds(idleTicks);
-    }
-
-    public void Dispose()
-    {
-        if (!_isDisposed)
-        {
-            _timer.Dispose();
-            _isDisposed = true;
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    #region P/Invoke for Win32 GetLastInputInfo
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct LASTINPUTINFO
-    {
-        public uint cbSize;
-        public uint dwTime;
-    }
-
-    [DllImport("user32.dll")]
-    private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
-
-    #endregion
 }

@@ -3,66 +3,90 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:viewModels="clr-namespace:DMPS.Client.Presentation.ViewModels"
-             xmlns:behaviors="clr-namespace:DMPS.Client.Presentation.Infrastructure.Behaviors"
+             xmlns:local="clr-namespace:DMPS.Client.Presentation.Views"
+             xmlns:vm="clr-namespace:DMPS.Client.Presentation.ViewModels"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:behaviors="clr-namespace:DMPS.Client.Presentation.Infrastructure.Behaviors"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d" 
-             d:DataContext="{d:DesignInstance Type=viewModels:LockScreenViewModel}"
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Background="#AA000000">
-        <materialDesign:Card Width="350" Padding="24" UniformCornerRadius="8" VerticalAlignment="Center" HorizontalAlignment="Center">
+             d:DataContext="{d:DesignInstance Type=vm:LockScreenViewModel}"
+             d:DesignHeight="720" d:DesignWidth="1280">
+
+    <Grid>
+        <Grid.Background>
+            <SolidColorBrush Color="{DynamicResource MaterialDesignPaper}" Opacity="0.9"/>
+        </Grid.Background>
+        
+        <materialDesign:Card Padding="32"
+                             Width="350"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             UniformCornerRadius="8">
             <StackPanel>
-                <materialDesign:PackIcon Kind="Lock" Width="48" Height="48" HorizontalAlignment="Center" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                <TextBlock Text="Session Locked" 
-                           Style="{StaticResource MaterialDesignHeadline5TextBlock}" 
-                           HorizontalAlignment="Center" 
-                           Margin="0,16,0,8"/>
-                <TextBlock Text="{Binding Username, StringFormat='Session for {0} is locked.'}"
+                <materialDesign:PackIcon Kind="LockClock" 
+                                         Width="48" Height="48" 
+                                         HorizontalAlignment="Center" 
+                                         Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+
+                <TextBlock Text="Session Locked"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
                            HorizontalAlignment="Center"
-                           Style="{StaticResource MaterialDesignBody1TextBlock}"
-                           Margin="0,0,0,24"/>
+                           Margin="0 16 0 0"/>
+
+                <TextBlock HorizontalAlignment="Center" Margin="0 4 0 24">
+                    <Run Text="Session for " Foreground="{DynamicResource MaterialDesignBodyLightTextBlock}"/>
+                    <Run Text="{Binding Username}" FontWeight="Bold"/>
+                </TextBlock>
+
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
+                           Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}"
+                           Margin="0 0 0 8"
+                           TextWrapping="Wrap"/>
 
                 <PasswordBox x:Name="PasswordBox"
                              materialDesign:HintAssist.Hint="Password"
                              Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
-                             behaviors:PasswordBoxBindingBehavior.IsPasswordBindingEnabled="True"
-                             behaviors:PasswordBoxBindingBehavior.BoundPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                    <PasswordBox.InputBindings>
-                        <KeyBinding Key="Enter" Command="{Binding UnlockCommand}" CommandParameter="{Binding ElementName=PasswordBox}"/>
-                    </PasswordBox.InputBindings>
+                             Margin="0 8">
+                    <i:Interaction.Behaviors>
+                        <behaviors:PasswordBoxBindingBehavior Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </i:Interaction.Behaviors>
+                    <materialDesign:HintAssist.Hint>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Lock" VerticalAlignment="Center"/>
+                            <TextBlock Text="Password" Margin="4 0 0 0"/>
+                        </StackPanel>
+                    </materialDesign:HintAssist.Hint>
                 </PasswordBox>
+
+                <Button Content="UNLOCK"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding UnlockCommand}"
+                        IsEnabled="{Binding IsNotBusy}"
+                        Margin="0 24 0 0"
+                        Height="40">
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="UNLOCK"
+                                           VerticalAlignment="Center"
+                                           Visibility="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                             Value="0"
+                                             IsIndeterminate="True"
+                                             Width="20" Height="20"
+                                             Visibility="{Binding DataContext.IsBusy, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
                 
-                <TextBlock Text="{Binding ErrorMessage}"
-                           Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
-                           Margin="0,8,0,0"
-                           TextWrapping="Wrap"
-                           HorizontalAlignment="Center"
-                           Visibility="{Binding ErrorMessage, Converter={StaticResource NullOrEmptyStringToVisibilityConverter}, ConverterParameter=invert}"/>
+                <Button Content="Log Out"
+                        Style="{StaticResource MaterialDesignTextButton}"
+                        Command="{Binding LogoutCommand}"
+                        HorizontalAlignment="Center"
+                        Margin="0 8 0 0"/>
 
-                <ProgressBar IsIndeterminate="True" 
-                             Visibility="{Binding IsUnlocking, Converter={StaticResource BooleanToVisibilityConverter}}"
-                             Margin="0,16,0,0"/>
-
-                <Grid Margin="0,24,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Button Content="Log Out"
-                            Grid.Column="0"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            Command="{Binding LogoutCommand}"
-                            IsEnabled="{Binding IsNotUnlocking}"/>
-
-                    <Button Content="Unlock"
-                            Grid.Column="1"
-                            IsDefault="True"
-                            Command="{Binding UnlockCommand}"
-                            CommandParameter="{Binding ElementName=PasswordBox}"
-                            IsEnabled="{Binding IsNotUnlocking}"
-                            Margin="8,0,0,0"/>
-                </Grid>
             </StackPanel>
         </materialDesign:Card>
     </Grid>

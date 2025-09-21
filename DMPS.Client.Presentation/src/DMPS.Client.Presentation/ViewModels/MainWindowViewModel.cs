@@ -1,114 +1,122 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DMPS.Client.Application.Services;
+using DMPS.Client.Application.Interfaces;
+using DMPS.Client.Application.DTOs;
 using DMPS.Client.Presentation.Services.Interfaces;
+using DMPS.Client.Presentation.ViewModels.Base;
 using DMPS.Client.Presentation.ViewModels.Pages;
-using DMPS.Client.Presentation.ViewModels.Pages.Admin;
-using DMPS.Shared.Core.Dtos;
-using MaterialDesignThemes.Wpf;
 using System;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace DMPS.Client.Presentation.ViewModels
 {
-    public sealed record NavigationItem(string Name, PackIconKind Icon, Type ViewModelType);
-
-    public partial class MainWindowViewModel : ViewModelBase, IDisposable
+    /// <summary>
+    /// The main shell ViewModel for the application. It orchestrates the main content area,
+    /// manages the user session state (logged in/out, role), and controls global UI states
+    /// such as the session lock overlay.
+    /// </summary>
+    public sealed partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
-        private readonly IStateService _stateService;
-        private readonly IAuthenticationService _authenticationService;
+        private const string BASE_APPLICATION_TITLE = "DICOM Management and Printing System";
         private readonly INavigationService _navigationService;
         private readonly ISessionLockService _sessionLockService;
+        private readonly IAuthenticationService _authenticationService;
         private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         private ViewModelBase? _currentViewModel;
 
         [ObservableProperty]
-        private UserDto? _currentUser;
+        private bool _isScreenLocked;
 
         [ObservableProperty]
-        private bool _isLocked;
+        private bool _isLoggedIn;
 
-        public ObservableCollection<NavigationItem> MenuItems { get; } = new();
-        public ObservableCollection<NavigationItem> FooterMenuItems { get; } = new();
+        [ObservableProperty]
+        private bool _isAdmin;
 
+        [ObservableProperty]
+        private string? _currentUserDisplayName;
+
+        [ObservableProperty]
+        private string _applicationTitle = BASE_APPLICATION_TITLE;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
+        /// </summary>
+        /// <param name="navigationService">The navigation service for changing the main content view.</param>
+        /// <param name="sessionLockService">The service for managing automatic session locking.</param>
+        /// <param name="authenticationService">The service for managing user authentication and session state.</param>
+        /// <param name="dialogService">The service for displaying dialogs to the user.</param>
         public MainWindowViewModel(
-            IStateService stateService,
-            IAuthenticationService authenticationService,
             INavigationService navigationService,
             ISessionLockService sessionLockService,
+            IAuthenticationService authenticationService,
             IDialogService dialogService)
         {
-            _stateService = stateService;
-            _authenticationService = authenticationService;
             _navigationService = navigationService;
             _sessionLockService = sessionLockService;
+            _authenticationService = authenticationService;
             _dialogService = dialogService;
 
-            // Subscribe to global state changes
-            _stateService.CurrentUserChanged += OnCurrentUserChanged;
-            _sessionLockService.SessionLocked += OnSessionLocked;
+            SubscribeToEvents();
+
+            // Initial navigation to the login screen
+            _navigationService.NavigateTo<LoginViewModel>();
+        }
+
+        private void SubscribeToEvents()
+        {
+            _navigationService.CurrentViewModelChanged += OnCurrentViewModelChanged;
+            _sessionLockService.SessionLockTriggered += OnSessionLockTriggered;
             _sessionLockService.SessionUnlocked += OnSessionUnlocked;
-
-            _navigationService.CurrentViewModelChanged += (sender, vm) => CurrentViewModel = vm;
-
-            // Initialize with current state, in case the app starts with a logged-in user (e.g., from a persisted session)
-            OnCurrentUserChanged(this, _stateService.CurrentUser);
+            _authenticationService.UserSessionChanged += OnUserSessionChanged;
         }
 
-        private void OnCurrentUserChanged(object? sender, UserDto? user)
+        private void UnsubscribeFromEvents()
         {
-            CurrentUser = user;
-            BuildMenuItems();
-            if (user is not null)
-            {
-                // Navigate to the default view after login
-                _navigationService.NavigateTo(typeof(StudyBrowserViewModel));
-            }
+            _navigationService.CurrentViewModelChanged -= OnCurrentViewModelChanged;
+            _sessionLockService.SessionLockTriggered -= OnSessionLockTriggered;
+            _sessionLockService.SessionUnlocked -= OnSessionUnlocked;
+            _authenticationService.UserSessionChanged -= OnUserSessionChanged;
         }
-        
-        private void BuildMenuItems()
+
+        private void OnUserSessionChanged(object? sender, UserSession? session)
         {
-            MenuItems.Clear();
-            FooterMenuItems.Clear();
-
-            if (CurrentUser is null)
+            if (session is not null)
             {
-                // No user logged in, so no menu items
-                return;
+                IsLoggedIn = true;
+                IsAdmin = session.Role == UserRole.Administrator;
+                CurrentUserDisplayName = session.DisplayName;
+                ApplicationTitle = $"{BASE_APPLICATION_TITLE} - {session.DisplayName}";
             }
-
-            // Standard items available to all roles
-            MenuItems.Add(new NavigationItem("Study Browser", PackIconKind.FolderImage, typeof(StudyBrowserViewModel)));
-            MenuItems.Add(new NavigationItem("Print Preview", PackIconKind.Printer, typeof(PrintPreviewViewModel)));
-            MenuItems.Add(new NavigationItem("Query/Retrieve", PackIconKind.CloudSearch, typeof(QueryRetrieveViewModel)));
-
-            // Admin-specific items
-            if (CurrentUser.Role == "Administrator")
+            else
             {
-                var adminHeader = new NavigationItem("Administration", PackIconKind.ShieldAccount, typeof(UserManagementViewModel));
-                MenuItems.Add(adminHeader); // Can be used as a group header or main navigation point
-                
-                // If you have a separate settings/admin page with sub-navigation, you might add them differently
-                // For this example, we'll assume they are top-level for simplicity.
-                FooterMenuItems.Add(new NavigationItem("User Management", PackIconKind.AccountGroup, typeof(UserManagementViewModel)));
-                FooterMenuItems.Add(new NavigationItem("System Health", PackIconKind.HeartPulse, typeof(SystemHealthViewModel)));
-                FooterMenuItems.Add(new NavigationItem("Audit Trail", PackIconKind.History, typeof(AuditTrailViewModel)));
+                IsLoggedIn = false;
+                IsAdmin = false;
+                CurrentUserDisplayName = null;
+                ApplicationTitle = BASE_APPLICATION_TITLE;
             }
         }
 
-        [RelayCommand]
-        private void Navigate(Type viewModelType)
+        private void OnSessionUnlocked(object? sender, EventArgs e)
         {
-            if (viewModelType is not null)
-            {
-                _navigationService.NavigateTo(viewModelType);
-            }
+            IsScreenLocked = false;
         }
 
-        [AsyncRelayCommand]
+        private void OnSessionLockTriggered(object? sender, EventArgs e)
+        {
+            IsScreenLocked = true;
+        }
+
+        private void OnCurrentViewModelChanged(object? sender, ViewModelBase viewModel)
+        {
+            CurrentViewModel = viewModel;
+        }
+
+        private bool CanLogout() => IsLoggedIn;
+
+        [RelayCommand(CanExecute = nameof(CanLogout))]
         private async Task LogoutAsync()
         {
             var confirmed = await _dialogService.ShowConfirmationAsync(
@@ -119,42 +127,25 @@ namespace DMPS.Client.Presentation.ViewModels
             {
                 return;
             }
-            
+
             try
             {
-                IsBusy = true;
-                await _authenticationService.LogoutAsync();
-                // The CurrentUserChanged event will handle UI updates, including navigating away or clearing data.
-                _navigationService.NavigateTo(typeof(LoginViewModel));
+                _authenticationService.Logout();
+                _navigationService.NavigateTo<LoginViewModel>();
             }
             catch (Exception ex)
             {
-                // In a real app, inject a logger and log the exception.
-                await _dialogService.ShowMessageBoxAsync("Logout Failed", "An unexpected error occurred during logout. Please try again.");
-            }
-            finally
-            {
-                IsBusy = false;
+                // In a real application, we would log this unexpected exception.
+                await _dialogService.ShowErrorAsync("Logout Error", "An unexpected error occurred during logout. Please try again.");
             }
         }
 
-        private void OnSessionLocked(object? sender, EventArgs e)
-        {
-            IsLocked = true;
-        }
-
-        private void OnSessionUnlocked(object? sender, EventArgs e)
-        {
-            IsLocked = false;
-        }
-
+        /// <summary>
+        /// Cleans up resources by unsubscribing from events.
+        /// </summary>
         public void Dispose()
         {
-            // Unsubscribe from events to prevent memory leaks
-            _stateService.CurrentUserChanged -= OnCurrentUserChanged;
-            _sessionLockService.SessionLocked -= OnSessionLocked;
-            _sessionLockService.SessionUnlocked -= OnSessionUnlocked;
-            _navigationService.CurrentViewModelChanged -= (sender, vm) => CurrentViewModel = vm;
+            UnsubscribeFromEvents();
         }
     }
 }

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification Toast Component</title>
+  <style>
+    /* ---------------------------------------- */
+    /* DESIGN SYSTEM FOUNDATION & BASE STYLES   */
+    /* ---------------------------------------- */
+    :root {
+      /* Colors */
+      --color-info: #2196F3;
+      --color-success: #4CAF50;
+      --color-warning: #FFC107;
+      --color-error: #F44336;
+      --color-text-light: #FFFFFF;
+      --color-text-dark: #212121;
+      --color-focus: #303F9F;
+      --color-bg-page: #f5f5f5;
+      --color-text-body: #424242;
+      --color-primary-500: #3F51B5;
+      --color-primary-600: #3949AB;
+      --color-white: #FFFFFF;
+
+      /* Spacing */
+      --spacing-xs: 8px;
+      --spacing-sm: 12px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+
+      /* Typography */
+      --font-family-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-size-body: 16px;
+      --font-weight-regular: 400;
+      --font-weight-medium: 500;
+      --line-height-body: 1.5;
+
+      /* Borders & Shadows */
+      --border-radius-md: 4px;
+      --shadow-2dp: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+      --shadow-4dp: 0 4px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.26);
+
+      /* Animation */
+      --transition-duration: 300ms;
+    }
+    
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-bg-page);
+      color: var(--color-text-body);
+      margin: 0;
+      padding: var(--spacing-lg);
+      line-height: var(--line-height-body);
+    }
+    
+    .showcase-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: var(--spacing-lg);
+      background-color: var(--color-white);
+      border-radius: var(--border-radius-md);
+      box-shadow: var(--shadow-2dp);
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+    
+    h1 { color: var(--color-primary-500); }
+    h2 { border-bottom: 1px solid #eee; padding-bottom: var(--spacing-xs); margin-bottom: var(--spacing-md); }
+
+    .interactive-demo {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+    }
+    
+    .demo-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: 0;
+      border-radius: var(--border-radius-md);
+      font-family: var(--font-family-primary);
+      font-size: 14px;
+      font-weight: var(--font-weight-medium);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--color-primary-500);
+      color: var(--color-white);
+      box-shadow: var(--shadow-2dp);
+    }
+    
+    .demo-button:hover {
+      background: var(--color-primary-600);
+      box-shadow: var(--shadow-4dp);
+      transform: translateY(-1px);
+    }
+
+    .demo-button:focus-visible {
+        outline: 2px solid var(--color-focus);
+        outline-offset: 2px;
+    }
+
+    /* ---------------------------------------- */
+    /* NOTIFICATION TOAST COMPONENT             */
+    /* ---------------------------------------- */
+
+    /* Container for all toasts */
+    .toast-container {
+      position: fixed;
+      bottom: var(--spacing-md);
+      right: var(--spacing-md);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column-reverse; /* New toasts appear at the bottom */
+      gap: var(--spacing-sm);
+      width: calc(100% - 32px);
+      max-width: 380px;
+    }
+
+    /* Base toast styles */
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+      border-radius: var(--border-radius-md);
+      box-shadow: var(--shadow-2dp);
+      animation: slideInUp var(--transition-duration) ease-out forwards, fadeIn var(--transition-duration) ease-out forwards;
+      opacity: 0;
+      transform: translateY(20px);
+      font-family: var(--font-family-primary);
+      font-size: var(--font-size-body);
+      line-height: var(--line-height-body);
+    }
+
+    /* State: when toast is being dismissed */
+    .toast.dismissing {
+      animation: fadeOut calc(var(--transition-duration) * 1.5) ease-in forwards;
+    }
+
+    /* Internal elements */
+    .toast__icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      margin-top: -1px; /* Vertical alignment fix */
+    }
+
+    .toast__message {
+      flex-grow: 1;
+      font-weight: var(--font-weight-medium);
+    }
+
+    .toast__close {
+      flex-shrink: 0;
+      margin-left: auto;
+      padding: 0;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      transition: background-color 150ms ease-in-out;
+    }
+    
+    .toast__close svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .toast__close:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .toast__close:focus-visible {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    /* Variants */
+    .toast--info {
+      background-color: var(--color-info);
+      color: var(--color-text-light);
+    }
+
+    .toast--success {
+      background-color: var(--color-success);
+      color: var(--color-text-light);
+    }
+
+    .toast--warning {
+      background-color: var(--color-warning);
+      color: var(--color-text-dark); /* WCAG compliance */
+    }
+
+    .toast--error {
+      background-color: var(--color-error);
+      color: var(--color-text-light);
+    }
+
+    /* Accessibility utility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* Reduced motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      .toast {
+        animation: fadeIn var(--transition-duration) ease-out forwards;
+        transform: translateY(0);
+      }
+      .toast.dismissing {
+        animation: fadeOut var(--transition-duration) ease-in forwards;
+      }
+    }
+
+    /* Keyframe animations */
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; }
+    }
+    @keyframes slideInUp {
+      to { transform: translateY(0); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- This is the container where toasts will be dynamically injected. -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div class="showcase-container">
+    <h1>Notification Toast</h1>
+    <p>Provides non-blocking feedback about the result of an operation.</p>
+
+    <section>
+        <h2>Interactive Demo</h2>
+        <p>Click the buttons below to trigger a live toast notification.</p>
+        <div class="interactive-demo">
+            <button class="demo-button" id="show-info">Show Info Toast</button>
+            <button class="demo-button" id="show-success">Show Success Toast</button>
+            <button class="demo-button" id="show-warning">Show Warning Toast</button>
+            <button class="demo-button" id="show-error">Show Error Toast</button>
+        </div>
+    </section>
+    
+    <hr style="margin: 24px 0; border: 1px solid #eee;">
+
+    <section>
+      <h2>Static Examples</h2>
+      <p>These are static renderings of all component variants for visual inspection and code reference.</p>
+      
+      <div id="static-toasts-wrapper" style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px; position: relative;">
+        
+        <!-- Component Variations -->
+        
+        <div>
+          <h3>Variant: Information</h3>
+          <p>For general, non-critical information or confirmations.</p>
+          <div class="toast toast--info" role="status" aria-live="polite">
+            <div class="toast__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+            <div class="toast__message">
+              A new software update is available.
+            </div>
+            <button class="toast__close" aria-label="Close notification">
+              <span class="sr-only">Close</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h3>Variant: Success</h3>
+          <p>To confirm that an operation has completed successfully.</p>
+          <div class="toast toast--success" role="status" aria-live="polite">
+            <div class="toast__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            </div>
+            <div class="toast__message">
+              Print job has been sent to the queue.
+            </div>
+            <button class="toast__close" aria-label="Close notification">
+              <span class="sr-only">Close</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+            </button>
+          </div>
+        </div>
+        
+        <div>
+          <h3>Variant: Warning</h3>
+          <p>To alert the user of a potential issue that doesn't block an operation.</p>
+          <div class="toast toast--warning" role="status" aria-live="polite">
+            <div class="toast__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            </div>
+            <div class="toast__message">
+              Low disk space. Less than 10% remaining.
+            </div>
+            <button class="toast__close" aria-label="Close notification">
+              <span class="sr-only">Close</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h3>Variant: Error</h3>
+          <p>To inform the user that an operation has failed.</p>
+          <div class="toast toast--error" role="alert" aria-live="assertive">
+            <div class="toast__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <div class="toast__message">
+              Failed to connect to the RabbitMQ server.
+            </div>
+            <button class="toast__close" aria-label="Close notification">
+              <span class="sr-only">Close</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Simple script for the interactive demo.
+    // In a real application, this logic would be part of a framework/service.
+    const toastContainer = document.getElementById('toast-container');
+    const buttons = {
+      info: document.getElementById('show-info'),
+      success: document.getElementById('show-success'),
+      warning: document.getElementById('show-warning'),
+      error: document.getElementById('show-error'),
+    };
+
+    const icons = {
+      info: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>`,
+      success: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`,
+      warning: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`,
+      error: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`,
+    };
+    
+    const messages = {
+        info: "A new software update is available.",
+        success: "Print job has been sent to the queue.",
+        warning: "Low disk space. Less than 10% remaining.",
+        error: "Failed to connect to the RabbitMQ server."
+    }
+
+    function createToast(type = 'info') {
+      const isError = type === 'error';
+      
+      const toast = document.createElement('div');
+      toast.className = `toast toast--${type}`;
+      toast.setAttribute('role', isError ? 'alert' : 'status');
+      toast.setAttribute('aria-live', isError ? 'assertive' : 'polite');
+
+      toast.innerHTML = `
+        <div class="toast__icon">${icons[type]}</div>
+        <div class="toast__message">${messages[type]}</div>
+        <button class="toast__close" aria-label="Close notification">
+            <span class="sr-only">Close</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      `;
+
+      toastContainer.appendChild(toast);
+      
+      const dismiss = () => {
+        toast.classList.add('dismissing');
+        // Remove from DOM after animation
+        toast.addEventListener('animationend', () => {
+            if(toast.parentElement) {
+                toast.parentElement.removeChild(toast);
+            }
+        });
+      };
+
+      // Auto-dismiss after 5 seconds
+      const timeoutId = setTimeout(dismiss, 5000);
+
+      // Dismiss on click
+      toast.querySelector('.toast__close').addEventListener('click', () => {
+        clearTimeout(timeoutId);
+        dismiss();
+      });
+    }
+
+    buttons.info.addEventListener('click', () => createToast('info'));
+    buttons.success.addEventListener('click', () => createToast('success'));
+    buttons.warning.addEventListener('click', () => createToast('warning'));
+    buttons.error.addEventListener('click', () => createToast('error'));
+  </script>
+</body>
+</html>

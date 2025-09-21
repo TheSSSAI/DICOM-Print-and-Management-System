@@ -1,0 +1,59 @@
+stateDiagram-v2
+    direction LR
+
+    [*] --> Empty : Component Loaded
+
+    state Empty {
+        description No layout or content is selected.
+    }
+
+    state LoadingLayout {
+        description Fetching DICOM images and rendering the layout.
+    }
+    note right of LoadingLayout
+        - Add '.is-rendering' class to container
+        - Show skeleton loader animation
+        - Set aria-busy="true"
+    end note
+
+    state DisplayingPreview {
+        description The print preview is fully rendered and interactive.
+        state Idle {
+            description Waiting for user interaction.
+        }
+        state DraggingImage {
+            description User is actively reordering an image.
+        }
+
+        [*] --> Idle
+        Idle --> DraggingImage : MouseDownOnImage
+        note on link
+          - Set cursor to 'grabbing'
+          - Capture image being dragged
+        end note
+        DraggingImage --> Idle : MouseUp
+        note on link
+          - Update image order in layout
+          - Set cursor to 'grab'
+        end note
+    }
+    note left of DisplayingPreview
+        - Render page with selected aspect ratio
+        - Render images, overlays, and masks
+        - Remove '.is-rendering' class
+        - Set aria-busy="false"
+    end note
+
+    state Error {
+        description An error occurred during rendering (e.g., image not found).
+    }
+
+    Empty --> LoadingLayout : SelectLayout
+    LoadingLayout --> DisplayingPreview : RenderSuccess
+    LoadingLayout --> Error : RenderFail
+
+    DisplayingPreview --> LoadingLayout : ChangeLayout
+    DisplayingPreview --> Empty : ClearLayout
+
+    Error --> LoadingLayout : Retry
+    Error --> Empty : Cancel

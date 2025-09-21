@@ -1,124 +1,72 @@
 using DMPS.Client.Presentation.Services.Interfaces;
+using DMPS.Client.Presentation.ViewModels;
 using DMPS.Client.Presentation.ViewModels.Base;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.Windows;
-using System.Windows.Controls;
+using System;
+using System.ComponentModel;
+using System.Diagnostics;
 
-namespace DMPS.Client.Presentation.Services;
-
-/// <summary>
-/// A service for managing navigation between different views/pages within the application shell.
-/// This service is designed to be used in an MVVM architecture, navigating based on ViewModel types.
-/// </summary>
-public sealed class NavigationService : INavigationService
+namespace DMPS.Client.Presentation.Services
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<NavigationService> _logger;
-    private readonly Dictionary<Type, Type> _viewModelToViewMappings = [];
-    private Frame? _mainFrame;
-    private ViewModelBase? _currentViewModel;
-
-    public NavigationService(IServiceProvider serviceProvider, ILogger<NavigationService> logger)
+    /// <summary>
+    /// Provides a concrete implementation for navigating between different ViewModels.
+    /// This service acts as a mediator between the main application shell and the individual page ViewModels.
+    /// </summary>
+    public sealed class NavigationService : INavigationService
     {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        private readonly IServiceProvider _serviceProvider;
+        private readonly MainWindowViewModel _mainWindowViewModel;
 
-    /// <inheritdoc />
-    public void Initialize(Frame navigationFrame)
-    {
-        _mainFrame = navigationFrame ?? throw new ArgumentNullException(nameof(navigationFrame));
-        _logger.LogInformation("NavigationService initialized with a navigation frame.");
-    }
+        private ViewModelBase? _currentViewModel;
 
-    /// <inheritdoc />
-    public void Configure<TViewModel, TView>() where TViewModel : ViewModelBase where TView : FrameworkElement
-    {
-        var viewModelType = typeof(TViewModel);
-        var viewType = typeof(TView);
+        /// <inheritdoc />
+        public event PropertyChangedEventHandler? CurrentViewModelChanged;
 
-        if (_viewModelToViewMappings.ContainsKey(viewModelType))
+        /// <inheritdoc />
+        public ViewModelBase? CurrentViewModel
         {
-            _logger.LogWarning("Mapping for ViewModel type {ViewModelType} is already configured. It will be overwritten.", viewModelType.FullName);
-            _viewModelToViewMappings[viewModelType] = viewType;
+            get => _currentViewModel;
+            private set
+            {
+                if (Equals(_currentViewModel, value)) return;
+                _currentViewModel = value;
+                CurrentViewModelChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentViewModel)));
+            }
         }
-        else
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NavigationService"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">The service provider to resolve ViewModel instances.</param>
+        /// <param name="mainWindowViewModel">The main window's ViewModel which hosts the current page.</param>
+        public NavigationService(IServiceProvider serviceProvider, MainWindowViewModel mainWindowViewModel)
         {
-            _viewModelToViewMappings.Add(viewModelType, viewType);
-            _logger.LogDebug("Configured navigation mapping: {ViewModelType} -> {ViewType}", viewModelType.FullName, viewType.FullName);
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _mainWindowViewModel = mainWindowViewModel ?? throw new ArgumentNullException(nameof(mainWindowViewModel));
         }
-    }
 
-    /// <inheritdoc />
-    public async Task NavigateToAsync<TViewModel>(object? parameter = null) where TViewModel : ViewModelBase
-    {
-        await Application.Current.Dispatcher.InvokeAsync(async () =>
+        /// <inheritdoc />
+        public void NavigateTo<TViewModel>() where TViewModel : ViewModelBase
         {
-            var viewModelType = typeof(TViewModel);
-
-            if (_mainFrame is null)
-            {
-                var ex = new InvalidOperationException("NavigationService has not been initialized. Call Initialize() before navigating.");
-                _logger.LogError(ex, "Attempted to navigate before initialization.");
-                throw ex;
-            }
-
-            if (!_viewModelToViewMappings.TryGetValue(viewModelType, out var viewType))
-            {
-                var ex = new InvalidOperationException($"No view is configured for the view model '{viewModelType.FullName}'.");
-                _logger.LogError(ex, "Navigation failed due to missing view model mapping.");
-                throw ex;
-            }
-
-            // Avoid re-navigating to the same view model type unless it's a different instance or parameterized
-            if (_currentViewModel?.GetType() == viewModelType && parameter == null)
-            {
-                _logger.LogInformation("Navigation to {ViewModelType} skipped as it is already the current view.", viewModelType.FullName);
-                return;
-            }
-
             try
             {
-                // Resolve dependencies for the new view and view model
-                var view = _serviceProvider.GetRequiredService(viewType) as FrameworkElement;
-                var viewModel = _serviceProvider.GetRequiredService(viewModelType) as TViewModel;
-                
-                if (view is null || viewModel is null)
+                var newViewModel = _serviceProvider.GetRequiredService<TViewModel>();
+
+                if (CurrentViewModel != null && CurrentViewModel is IDisposable disposableViewModel)
                 {
-                    var ex = new InvalidOperationException($"Failed to resolve view or view model from DI container for type {viewModelType.FullName}.");
-                    _logger.LogError(ex, "DI resolution failed during navigation.");
-                    throw ex;
+                    disposableViewModel.Dispose();
                 }
 
-                view.DataContext = viewModel;
-
-                _logger.LogInformation("Navigating to {ViewType} with ViewModel {ViewModelType}.", viewType.FullName, viewModelType.FullName);
-
-                // Perform cleanup on the old ViewModel
-                if (_currentViewModel is not null && _currentViewModel is IDisposable disposableOldViewModel)
-                {
-                    disposableOldViewModel.Dispose();
-                    _logger.LogDebug("Disposed previous ViewModel: {OldViewModelType}", _currentViewModel.GetType().FullName);
-                }
-
-                // Navigate the frame and update the current view model
-                _mainFrame.Navigate(view);
-                _currentViewModel = viewModel;
-
-                // Call an initialization method on the new ViewModel if it exists
-                if (viewModel is INavigationAware navigationAwareViewModel)
-                {
-                    await navigationAwareViewModel.OnNavigatedToAsync(parameter);
-                    _logger.LogDebug("Executed OnNavigatedToAsync for {ViewModelType}.", viewModelType.FullName);
-                }
+                CurrentViewModel = newViewModel;
+                _mainWindowViewModel.CurrentViewModel = newViewModel;
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, "An unexpected error occurred during navigation to {ViewModelType}.", viewModelType.FullName);
-                // Optionally, navigate to an error page or show a dialog
-                throw; // Rethrow to allow higher-level error handling
+                // This typically means the ViewModel is not registered in the DI container.
+                // This is a development-time error, so it's appropriate to throw a more informative exception.
+                Debug.WriteLine($"Failed to navigate to ViewModel {typeof(TViewModel).Name}. Is it registered in DI container? Error: {ex.Message}");
+                throw new InvalidOperationException($"The ViewModel '{typeof(TViewModel).FullName}' is not registered with the dependency injection container. Please register it in App.xaml.cs.", ex);
             }
-        });
+        }
     }
 }

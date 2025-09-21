@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metric Card Component</title>
+  <style>
+    /* ----------------------------------- */
+    /*           DESIGN TOKENS             */
+    /* ----------------------------------- */
+    :root {
+      /* Colors */
+      --color-neutral-white: #FFFFFF;
+      --color-neutral-gray-50: #FAFAFA;
+      --color-neutral-gray-500: #9E9E9E;
+      --color-neutral-gray-900: #212121;
+      --color-semantic-warning: #FFC107;
+      --color-semantic-error: #F44336;
+      --color-primary-500: #3F51B5;
+
+      /* Typography */
+      --font-family-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-size-h1: 34px;
+      --font-weight-h1: 400;
+      --font-size-caption: 14px;
+      --font-weight-caption: 500;
+      --line-height-tight: 1.2;
+
+      /* Spacing */
+      --spacing-lg: 24px;
+      --spacing-md: 16px;
+      --spacing-sm: 8px;
+
+      /* Borders */
+      --border-radius-md: 4px;
+
+      /* Shadows */
+      --shadow-2dp: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      --shadow-8dp: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    }
+
+    /* ----------------------------------- */
+    /*          SHOWCASE STYLES            */
+    /* ----------------------------------- */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-neutral-gray-50);
+      margin: 0;
+      padding: var(--spacing-lg);
+    }
+
+    .showcase {
+        max-width: 1200px;
+        margin: auto;
+    }
+    
+    .showcase__header {
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-md);
+    }
+    
+    .showcase__header h1 {
+        font-size: 28px;
+        color: var(--color-neutral-gray-900);
+        margin: 0;
+    }
+    
+    .showcase__header p {
+        font-size: 16px;
+        color: var(--color-neutral-gray-500);
+        margin: 4px 0 0;
+    }
+
+    .showcase__section {
+      margin-bottom: 48px;
+    }
+
+    .showcase__section-title {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--color-neutral-gray-900);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--spacing-lg);
+    }
+    
+    .variant-docs {
+      font-family: monospace;
+      font-size: 14px;
+      background-color: #f0f0f0;
+      padding: 16px;
+      border-radius: 4px;
+      margin-top: 16px;
+    }
+    
+    .variant-docs strong {
+        color: #3F51B5;
+    }
+
+    /* ----------------------------------- */
+    /*        METRIC CARD COMPONENT        */
+    /* ----------------------------------- */
+
+    /* Base Component */
+    .metric-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 140px;
+      padding: var(--spacing-lg);
+      background-color: var(--color-neutral-white);
+      border-radius: var(--border-radius-md);
+      box-shadow: var(--shadow-2dp);
+      border-left: 5px solid transparent;
+      transition: box-shadow 0.2s ease-out, transform 0.2s ease-out;
+      overflow: hidden;
+    }
+
+    /* States */
+    .metric-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-8dp);
+    }
+
+    .metric-card__content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: opacity 0.2s ease;
+    }
+
+    .metric-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .metric-card__title {
+      font-size: var(--font-size-caption);
+      font-weight: var(--font-weight-caption);
+      color: var(--color-neutral-gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    .metric-card__icon {
+      width: 24px;
+      height: 24px;
+      color: var(--color-neutral-gray-500);
+    }
+
+    .metric-card__value {
+      font-size: var(--font-size-h1);
+      font-weight: var(--font-weight-h1);
+      color: var(--color-neutral-gray-900);
+      line-height: var(--line-height-tight);
+      margin: auto 0 0;
+    }
+
+    /* Loader State */
+    .metric-card__loader {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(255, 255, 255, 0.8);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      z-index: 1;
+    }
+    
+    .metric-card[data-state='loading'] .metric-card__content {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .metric-card[data-state='loading'] .metric-card__loader {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Progress Ring (Loader) */
+    .progress-ring {
+        width: 48px;
+        height: 48px;
+        transform-origin: center;
+        animation: rotate 2s linear infinite;
+    }
+
+    .progress-ring__circle {
+        stroke: var(--color-primary-500);
+        stroke-width: 4;
+        stroke-linecap: round;
+        fill: transparent;
+        transform-origin: center;
+        animation: grow 1.5s ease-in-out infinite;
+    }
+
+    @keyframes rotate {
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes grow {
+        0% { stroke-dasharray: 1, 200; stroke-dashoffset: 0; }
+        50% { stroke-dasharray: 100, 200; stroke-dashoffset: -25; }
+        100% { stroke-dasharray: 100, 200; stroke-dashoffset: -125; }
+    }
+
+    /* Variants */
+    .metric-card--warning {
+      border-left-color: var(--color-semantic-warning);
+    }
+    .metric-card--warning .metric-card__icon {
+      color: var(--color-semantic-warning);
+    }
+    .metric-card--warning .metric-card__value {
+      color: var(--color-neutral-gray-900);
+    }
+
+    .metric-card--critical {
+      border-left-color: var(--color-semantic-error);
+    }
+    .metric-card--critical .metric-card__icon {
+      color: var(--color-semantic-error);
+    }
+    .metric-card--critical .metric-card__value {
+      color: var(--color-semantic-error);
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      .metric-card {
+        transition: none;
+      }
+      .metric-card:hover {
+        transform: none;
+      }
+      .progress-ring, .progress-ring__circle {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="showcase">
+    <div class="showcase__header">
+        <h1>Metric Card</h1>
+        <p>Displays a key metric for a system health dashboard.</p>
+    </div>
+
+    <div class="showcase__section">
+      <h2 class="showcase__section-title">Default State</h2>
+      <div class="component-grid">
+        <div role="region" aria-labelledby="status-title" class="metric-card">
+          <div class="metric-card__content">
+            <div class="metric-card__header">
+              <h3 id="status-title" class="metric-card__title">Service Status</h3>
+              <svg class="metric-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM21 3H3C1.9 3 1 3.9 1 5v6h20V5c0-1.1-.9-2-2-2zM8 6.5c-.83 0-1.5-.67-1.5-1.5S7.17 3.5 8 3.5s1.5.67 1.5 1.5S8.83 6.5 8 6.5z"/></svg>
+            </div>
+            <p class="metric-card__value">Running</p>
+          </div>
+        </div>
+
+        <div role="region" aria-labelledby="db-title" class="metric-card">
+          <div class="metric-card__content">
+            <div class="metric-card__header">
+              <h3 id="db-title" class="metric-card__title">PostgreSQL DB</h3>
+              <svg class="metric-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+            </div>
+            <p class="metric-card__value">Connected</p>
+          </div>
+        </div>
+        
+        <div role="region" aria-labelledby="mq-title" class="metric-card">
+          <div class="metric-card__content">
+            <div class="metric-card__header">
+              <h3 id="mq-title" class="metric-card__title">RabbitMQ</h3>
+              <svg class="metric-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.84 6.47l-1.79-1.79c-.32-.31-.85-.09-.85.35v7.94c0 .44.54.66.85.35l1.79-1.79 1.79 1.79c.32.31.85.09.85-.35V7.03c0-.44-.54-.66-.85-.35l-1.79 1.79zM9.84 11.47L8.05 9.68c-.32-.31-.85-.09-.85.35v7.94c0 .44.54.66.85.35l1.79-1.79 1.79 1.79c.32.31.85.09.85-.35V7.03c0-.44-.54-.66-.85-.35l-1.79 1.79z"/></svg>
+            </div>
+            <p class="metric-card__value">Connected</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="showcase__section">
+      <h2 class="showcase__section-title">Threshold Variants</h2>
+      <div class="component-grid">
+        <div role="region" aria-labelledby="disk-title" class="metric-card metric-card--warning">
+          <div class="metric-card__content">
+            <div class="metric-card__header">
+              <h3 id="disk-title" class="metric-card__title">Storage Disk Space</h3>
+              <svg class="metric-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            </div>
+            <p class="metric-card__value">85% Full</p>
+          </div>
+        </div>
+
+        <div role="region" aria-labelledby="dlq-title" class="metric-card metric-card--critical">
+          <div class="metric-card__content">
+            <div class="metric-card__header">
+              <h3 id="dlq-title" class="metric-card__title">Dead-Letter Queue</h3>
+              <svg class="metric-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <p class="metric-card__value">12 Messages</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase__section">
+      <h2 class="showcase__section-title">Loading State</h2>
+      <div class="component-grid">
+        <div role="region" aria-labelledby="loading-title" class="metric-card" data-state="loading">
+          <div class="metric-card__loader">
+             <svg class="progress-ring" viewBox="0 0 50 50">
+                <circle class="progress-ring__circle" cx="25" cy="25" r="20" />
+            </svg>
+          </div>
+          <div class="metric-card__content">
+            <div class="metric-card__header">
+              <h3 id="loading-title" class="metric-card__title">Fetching Data...</h3>
+              <svg class="metric-card__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM21 3H3C1.9 3 1 3.9 1 5v6h20V5c0-1.1-.9-2-2-2zM8 6.5c-.83 0-1.5-.67-1.5-1.5S7.17 3.5 8 3.5s1.5.67 1.5 1.5S8.83 6.5 8 6.5z"/></svg>
+            </div>
+            <p class="metric-card__value">--</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+    
+  <div class="showcase">
+    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e0e0e0;"> 
+      <h2 class="showcase__section-title">Component Variations</h2>
+      <div>
+        <h3>Variant: Default</h3>
+        <p>The standard display for a metric in a healthy state.</p>
+        <div class="variant-docs">
+            &lt;div class="<strong>metric-card</strong>"&gt; ... &lt;/div&gt;
+        </div>
+      </div>
+      <div style="margin-top:24px;">
+        <h3>Variant: Warning Threshold</h3>
+        <p>Indicates that a metric has crossed a warning threshold. Uses a prominent left border and icon color to draw attention.</p>
+        <div class="variant-docs">
+            &lt;div class="<strong>metric-card metric-card--warning</strong>"&gt; ... &lt;/div&gt;
+        </div>
+      </div>
+      <div style="margin-top:24px;">
+        <h3>Variant: Critical Threshold</h3>
+        <p>Indicates a critical state that requires immediate attention. Uses a more aggressive color scheme for the border, icon, and metric value.</p>
+        <div class="variant-docs">
+            &lt;div class="<strong>metric-card metric-card--critical</strong>"&gt; ... &lt;/div&gt;
+        </div>
+      </div>
+      <div style="margin-top:24px;">
+        <h3>State: Loading</h3>
+        <p>Used when the metric data is being fetched. Dims the content and displays a centered progress ring.</p>
+        <div class="variant-docs">
+            &lt;div class="<strong>metric-card</strong>" data-state="<strong>loading</strong>"&gt; ... &lt;/div&gt;
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

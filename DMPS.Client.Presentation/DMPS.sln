@@ -1,0 +1,33 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34525.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DMPS.Client.Presentation", "src\DMPS.Client.Presentation\DMPS.Client.Presentation.csproj", "{8D07D87D-7A95-4E7B-92D0-4F588A6E3F4C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A8A0B933-28D8-49A3-9F93-7C38B0F2A48C}"
+	ProjectSection(SolutionItems) = preProject
+		src\DMPS.Client.Presentation\appsettings.Development.json = src\DMPS.Client.Presentation\appsettings.Development.json
+		src\DMPS.Client.Presentation\appsettings.json = src\DMPS.Client.Presentation\appsettings.json
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8D07D87D-7A95-4E7B-92D0-4F588A6E3F4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D07D87D-7A95-4E7B-92D0-4F588A6E3F4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D07D87D-7A95-4E7B-92D0-4F588A6E3F4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D07D87D-7A95-4E7B-92D0-4F588A6E3F4C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8D07D87D-7A95-4E7B-92D0-4F588A6E3F4C} = {A8A0B933-28D8-49A3-9F93-7C38B0F2A48C}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B1E2D38B-3C4D-4E5F-8A9B-7C6D5E4F3A2B}
+	EndGlobalSection
+EndGlobal

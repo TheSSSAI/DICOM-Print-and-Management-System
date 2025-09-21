@@ -1,57 +1,126 @@
 using DMPS.Client.Presentation.Services.Interfaces;
-using DMPS.Client.Presentation.ViewModels.Dialogs;
+using DMPS.Client.Presentation.ViewModels;
 using DMPS.Client.Presentation.Views.Dialogs;
 using MaterialDesignThemes.Wpf;
-using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Threading.Tasks;
 using System.Windows;
 
-namespace DMPS.Client.Presentation.Services;
-
-/// <summary>
-/// A service for displaying dialogs in an MVVM-friendly way.
-/// It uses the MaterialDesignInXamlToolkit's DialogHost for a consistent look and feel.
-/// </summary>
-public sealed class DialogService : IDialogService
+namespace DMPS.Client.Presentation.Services
 {
-    private const string MainDialogHostIdentifier = "MainDialogHost";
-    private readonly IServiceProvider _serviceProvider;
+    /// <summary>
+    /// A service for displaying modal dialogs from ViewModels without a direct dependency on the View layer.
+    /// This implementation uses the Material Design in XAML Toolkit's DialogHost.
+    /// </summary>
+    public sealed class DialogService : IDialogService
+    {
+        private const string MainDialogHostIdentifier = "MainDialogHost";
 
-    public DialogService(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    }
-    
-    /// <inheritdoc />
-    public async Task<DialogResult> ShowMessageBoxAsync(string title, string message, DialogButton buttons)
-    {
-        return await Application.Current.Dispatcher.Invoke(async () =>
+        /// <inheritdoc />
+        public async Task ShowMessageAsync(string title, string message)
         {
-            var viewModel = _serviceProvider.GetRequiredService<MessageBoxViewModel>();
-            viewModel.Title = title;
-            viewModel.Message = message;
-            viewModel.ConfigureButtons(buttons);
-
-            var view = new MessageBoxView
+            if (string.IsNullOrWhiteSpace(message))
             {
-                DataContext = viewModel
-            };
+                return;
+            }
 
-            var result = await DialogHost.Show(view, MainDialogHostIdentifier);
+            await ExecuteOnUIThread(async () =>
+            {
+                var view = new MessageDialogView
+                {
+                    DataContext = new MessageDialogViewModel
+                    {
+                        Title = title,
+                        Message = message
+                    }
+                };
 
-            return result is DialogResult dialogResult ? dialogResult : DialogResult.None;
-        });
-    }
+                await DialogHost.Show(view, MainDialogHostIdentifier);
+            });
+        }
 
-    /// <inheritdoc />
-    public async Task<TResult?> ShowDialogAsync<TViewModel, TResult>(object? parameter = null) where TViewModel : IDialogViewModel<TResult>
-    {
-        return await Application.Current.Dispatcher.Invoke(async () =>
+        /// <inheritdoc />
+        public async Task<bool> ShowConfirmationAsync(string title, string message)
         {
-            // This is a more advanced version that could be used for custom dialogs.
-            // It requires a mapping from ViewModel to View, similar to NavigationService.
-            // For now, this is a placeholder for future extension.
-            // A full implementation would resolve the view by convention and show it.
-            throw new NotImplementedException("Custom dialogs are not yet implemented in this version.");
-        });
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return false;
+            }
+
+            var result = await ExecuteOnUIThread(async () =>
+            {
+                var viewModel = new ConfirmationDialogViewModel
+                {
+                    Title = title,
+                    Message = message
+                };
+
+                var view = new ConfirmationDialogView
+                {
+                    DataContext = viewModel
+                };
+
+                await DialogHost.Show(view, MainDialogHostIdentifier);
+
+                return viewModel.Result;
+            });
+
+            return result;
+        }
+
+        /// <inheritdoc />
+        public async Task ShowErrorAsync(string title, string message, string details)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            await ExecuteOnUIThread(async () =>
+            {
+                var view = new ErrorDialogView
+                {
+                    DataContext = new ErrorDialogViewModel
+                    {
+                        Title = title,
+                        Message = message,
+                        Details = details
+                    }
+                };
+
+                await DialogHost.Show(view, MainDialogHostIdentifier);
+            });
+        }
+
+        /// <summary>
+        /// Executes a function on the UI thread.
+        /// </summary>
+        /// <typeparam name="T">The return type of the function.</typeparam>
+        /// <param name="func">The function to execute.</param>
+        /// <returns>The result of the function.</returns>
+        private static async Task<T> ExecuteOnUIThread<T>(Func<Task<T>> func)
+        {
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                return await func();
+            }
+            return await Application.Current.Dispatcher.InvokeAsync(func).Task.Unwrap();
+        }
+
+        /// <summary>
+        /// Executes an action on the UI thread.
+        /// </summary>
+        /// <param name="action">The action to execute.</param>
+        private static async Task ExecuteOnUIThread(Func<Task> action)
+        {
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                await action();
+            }
+            else
+            {
+                await Application.Current.Dispatcher.InvokeAsync(action).Task.Unwrap();
+            }
+        }
     }
 }

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FormGroup Component</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* FormGroup Component CSS */
+
+    /* Design System Tokens */
+    :root {
+      /* Colors */
+      --color-primary-500: #3F51B5;
+      --color-primary-700: #303F9F;
+      --color-semantic-error: #F44336;
+      --color-neutrals-white: #FFFFFF;
+      --color-neutrals-gray-100: #F5F5F5;
+      --color-neutrals-gray-500: #9E9E9E;
+      --color-neutrals-gray-900: #212121;
+      --color-border-default: rgba(0, 0, 0, 0.42);
+
+      /* Typography */
+      --font-family-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-size-body: 16px;
+      --font-size-caption: 14px;
+      --font-weight-medium: 500;
+      --font-weight-regular: 400;
+      --line-height-body: 1.6;
+      --line-height-caption: 1.4;
+
+      /* Spacing */
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      
+      /* Borders */
+      --border-radius-md: 4px;
+    }
+
+    /* Base Styles */
+    body {
+      font-family: var(--font-family-primary);
+      background-color: var(--color-neutrals-gray-100);
+      padding: var(--spacing-lg);
+      color: var(--color-neutrals-gray-900);
+    }
+
+    .showcase {
+        max-width: 600px;
+        margin: auto;
+        background: var(--color-neutrals-white);
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .showcase h1 {
+        font-size: 24px;
+        font-weight: var(--font-weight-medium);
+        margin-top: 0;
+        margin-bottom: var(--spacing-lg);
+        border-bottom: 1px solid #eee;
+        padding-bottom: var(--spacing-md);
+    }
+
+    .showcase h2 {
+        font-size: 20px;
+        font-weight: var(--font-weight-medium);
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .showcase h3 {
+        font-size: 16px;
+        font-weight: var(--font-weight-medium);
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+    
+    .showcase normal {
+        font-size: 14px;
+        color: #666;
+        display: block;
+        margin-bottom: 1rem;
+    }
+    
+    /* Component: FormGroup */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* Child: Label */
+    .form-group__label {
+      font-size: var(--font-size-caption);
+      font-weight: var(--font-weight-medium);
+      line-height: var(--line-height-caption);
+      color: var(--color-neutrals-gray-900);
+      margin-bottom: var(--spacing-sm);
+      transition: color 0.2s ease-in-out;
+    }
+
+    /* Child: Control (shared styles for input, select) */
+    .form-group__control {
+      font-family: var(--font-family-primary);
+      font-size: var(--font-size-body);
+      padding: 11px 15px;
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--border-radius-md);
+      background-color: var(--color-neutrals-white);
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease-in-out, padding 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .form-group__control::placeholder {
+        color: var(--color-neutrals-gray-500);
+        opacity: 1;
+    }
+
+    .form-group__control:focus-visible {
+      outline: none;
+      border: 2px solid var(--color-primary-500);
+      padding: 10px 14px; /* Adjust padding to maintain size with thicker border */
+    }
+
+    /* Custom styles for select to override default browser appearance */
+    .form-group__control--select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23212121' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px;
+    }
+
+    /* Child: Error Message */
+    .form-group__error-message {
+      display: none; /* Hidden by default */
+      font-size: var(--font-size-caption);
+      font-weight: var(--font-weight-regular);
+      line-height: var(--line-height-caption);
+      color: var(--color-semantic-error);
+      margin-top: var(--spacing-sm);
+    }
+
+    /* State Modifier: --error */
+    .form-group--error .form-group__label {
+      color: var(--color-semantic-error);
+    }
+
+    .form-group--error .form-group__control {
+      border: 2px solid var(--color-semantic-error);
+      padding: 10px 14px;
+    }
+
+    .form-group--error .form-group__error-message {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="showcase">
+    <h1>FormGroup Component</h1>
+    <p>This component combines a label, an input control, and an error message into a single, cohesive unit.</p>
+    
+    <div>
+      <h2>Component Variations</h2>
+      <div>
+        <h3>Default State (TextInput)</h3>
+        <normal>Standard input field with a label. This is the default appearance for data entry.</normal>
+        <div class="form-group">
+          <label for="username" class="form-group__label">Username</label>
+          <input type="text" id="username" class="form-group__control" placeholder="e.g., jsmith">
+          <!-- Error message container is present but hidden for accessibility tools -->
+          <div id="username-error" class="form-group__error-message"></div>
+        </div>
+      </div>
+
+      <div>
+        <h3>Error State (TextInput)</h3>
+        <normal>Indicates a validation error. The label, border, and error message adopt the error color.</normal>
+        <div class="form-group form-group--error">
+          <label for="password" class="form-group__label">Password</label>
+          <input type="password" id="password" class="form-group__control" value="short" aria-invalid="true" aria-describedby="password-error">
+          <div id="password-error" class="form-group__error-message">Password must be at least 12 characters.</div>
+        </div>
+      </div>
+      
+      <div>
+        <h3>Default State (ComboBox)</h3>
+        <normal>A standard dropdown selection field, styled to match other form controls.</normal>
+        <div class="form-group">
+          <label for="role" class="form-group__label">User Role</label>
+          <select id="role" class="form-group__control form-group__control--select">
+            <option>Select a role...</option>
+            <option>Technician</option>
+            <option>Administrator</option>
+          </select>
+          <div id="role-error" class="form-group__error-message"></div>
+        </div>
+      </div>
+
+      <div>
+        <h3>Error State (ComboBox)</h3>
+        <normal>Indicates that a selection is required but has not been made.</normal>
+        <div class="form-group form-group--error">
+          <label for="modality" class="form-group__label">Modality</label>
+          <select id="modality" class="form-group__control form-group__control--select" aria-invalid="true" aria-describedby="modality-error">
+            <option>Select a modality...</option>
+            <option>CT</option>
+            <option>MR</option>
+          </select>
+          <div id="modality-error" class="form-group__error-message">This field is required.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

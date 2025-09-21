@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Screen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+   
+    /* Design System Foundation (as CSS Custom Properties) */
+    :root {
+      /* Typography */
+      --font-primary: 'Roboto', sans-serif;
+      --font-size-h2: 24px;
+      --font-weight-h2: 500;
+      --font-size-body: 16px;
+      --font-weight-body: 400;
+      --font-size-caption: 14px;
+
+      /* Color Palette */
+      --color-primary-50: #E8EAF6;
+      --color-primary-500: #3F51B5;
+      --color-primary-600: #3949AB;
+      --color-primary-700: #303F9F;
+      --color-neutral-white: #FFFFFF;
+      --color-neutral-gray-50: #FAFAFA;
+      --color-neutral-gray-100: #F5F5F5;
+      --color-neutral-gray-900: #212121;
+      --color-semantic-error: #F44336;
+      --color-text-primary: #212121;
+      --color-text-secondary: rgba(0,0,0,0.6);
+      --color-text-disabled: rgba(0,0,0,0.26);
+      --color-border-default: rgba(0,0,0,0.42);
+      --color-border-disabled: rgba(0,0,0,0.12);
+      --color-button-disabled-bg: rgba(0,0,0,0.12);
+
+      /* Spacing System */
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+
+      /* Other Tokens */
+      --border-radius: 4px;
+      --shadow-2dp: 0 1px 3px 0 rgba(0,0,0,0.2), 0 1px 1px 0 rgba(0,0,0,0.14), 0 2px 1px -1px rgba(0,0,0,0.12);
+      --shadow-4dp: 0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12);
+      --transition-speed: 0.2s;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-neutral-gray-50);
+      color: var(--color-text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Screen Layout */
+    .screen-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: var(--spacing-lg);
+    }
+    
+    .login-card {
+      background-color: var(--color-neutral-white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-2dp);
+      padding: var(--spacing-xl);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-card__header {
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .login-card__title {
+      font-size: var(--font-size-h2);
+      font-weight: var(--font-weight-h2);
+      color: var(--color-text-primary);
+    }
+    
+    .login-form .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-size: var(--font-size-caption);
+      font-weight: 500;
+      color: var(--color-text-secondary);
+    }
+    
+    /* Text Input Component */
+    .text-input {
+      width: 100%;
+      padding: 12px var(--spacing-md);
+      font-size: var(--font-size-body);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--border-radius);
+      transition: border-color var(--transition-speed) ease-in-out, box-shadow var(--transition-speed) ease-in-out;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border: 2px solid var(--color-primary-500);
+      padding: 11px 15px; /* Adjust padding to keep size consistent */
+    }
+
+    .text-input:disabled {
+        background-color: var(--color-neutral-gray-100);
+        border: 1px solid var(--color-border-disabled);
+        cursor: not-allowed;
+    }
+
+    /* Error Message TextBlock */
+    .form-error {
+      background-color: #fdecea;
+      color: var(--color-semantic-error);
+      border: 1px solid var(--color-semantic-error);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md);
+      font-size: var(--font-size-caption);
+      margin-bottom: var(--spacing-lg);
+      display: none; /* Hidden by default */
+    }
+
+    .form-error.is-visible {
+      display: block;
+    }
+
+    .login-form.has-error .text-input {
+        border: 2px solid var(--color-semantic-error);
+        padding: 11px 15px;
+    }
+
+    /* Button Component */
+    .btn {
+      width: 100%;
+      padding: 12px var(--spacing-lg);
+      font-size: var(--font-size-body);
+      font-weight: 500;
+      border-radius: var(--border-radius);
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease, transform var(--transition-speed) ease;
+      position: relative;
+      overflow: hidden; /* For ripple and spinner */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .btn--primary {
+      background-color: var(--color-primary-500);
+      color: var(--color-neutral-white);
+    }
+    
+    .btn--primary:hover {
+      background-color: var(--color-primary-600);
+      box-shadow: var(--shadow-4dp);
+    }
+    
+    .btn--primary:active {
+      background-color: var(--color-primary-700);
+      transform: scale(0.98);
+    }
+    
+    .btn:focus-visible {
+      outline: 2px solid var(--color-primary-700);
+      outline-offset: 2px;
+    }
+    
+    .btn:disabled {
+      background-color: var(--color-button-disabled-bg);
+      color: var(--color-text-disabled);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    
+    /* Loading State */
+    .btn.is-loading .btn-text {
+      visibility: hidden;
+      opacity: 0;
+    }
+    
+    .btn .spinner {
+      display: none;
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: var(--color-neutral-white);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    .btn.is-loading .spinner {
+      display: block;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Variations Section for Demo */
+    .screen-variations {
+        padding: var(--spacing-xl);
+        background-color: var(--color-neutral-gray-100);
+        margin-top: 50px;
+    }
+    .screen-variations h2 {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+        color: var(--color-text-secondary);
+    }
+    .variations-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-xl);
+        justify-content: center;
+    }
+    .variation-group {
+        flex-shrink: 0;
+    }
+    .variation-group h3 {
+        margin-bottom: var(--spacing-md);
+        text-align: center;
+    }
+    .variation-group p {
+        font-size: var(--font-size-caption);
+        color: var(--color-text-secondary);
+        text-align: center;
+        margin-bottom: var(--spacing-md);
+        max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="screen-container">
+    <main class="login-card" role="main">
+      <div class="login-card__header">
+        <h1 class="login-card__title">DICOM System Login</h1>
+      </div>
+      <form class="login-form">
+        <div class="form-error" role="alert" aria-live="assertive">
+          Invalid username or password.
+        </div>
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" class="text-input" name="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="text-input" name="password" required>
+        </div>
+        <button type="submit" class="btn btn--primary">
+          <span class="btn-text">Login</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+    </main>
+  </div>
+  
+  <!-- Screen Variations Section -->
+  <section class="screen-variations" aria-label="Screen State Demonstrations">
+    <h2>Screen Variations</h2>
+    <div class="variations-container">
+      
+      <!-- Default State -->
+      <div class="variation-group">
+        <h3>Variant Name: "Default State"</h3>
+        <p>Standard interactive login form presented to the user on application launch.</p>
+        <div class="login-card">
+          <div class="login-card__header">
+            <h1 class="login-card__title">DICOM System Login</h1>
+          </div>
+          <form class="login-form">
+            <div class="form-group">
+              <label for="username-default">Username</label>
+              <input type="text" id="username-default" class="text-input" name="username" value="technician" required>
+            </div>
+            <div class="form-group">
+              <label for="password-default">Password</label>
+              <input type="password" id="password-default" class="text-input" name="password" value="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn--primary">
+              <span class="btn-text">Login</span>
+              <div class="spinner"></div>
+            </button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Loading State -->
+      <div class="variation-group">
+        <h3>Variant Name: "Loading State"</h3>
+        <p>State shown after the user clicks 'Login' while credentials are being verified. All inputs are disabled.</p>
+        <div class="login-card">
+          <div class="login-card__header">
+            <h1 class="login-card__title">DICOM System Login</h1>
+          </div>
+          <form class="login-form">
+            <div class="form-group">
+              <label for="username-loading">Username</label>
+              <input type="text" id="username-loading" class="text-input" name="username" value="technician" required disabled>
+            </div>
+            <div class="form-group">
+              <label for="password-loading">Password</label>
+              <input type="password" id="password-loading" class="text-input" name="password" value="••••••••" required disabled>
+            </div>
+            <button type="submit" class="btn btn--primary is-loading" disabled>
+              <span class="btn-text">Login</span>
+              <div class="spinner"></div>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div class="variation-group">
+        <h3>Variant Name: "Error State"</h3>
+        <p>State shown after a failed login attempt. An error message is displayed and inputs may be highlighted.</p>
+        <div class="login-card">
+          <div class="login-card__header">
+            <h1 class="login-card__title">DICOM System Login</h1>
+          </div>
+          <form class="login-form has-error">
+            <div class="form-error is-visible" role="alert" aria-live="assertive">
+              Invalid username or password.
+            </div>
+            <div class="form-group">
+              <label for="username-error">Username</label>
+              <input type="text" id="username-error" class="text-input" name="username" value="technician" required aria-describedby="login-error-msg">
+            </div>
+            <div class="form-group">
+              <label for="password-error">Password</label>
+              <input type="password" id="password-error" class="text-input" name="password" required aria-describedby="login-error-msg">
+            </div>
+            <button type="submit" class="btn btn--primary">
+              <span class="btn-text">Login</span>
+              <div class="spinner"></div>
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</body>
+</html>

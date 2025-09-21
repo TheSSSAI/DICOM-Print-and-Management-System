@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DMPS.Client.Application.Services;
+using DMPS.Client.Application.DTO;
+using DMPS.Client.Application.Interfaces;
 using DMPS.Client.Presentation.Services.Interfaces;
 using DMPS.Client.Presentation.ViewModels.Base;
-using DMPS.Shared.Core.Models;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -14,73 +14,69 @@ namespace DMPS.Client.Presentation.ViewModels.Pages.Admin
     {
         private readonly ISystemHealthService _systemHealthService;
         private readonly IDialogService _dialogService;
-        private readonly DispatcherTimer _timer;
+        private readonly DispatcherTimer _refreshTimer;
 
         [ObservableProperty]
-        private SystemHealthReport? _healthReport;
+        private SystemHealthStatusDto? _healthStatus;
+
+        [ObservableProperty]
+        private bool _isLoading;
 
         [ObservableProperty]
         private DateTime _lastUpdated;
-        
-        [ObservableProperty]
-        private bool _isBusy;
 
         public SystemHealthViewModel(ISystemHealthService systemHealthService, IDialogService dialogService)
         {
             _systemHealthService = systemHealthService;
             _dialogService = dialogService;
             
-            _timer = new DispatcherTimer
+            _refreshTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(30)
             };
-            _timer.Tick += async (s, e) => await RefreshHealthAsync();
+            _refreshTimer.Tick += async (s, e) => await RefreshHealthStatusCommand.ExecuteAsync(null);
         }
 
-        public void OnNavigatedTo()
+        [AsyncRelayCommand]
+        private async Task RefreshHealthStatusAsync()
         {
-            _timer.Start();
-            // Fire immediately on navigation
-            Task.Run(RefreshHealthAsync);
-        }
-
-        public void OnNavigatedFrom()
-        {
-            _timer.Stop();
-        }
-
-        [RelayCommand]
-        private async Task RefreshHealthAsync()
-        {
-            IsBusy = true;
+            IsLoading = true;
             try
             {
-                var result = await _systemHealthService.GetSystemHealthAsync();
-                if (result.IsSuccess && result.Value is not null)
-                {
-                    HealthReport = result.Value;
-                    LastUpdated = DateTime.Now;
-                }
-                else
-                {
-                    await _dialogService.ShowMessageBoxAsync("Error", result.Error ?? "Failed to retrieve system health status.");
-                }
+                HealthStatus = await _systemHealthService.GetSystemHealthStatusAsync();
+                LastUpdated = DateTime.Now;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                await _dialogService.ShowMessageBoxAsync("Critical Error", $"An error occurred while fetching system health: {ex.Message}");
-                // Stop timer on critical failure to avoid spamming errors
-                _timer.Stop();
+                // log ex
+                _refreshTimer.Stop();
+                await _dialogService.ShowMessageAsync("Error", "Failed to retrieve system health status. Auto-refresh disabled.");
+                HealthStatus = new SystemHealthStatusDto { IsHealthy = false, ServiceStatus = "Error" };
             }
             finally
             {
-                IsBusy = false;
+                IsLoading = false;
             }
+        }
+
+        public async Task OnNavigatedToAsync()
+        {
+            await RefreshHealthStatusAsync();
+            if (!_refreshTimer.IsEnabled)
+            {
+                _refreshTimer.Start();
+            }
+        }
+        
+        public void OnNavigatedFrom()
+        {
+            _refreshTimer.Stop();
         }
 
         public void Dispose()
         {
-            _timer.Stop();
+            _refreshTimer.Stop();
+            GC.SuppressFinalize(this);
         }
     }
 }

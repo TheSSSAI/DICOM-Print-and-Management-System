@@ -1,0 +1,128 @@
+# Top-most EditorConfig file
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+# C# files
+[*.cs]
+# Indentation and spacing
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+csharp_indent_labels = one_less_than_current
+csharp_indent_switch_labels = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_else = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_open_brace = all
+csharp_new_line_between_query_expression_clauses = true
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_after_colon_in_inheritance_clause = true
+csharp_space_around_binary_operators = before_and_after
+csharp_space_between_method_call_empty_parameter_list = false
+csharp_space_between_method_call_name_and_opening_parenthesis = false
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_space_between_parentheses = false
+csharp_space_before_comma = false
+csharp_space_after_comma = true
+
+# Code style
+dotnet_style_qualification_for_field = false
+dotnet_style_qualification_for_property = false
+dotnet_style_qualification_for_method = false
+dotnet_style_qualification_for_event = false
+dotnet_style_predefined_type_for_locals_parameters_members = true
+dotnet_style_predefined_type_for_member_access = true
+
+# var preferences
+dotnet_style_var_for_built_in_types = true
+dotnet_style_var_when_type_is_apparent = true
+dotnet_style_var_elsewhere = true
+
+# 'this.' preferences
+dotnet_style_explicit_this_member_access = false
+
+# Language keywords instead of framework types
+dotnet_style_predefined_type_for_locals_parameters_members = true
+dotnet_style_predefined_type_for_member_access = true
+
+# Modifier preferences
+dotnet_style_require_accessibility_modifiers = for_non_interface_members
+csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async
+
+# Expression-level preferences
+dotnet_style_object_initializer = true
+dotnet_style_collection_initializer = true
+dotnet_style_explicit_tuple_names = true
+dotnet_style_null_propagation = true
+dotnet_style_coalesce_expression = true
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true
+dotnet_style_prefer_conditional_expression_over_assignment = true
+dotnet_style_prefer_conditional_expression_over_return = true
+dotnet_style_prefer_inferred_tuple_names = true
+dotnet_style_prefer_inferred_anonymous_type_member_names = true
+dotnet_style_prefer_auto_properties = true
+csharp_style_throw_expression = true
+csharp_prefer_simple_default_expression = true
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line
+csharp_style_expression_bodied_constructors = false
+csharp_style_expression_bodied_operators = when_on_single_line
+csharp_style_expression_bodied_properties = true
+csharp_style_expression_bodied_indexers = true
+csharp_style_expression_bodied_accessors = true
+csharp_style_expression_bodied_local_functions = when_on_single_line
+
+# Pattern matching
+csharp_style_pattern_matching_over_as_with_null_check = true
+csharp_style_pattern_matching_over_is_with_cast_check = true
+csharp_style_prefer_pattern_matching_over_mixed_type_check_with_cast = true
+csharp_style_prefer_pattern_matching_over_as_with_is_null_check = true
+
+# Null checking preferences
+csharp_style_conditional_delegate_call = true
+
+# Code block preferences
+csharp_prefer_braces = true
+
+# using directive preferences
+csharp_using_directive_placement = outside_namespace
+
+# Naming conventions
+dotnet_naming_rule.interface_should_be_pascal_case_with_i.severity = suggestion
+dotnet_naming_rule.interface_should_be_pascal_case_with_i.symbols = interface
+dotnet_naming_rule.interface_should_be_pascal_case_with_i.style = pascal_case_with_i_prefix
+
+dotnet_naming_symbols.interface.applicable_kinds = interface
+dotnet_naming_style.pascal_case_with_i_prefix.required_prefix = I
+dotnet_naming_style.pascal_case_with_i_prefix.capitalization = pascal_case
+
+# XML Documentation
+xml_doc_comments_should_be_on_single_line = false
+xml_doc_comments_fully_trim_whitespace = true
+file_header_template = unset
+
+# Analyzer rules
+dotnet_analyzer_diagnostic.severity = warning
+# Allow unused parameters in public methods
+dotnet_code_quality_analyzer.api_surface.enable_unused_parameter_analysis = true
+dotnet_code_quality_analyzer.api_surface.exclude_async_void_methods = false
+dotnet_code_quality_analyzer.api_surface.exclude_entry_points = true
+dotnet_code_quality_analyzer.api_surface.exclude_extension_methods = false
+dotnet_code_quality_analyzer.api_surface.exclude_overrides = false
+
+# XAML files
+[*.xaml]
+xaml_indent_with_tabs = false
+xaml_indent_size = 2

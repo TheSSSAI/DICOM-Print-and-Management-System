@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metadata Panel Component</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset */
+        *, *::before, *::after { box-sizing: border-box; }
+        body, h1, h2, p, ul, ol, li, figure, figcaption, blockquote, dl, dd { margin: 0; }
+        ul[role='list'], ol[role='list'] { list-style: none; padding: 0;}
+        html { scroll-behavior: smooth; }
+        body { text-rendering: optimizeSpeed; line-height: 1.5; font-family: 'Roboto', sans-serif;}
+        img, picture { max-width: 100%; display: block; }
+        input, button, textarea, select { font: inherit; }
+
+        /* Design System Tokens */
+        :root {
+            --font-family-primary: 'Roboto', sans-serif;
+            --font-family-monospace: 'Roboto Mono', monospace;
+            --font-size-body: 16px;
+            --font-size-caption: 14px;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+
+            --color-primary-50: #E8EAF6;
+            --color-primary-500: #3F51B5;
+            --color-primary-600: #3949AB;
+            --color-primary-700: #303F9F;
+
+            --color-neutral-white: #FFFFFF;
+            --color-neutral-100: #F5F5F5;
+            --color-neutral-500: #9E9E9E;
+            --color-neutral-900: #212121;
+            --color-input-border: rgba(0,0,0,0.23);
+            --color-border-light: #e0e0e0;
+
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+
+            --border-radius-sm: 4px;
+            --transition-speed: 0.2s ease;
+        }
+
+        /* Showcase Styles */
+        body {
+            background-color: var(--color-neutral-100);
+            padding: var(--spacing-lg);
+        }
+        .showcase-container {
+            max-width: 1200px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--spacing-lg);
+        }
+        .showcase-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        .showcase-item h2 {
+            font-size: 18px;
+            font-weight: var(--font-weight-medium);
+            color: var(--color-neutral-900);
+        }
+
+        /* MetadataPanel Component CSS */
+
+        /* Component Base */
+        .metadata-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 500px; /* For demonstration */
+            max-height: 700px; /* Example height */
+            background-color: var(--color-neutral-white);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+
+        /* Header & Search */
+        .metadata-panel__header {
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid var(--color-border-light);
+            flex-shrink: 0;
+        }
+        .search-bar {
+            position: relative;
+        }
+        .search-bar__input {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            padding-left: 36px;
+            border: 1px solid var(--color-input-border);
+            border-radius: var(--border-radius-sm);
+            font-size: var(--font-size-caption);
+            transition: border-color var(--transition-speed);
+            background-color: var(--color-neutral-white);
+        }
+        .search-bar__input:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+            box-shadow: 0 0 0 2px var(--color-primary-50);
+        }
+        .search-bar__icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: var(--color-neutral-500);
+            pointer-events: none;
+        }
+
+        /* Body & Content */
+        .metadata-panel__body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: var(--spacing-sm);
+        }
+
+        .metadata-group {
+            margin-bottom: var(--spacing-xs);
+        }
+        .metadata-group__header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: var(--spacing-sm);
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: var(--font-size-caption);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-neutral-900);
+            transition: background-color var(--transition-speed);
+            border-radius: var(--border-radius-sm);
+        }
+        .metadata-group__header:hover {
+            background-color: var(--color-neutral-100);
+        }
+        .metadata-group__header:focus-visible {
+            outline: none;
+            background-color: var(--color-primary-50);
+            box-shadow: 0 0 0 2px var(--color-primary-500);
+        }
+        .metadata-group__chevron {
+            width: 20px;
+            height: 20px;
+            margin-right: var(--spacing-sm);
+            transition: transform var(--transition-speed);
+            flex-shrink: 0;
+        }
+        .metadata-group[data-state='collapsed'] .metadata-group__chevron {
+            transform: rotate(-90deg);
+        }
+        .metadata-group[data-state='collapsed'] .metadata-group__content {
+            display: none;
+        }
+
+        .metadata-group__content {
+            padding-left: 32px; /* Indent content under header */
+        }
+
+        .metadata-item {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: 6px var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+        }
+        .metadata-item--editable {
+            grid-template-columns: 120px 1fr 1.5fr;
+        }
+        .metadata-item__tag {
+            font-family: var(--font-family-monospace);
+            font-size: 13px;
+            color: var(--color-neutral-500);
+        }
+        .metadata-item__name {
+            font-size: var(--font-size-caption);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #424242;
+        }
+        .metadata-item__value {
+            font-size: var(--font-size-caption);
+            font-weight: var(--font-weight-medium);
+            text-align: right;
+            color: var(--color-neutral-900);
+            word-break: break-all;
+        }
+        .metadata-item__input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid var(--color-input-border);
+            border-radius: var(--border-radius-sm);
+            font-size: var(--font-size-caption);
+        }
+        .metadata-item__input:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+        }
+
+        /* Footer & Actions */
+        .metadata-panel__footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--color-border-light);
+            background-color: var(--color-neutral-100);
+            flex-shrink: 0;
+        }
+
+        /* Loading State */
+        .metadata-panel.is-loading .metadata-panel__body {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: var(--border-radius-sm);
+        }
+        @keyframes shimmer {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        .skeleton.skeleton--header { height: 28px; width: 40%; margin-bottom: var(--spacing-sm); }
+        .skeleton.skeleton--item { height: 24px; margin-left: 32px; width: calc(100% - 32px); }
+        .skeleton.skeleton--item-short { width: 60%; }
+
+        /* Pre-designed Button Component */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 8px 16px; border-radius: var(--border-radius-sm); font-weight: var(--font-weight-medium);
+            font-size: var(--font-size-caption); text-decoration: none; cursor: pointer;
+            transition: all var(--transition-speed); min-height: 36px; border: 1px solid transparent;
+        }
+        .btn:focus-visible { outline: 2px solid var(--color-primary-700); outline-offset: 2px; }
+        .btn--primary { background: var(--color-primary-500); color: var(--color-neutral-white); }
+        .btn--primary:hover { background: var(--color-primary-600); }
+        .btn--secondary { background: var(--color-neutral-white); color: var(--color-primary-500); border-color: var(--color-input-border); }
+        .btn--secondary:hover { background: var(--color-primary-50); }
+
+    </style>
+</head>
+<body>
+
+    <div class="showcase-container">
+        
+        <div class="showcase-item">
+            <h2>Read-Only (Loaded)</h2>
+            <div class="metadata-panel">
+                <div class="metadata-panel__header">
+                    <div class="search-bar">
+                        <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                        <input type="search" class="search-bar__input" placeholder="Filter by name or tag..." aria-label="Filter metadata">
+                    </div>
+                </div>
+                <div class="metadata-panel__body" role="list">
+                    
+                    <div class="metadata-group" data-state="expanded" role="listitem">
+                        <button class="metadata-group__header" aria-expanded="true" onclick="this.parentElement.dataset.state = this.parentElement.dataset.state === 'expanded' ? 'collapsed' : 'expanded'">
+                            <svg class="metadata-group__chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                            Patient Information
+                        </button>
+                        <div class="metadata-group__content">
+                            <div class="metadata-item"><span class="metadata-item__tag">(0010,0010)</span><span class="metadata-item__name">Patient's Name</span><span class="metadata-item__value">DOE^JANE</span></div>
+                            <div class="metadata-item"><span class="metadata-item__tag">(0010,0020)</span><span class="metadata-item__name">Patient ID</span><span class="metadata-item__value">123456789</span></div>
+                            <div class="metadata-item"><span class="metadata-item__tag">(0010,0030)</span><span class="metadata-item__name">Patient's Birth Date</span><span class="metadata-item__value">19800101</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="metadata-group" data-state="expanded" role="listitem">
+                        <button class="metadata-group__header" aria-expanded="true" onclick="this.parentElement.dataset.state = this.parentElement.dataset.state === 'expanded' ? 'collapsed' : 'expanded'">
+                            <svg class="metadata-group__chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                            Study Information
+                        </button>
+                        <div class="metadata-group__content">
+                            <div class="metadata-item"><span class="metadata-item__tag">(0008,0020)</span><span class="metadata-item__name">Study Date</span><span class="metadata-item__value">20240521</span></div>
+                            <div class="metadata-item"><span class="metadata-item__tag">(0008,0050)</span><span class="metadata-item__name">Accession Number</span><span class="metadata-item__value">987654321</span></div>
+                            <div class="metadata-item"><span class="metadata-item__tag">(0008,1030)</span><span class="metadata-item__name">Study Description</span><span class="metadata-item__value">CT CHEST W/CONTRAST</span></div>
+                        </div>
+                    </div>
+
+                    <div class="metadata-group" data-state="collapsed" role="listitem">
+                        <button class="metadata-group__header" aria-expanded="false" onclick="this.parentElement.dataset.state = this.parentElement.dataset.state === 'expanded' ? 'collapsed' : 'expanded'">
+                            <svg class="metadata-group__chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                            Series Information
+                        </button>
+                        <div class="metadata-group__content">
+                             <div class="metadata-item"><span class="metadata-item__tag">(0008,0060)</span><span class="metadata-item__name">Modality</span><span class="metadata-item__value">CT</span></div>
+                             <div class="metadata-item"><span class="metadata-item__tag">(0018,0050)</span><span class="metadata-item__name">Slice Thickness</span><span class="metadata-item__value">1.25</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="showcase-item">
+            <h2>Editable (Loaded)</h2>
+            <div class="metadata-panel metadata-panel--editable">
+                <div class="metadata-panel__header">
+                    <div class="search-bar">
+                        <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+                        <input type="search" class="search-bar__input" placeholder="Filter by name or tag..." aria-label="Filter metadata">
+                    </div>
+                </div>
+                <div class="metadata-panel__body">
+                     <div class="metadata-group" data-state="expanded">
+                        <button class="metadata-group__header" aria-expanded="true" onclick="this.parentElement.dataset.state = this.parentElement.dataset.state === 'expanded' ? 'collapsed' : 'expanded'">
+                            <svg class="metadata-group__chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                            Patient Information
+                        </button>
+                        <div class="metadata-group__content">
+                            <div class="metadata-item metadata-item--editable"><span class="metadata-item__tag">(0010,0010)</span><span class="metadata-item__name">Patient's Name</span><input type="text" class="metadata-item__input" value="DOE^JANE"></div>
+                            <div class="metadata-item metadata-item--editable"><span class="metadata-item__tag">(0010,0020)</span><span class="metadata-item__name">Patient ID</span><input type="text" class="metadata-item__input" value="123456789"></div>
+                            <div class="metadata-item metadata-item--editable"><span class="metadata-item__tag">(0010,0030)</span><span class="metadata-item__name">Patient's Birth Date</span><input type="text" class="metadata-item__input" value="19800101"></div>
+                        </div>
+                    </div>
+                    <div class="metadata-group" data-state="expanded">
+                        <button class="metadata-group__header" aria-expanded="true" onclick="this.parentElement.dataset.state = this.parentElement.dataset.state === 'expanded' ? 'collapsed' : 'expanded'">
+                            <svg class="metadata-group__chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                            Study Information
+                        </button>
+                        <div class="metadata-group__content">
+                             <div class="metadata-item metadata-item--editable"><span class="metadata-item__tag">(0008,1030)</span><span class="metadata-item__name">Study Description</span><input type="text" class="metadata-item__input" value="CT CHEST W/CONTRAST"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metadata-panel__footer">
+                    <button class="btn btn--secondary">Cancel</button>
+                    <button class="btn btn--primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="showcase-item">
+            <h2>Loading State</h2>
+            <div class="metadata-panel is-loading">
+                <div class="metadata-panel__header">
+                    <div class="search-bar">
+                         <svg class="search-bar__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+                        <input type="search" class="search-bar__input" placeholder="Filter by name or tag..." disabled>
+                    </div>
+                </div>
+                <div class="metadata-panel__body">
+                    <div class="skeleton skeleton--header"></div>
+                    <div class="skeleton skeleton--item"></div>
+                    <div class="skeleton skeleton--item skeleton--item-short"></div>
+                    <div class="skeleton skeleton--item"></div>
+                    
+                    <div class="skeleton skeleton--header"></div>
+                    <div class="skeleton skeleton--item"></div>
+                    <div class="skeleton skeleton--item"></div>
+                    <div class="skeleton skeleton--item skeleton--item-short"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="max-width: 1200px; margin: 48px auto;">
+        <h2 style="font-size: 24px; margin-bottom: 24px; border-bottom: 2px solid var(--color-border-light); padding-bottom: 16px;">Component Variations</h2>
+        <div>
+            <h3 style="font-size: 18px; margin-bottom: 8px;">Variant: Read-Only</h3>
+            <p style="font-size: 14px; color: #616161; margin-bottom: 16px;">The default state for displaying metadata. All values are presented as non-interactive text. This is the primary mode for technicians and for initial data review.</p>
+        </div>
+        <div>
+            <h3 style="font-size: 18px; margin-bottom: 8px;">Variant: Editable</h3>
+            <p style="font-size: 14px; color: #616161; margin-bottom: 16px;">An administrator-only mode where specific tag values are replaced with input fields. A footer with 'Save' and 'Cancel' actions is displayed.</p>
+        </div>
+        <div>
+            <h3 style="font-size: 18px; margin-bottom: 8px;">State: Loading</h3>
+            <p style="font-size: 14px; color: #616161; margin-bottom: 16px;">Displayed when the component is first loaded or when fetching new metadata. A skeleton screen with a shimmering animation provides user feedback that content is being prepared.</p>
+        </div>
+    </div>
+</body>
+</html>

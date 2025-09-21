@@ -1,0 +1,53 @@
+flowchart TD
+    subgraph Initialization
+        A[User clicks 'Print' or 'Export'] --> B[System loads Print Preview UI];
+        B --> C[Canvas renders with default layout];
+    end
+
+    C --> D{Happy with default layout?};
+
+    subgraph "Layout & Page Configuration"
+        D -- No --> E[User selects a layout template e.g., '2x2 grid'];
+        E --> F{Configure page options?};
+        F -- Yes --> G[User sets orientation, margins, scaling];
+        G --> H;
+        F -- No --> H;
+        D -- Yes --> H;
+    end
+
+    subgraph "Content Customization"
+        H[Layout is set] --> I{Rearrange images?};
+        I -- Yes --> J[User drag-and-drops images into position];
+        J --> K;
+        I -- No --> K;
+        K{Add branding or overlays?};
+        K -- Yes --> L[User adds logo and/or dynamic text fields];
+        L --> M;
+        K -- No --> M;
+        M{Apply de-identification masks?};
+        M -- Yes --> N[User selects and applies blackout overlays];
+        N --> O;
+        M -- No --> O;
+    end
+
+    subgraph "Final Output"
+        O[Final preview is ready] --> P{Choose final action};
+        P -- Print --> Q[Queue Print Job for Async Processing];
+        P -- Export to PDF --> R[Initiate PDF/A-3 Generation Process];
+        P -- Cancel --> S[Close Print Preview UI];
+        Q --> T((End));
+        R --> U[/PDF file saved locally/];
+        U --> T;
+        S --> T;
+    end
+
+    %% Styling
+    classDef decision fill:#e3f2fd,stroke:#1e88e5,color:#1e293b,stroke-width:2px
+    classDef process fill:#f3e5f5,stroke:#8e24aa,color:#1e293b
+    classDef io fill:#e8f5e9,stroke:#43a047,color:#1e293b
+    classDef startend fill:#fff3e0,stroke:#f4511e,color:#1e293b,font-weight:bold
+
+    class D,F,I,K,M,P decision;
+    class B,C,E,G,J,L,N,Q,R,S process;
+    class U io;
+    class A,T startend;

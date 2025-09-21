@@ -1,8 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DMPS.Client.Application.Services;
+using DMPS.Client.Application.Interfaces;
 using DMPS.Client.Presentation.Services.Interfaces;
 using DMPS.Client.Presentation.ViewModels.Base;
+using System;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace DMPS.Client.Presentation.ViewModels
@@ -11,12 +13,16 @@ namespace DMPS.Client.Presentation.ViewModels
     {
         private readonly IAuthenticationService _authenticationService;
         private readonly INavigationService _navigationService;
-        private readonly INotificationService _notificationService;
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
         private string? _username;
 
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
+        private SecureString? _password;
+        
         [ObservableProperty]
         private string? _errorMessage;
 
@@ -26,54 +32,59 @@ namespace DMPS.Client.Presentation.ViewModels
         public LoginViewModel(
             IAuthenticationService authenticationService,
             INavigationService navigationService,
-            INotificationService notificationService)
+            IDialogService dialogService)
         {
             _authenticationService = authenticationService;
             _navigationService = navigationService;
-            _notificationService = notificationService;
+            _dialogService = dialogService;
         }
 
-        [RelayCommand(CanExecute = nameof(CanLogin))]
-        private async Task LoginAsync(string? password)
+        [AsyncRelayCommand(CanExecute = nameof(CanLogin))]
+        private async Task LoginAsync()
         {
-            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(Username))
-            {
-                ErrorMessage = "Username and password are required.";
-                return;
-            }
-
             IsBusy = true;
             ErrorMessage = null;
-
             try
             {
-                var loginResult = await _authenticationService.LoginAsync(Username, password);
-                if (loginResult.IsSuccess)
+                var result = await _authenticationService.LoginAsync(Username!, Password!);
+
+                if (result.IsSuccess)
                 {
-                    // Navigate to the main application window
-                    _navigationService.NavigateTo<MainWindowViewModel>();
-                    _navigationService.Close<LoginViewModel>();
+                    if (result.IsTemporaryPassword)
+                    {
+                        // To be implemented: Navigate to a dedicated Change Password view
+                        // _navigationService.NavigateTo<ChangePasswordViewModel>(); 
+                        await _dialogService.ShowMessageAsync("Login Successful", "You are required to change your temporary password.");
+                    }
+                    else
+                    {
+                        _navigationService.NavigateTo<StudyBrowserViewModel>();
+                    }
                 }
                 else
                 {
-                    ErrorMessage = loginResult.Error;
+                    ErrorMessage = result.ErrorMessage;
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 // In a real app, log this exception
-                ErrorMessage = "An unexpected error occurred. Please contact support.";
-                _notificationService.ShowError("Login Failed", "Could not connect to the authentication service.");
+                ErrorMessage = "An unexpected error occurred. Please try again later.";
+                await _dialogService.ShowMessageAsync("Login Error", ErrorMessage);
             }
             finally
             {
+                Password?.Clear();
                 IsBusy = false;
             }
         }
-
-        private bool CanLogin(string? password)
+        
+        private bool CanLogin()
         {
-            return !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(password) && !IsBusy;
+            return !string.IsNullOrWhiteSpace(Username) 
+                && Password is not null 
+                && Password.Length > 0 
+                && !IsBusy;
         }
     }
 }

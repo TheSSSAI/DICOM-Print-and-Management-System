@@ -1,52 +1,56 @@
 using DMPS.Client.Presentation.Services.Interfaces;
 using MaterialDesignThemes.Wpf;
+using System;
+using System.Threading.Tasks;
 using System.Windows;
 
-namespace DMPS.Client.Presentation.Services;
-
-/// <summary>
-/// A service to display non-blocking toast notifications (snackbars) to the user.
-/// This implementation relies on the MaterialDesignInXamlToolkit's Snackbar component.
-/// </summary>
-public sealed class NotificationService : INotificationService
+namespace DMPS.Client.Presentation.Services
 {
-    private readonly ISnackbarMessageQueue _messageQueue;
-
-    public NotificationService(ISnackbarMessageQueue messageQueue)
+    /// <summary>
+    /// A service for displaying non-blocking notifications (snackbars) to the user.
+    /// This implementation uses the Material Design in XAML Toolkit's Snackbar component.
+    /// </summary>
+    public sealed class NotificationService : INotificationService
     {
-        _messageQueue = messageQueue ?? throw new ArgumentNullException(nameof(messageQueue));
-    }
+        private readonly SnackbarMessageQueue _messageQueue;
 
-    /// <inheritdoc />
-    public void Show(string message, NotificationType type = NotificationType.Info)
-    {
-        if (Application.Current.Dispatcher.CheckAccess())
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NotificationService"/> class.
+        /// </summary>
+        /// <param name="messageQueue">The message queue associated with the main window's snackbar.</param>
+        public NotificationService(SnackbarMessageQueue messageQueue)
         {
-            EnqueueMessage(message, type);
+            _messageQueue = messageQueue ?? throw new ArgumentNullException(nameof(messageQueue));
         }
-        else
+
+        /// <inheritdoc />
+        public Task ShowSuccessAsync(string message) => ShowNotificationAsync(message, "Success");
+
+        /// <inheritdoc />
+        public Task ShowInfoAsync(string message) => ShowNotificationAsync(message, "Info");
+
+        /// <inheritdoc />
+        public Task ShowWarningAsync(string message) => ShowNotificationAsync(message, "Warning");
+
+        /// <inheritdoc />
+        public Task ShowErrorAsync(string message) => ShowNotificationAsync(message, "Error");
+
+        private Task ShowNotificationAsync(string message, string category)
         {
-            Application.Current.Dispatcher.Invoke(() => EnqueueMessage(message, type));
+            var duration = category == "Error" ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(5);
+            
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                _messageQueue.Enqueue(message, neverConsiderToBeDuplicate: true, promote: true, durationOverride: duration);
+                return Task.CompletedTask;
+            }
+            else
+            {
+                return Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _messageQueue.Enqueue(message, neverConsiderToBeDuplicate: true, promote: true, durationOverride: duration);
+                }).Task;
+            }
         }
-    }
-
-    private void EnqueueMessage(string message, NotificationType type)
-    {
-        // MaterialDesign Snackbar doesn't have built-in styling for different notification types.
-        // We can prepend the message with a prefix or an icon in a real application.
-        // For simplicity, we just show the message.
-        // In a more complex scenario, we could use a custom template for the snackbar content.
-        
-        string fullMessage = type switch
-        {
-            NotificationType.Success => $"✅ {message}",
-            NotificationType.Error => $"❌ {message}",
-            NotificationType.Warning => $"⚠️ {message}",
-            _ => $"ℹ️ {message}"
-        };
-
-        // The Enqueue method is thread-safe, but it's good practice to ensure it's called
-        // from the UI thread context, as UI updates might be triggered.
-        _messageQueue.Enqueue(fullMessage);
     }
 }

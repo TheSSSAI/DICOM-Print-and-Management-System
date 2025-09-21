@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DICOM Viewer Screen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Design System Tokens */
+        :root {
+            /* Typography */
+            --font-primary: 'Roboto', sans-serif;
+            --font-monospace: 'Roboto Mono', monospace;
+            --font-size-h2: 24px;
+            --font-size-h3: 20px;
+            --font-size-body: 16px;
+            --font-size-caption: 14px;
+            --font-size-small: 12px;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+            --font-weight-bold: 700;
+
+            /* Colors */
+            --color-primary-50: #E8EAF6;
+            --color-primary-500: #3F51B5;
+            --color-primary-700: #303F9F;
+            --color-neutral-white: #FFFFFF;
+            --color-neutral-gray-50: #FAFAFA;
+            --color-neutral-gray-100: #F5F5F5;
+            --color-neutral-gray-200: #EEEEEE;
+            --color-neutral-gray-300: #E0E0E0;
+            --color-neutral-gray-500: #9E9E9E;
+            --color-neutral-gray-700: #616161;
+            --color-neutral-gray-800: #424242;
+            --color-neutral-gray-900: #212121;
+            --color-neutral-black: #000000;
+            --color-semantic-info: #2196F3;
+
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+
+            /* Shadows & Borders */
+            --shadow-2dp: 0 2px 4px rgba(0,0,0,0.12);
+            --shadow-4dp: 0 4px 8px rgba(0,0,0,0.15);
+            --border-radius-sm: 2px;
+            --border-radius-md: 4px;
+            --border-color: var(--color-neutral-gray-300);
+            --transition-speed: 0.2s;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            font-size: var(--font-size-body);
+            background-color: var(--color-neutral-gray-100);
+            color: var(--color-neutral-gray-900);
+        }
+
+        /* Screen Layout */
+        .dicom-viewer-screen {
+            display: grid;
+            grid-template-columns: 200px 1fr 320px;
+            grid-template-rows: auto 1fr;
+            grid-template-areas:
+                "toolbar toolbar toolbar"
+                "thumbnails viewer metadata";
+            height: 100vh;
+            width: 100vw;
+            background-color: var(--color-neutral-gray-200);
+        }
+        
+        /* Toolbar */
+        .viewer-toolbar {
+            grid-area: toolbar;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: var(--color-neutral-white);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-2dp);
+            z-index: 10;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background-color: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--color-neutral-gray-700);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+        .icon-btn:hover {
+            background-color: var(--color-primary-50);
+            color: var(--color-primary-500);
+        }
+        .icon-btn:active, .icon-btn.is-active {
+            background-color: var(--color-primary-500);
+            color: var(--color-neutral-white);
+        }
+        .icon-btn:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: 2px;
+        }
+        .icon-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background-color: var(--border-color);
+            margin: 0 var(--spacing-xs);
+        }
+
+        /* Thumbnail Strip */
+        .thumbnail-strip {
+            grid-area: thumbnails;
+            background-color: var(--color-neutral-gray-50);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: var(--spacing-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        .thumbnail {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: var(--color-neutral-black);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            position: relative;
+            transition: border-color var(--transition-speed);
+            overflow: hidden;
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+        }
+        .thumbnail__number {
+            position: absolute;
+            bottom: var(--spacing-xs);
+            right: var(--spacing-sm);
+            color: var(--color-neutral-white);
+            font-size: var(--font-size-small);
+            font-weight: var(--font-weight-medium);
+            background-color: rgba(0,0,0,0.5);
+            padding: 2px 4px;
+            border-radius: var(--border-radius-sm);
+        }
+        .thumbnail:hover {
+            border-color: var(--color-neutral-gray-500);
+        }
+        .thumbnail.is-active {
+            border-color: var(--color-primary-500);
+        }
+        .thumbnail:focus-visible {
+            outline: 2px solid var(--color-primary-700);
+            outline-offset: 2px;
+        }
+
+        /* DICOM Viewer Main Area */
+        .viewer-main {
+            grid-area: viewer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--color-neutral-black);
+            overflow: hidden;
+            position: relative;
+        }
+        .viewer-layout {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            gap: 2px;
+            background-color: var(--color-neutral-gray-800);
+        }
+        .viewer-layout--single {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr;
+        }
+        .viewer-layout--comparison {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr;
+        }
+        .dicom-viewport {
+            background-color: var(--color-neutral-black);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .dicom-viewport img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .viewport-overlay {
+            position: absolute;
+            top: var(--spacing-sm);
+            left: var(--spacing-sm);
+            color: var(--color-neutral-gray-300);
+            font-size: var(--font-size-small);
+            line-height: 1.4;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        /* Metadata Panel */
+        .metadata-panel {
+            grid-area: metadata;
+            background-color: var(--color-neutral-white);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+            resize: horizontal; /* For simple mockup resizing */
+            min-width: 250px;
+            max-width: 500px;
+        }
+        .metadata-panel__section {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .metadata-panel__section:last-child {
+            border-bottom: none;
+        }
+        .metadata-panel__title {
+            font-size: var(--font-size-caption);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary-700);
+            margin-bottom: var(--spacing-md);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .metadata-panel__item {
+            display: flex;
+            justify-content: space-between;
+            font-size: var(--font-size-caption);
+            margin-bottom: var(--spacing-sm);
+            gap: var(--spacing-md);
+        }
+        .metadata-panel__key {
+            color: var(--color-neutral-gray-700);
+            white-space: nowrap;
+        }
+        .metadata-panel__value {
+            color: var(--color-neutral-gray-900);
+            text-align: right;
+            font-family: var(--font-monospace);
+            word-break: break-all;
+        }
+        
+        /* Loading State */
+        .skeleton-loader {
+            background: var(--color-neutral-gray-300);
+            background: linear-gradient(110deg, var(--color-neutral-gray-200) 8%, var(--color-neutral-gray-300) 18%, var(--color-neutral-gray-200) 33%);
+            background-size: 200% 100%;
+            animation: 1.5s shimmer infinite linear;
+            border-radius: var(--border-radius-md);
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .is-loading .viewer-main .dicom-viewport {
+            background: var(--color-neutral-black);
+        }
+        .is-loading .viewer-main .dicom-viewport > * {
+            visibility: hidden;
+        }
+        .is-loading .viewer-main .dicom-viewport::after {
+            content: '';
+            position: absolute;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            animation: 1.5s shimmer infinite linear;
+            background: linear-gradient(110deg, #222 8%, #444 18%, #222 33%);
+            background-size: 200% 100%;
+            border-radius: var(--border-radius-md);
+        }
+
+        .is-loading .thumbnail-strip .thumbnail > * {
+            visibility: hidden;
+        }
+        .is-loading .thumbnail-strip .thumbnail {
+             background: none;
+        }
+        .is-loading .thumbnail-strip .thumbnail::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: 1.5s shimmer infinite linear;
+            background: linear-gradient(110deg, #222 8%, #444 18%, #222 33%);
+            background-size: 200% 100%;
+        }
+
+        .is-loading .metadata-panel .metadata-panel__value {
+            color: transparent;
+            background-color: var(--color-neutral-gray-200);
+            border-radius: var(--border-radius-sm);
+            min-width: 60px;
+        }
+        .is-loading .metadata-panel .metadata-panel__value.long-value {
+             min-width: 120px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="dicom-viewer-screen" id="main-viewer">
+        <!-- Toolbar -->
+        <header class="viewer-toolbar" role="toolbar" aria-label="Viewer Tools">
+            <button class="icon-btn" aria-label="Pan"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15.59V15H9.41c-.21 0-.42-.08-.58-.23-.33-.33-.18-.94.24-1.24C9.52 13.2 10 13 10 12.5c0-.4-.2-.6-.5-.83-.43-.28-.56-.9-.23-1.24.16-.16.37-.23.58-.23H11V8.41c0-.55.45-1 1-1s1 .45 1 1V10h1.59c.21 0 .42.08.58.23.33.33.18.94-.24 1.24-.45.33-.74.63-.74 1.03 0 .4.2.6.5.83.43.28.56.9.23 1.24-.16.16-.37.23-.58.23H13v2.59c0 .55-.45 1-1 1s-1-.45-1-1z"/></svg></button>
+            <button class="icon-btn is-active" aria-label="Zoom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM10 9h-1V8h1v-1h1v1h1v1h-1v1h-1V9z"/></svg></button>
+            <button class="icon-btn" aria-label="Window/Level"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zM12 4c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></button>
+            <button class="icon-btn" aria-label="Rotate"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7.47 2.47c.2-.2.45-.3.71-.3h8.64c.26 0 .51.1.71.3.2.2.3.45.3.71v3.36c0 .55-.45 1-1 1s-1-.45-1-1V5.88L15.3 6.4c1.11.23 2.14.78 3 1.57.87.79 1.52 1.81 1.87 2.94.36 1.13.43 2.3.19 3.45s-.82 2.2-1.66 3.04-1.89 1.41-3.04 1.66c-1.15.24-2.32.17-3.45-.19-1.13-.36-2.15-.91-2.94-1.87-.79-.87-1.34-1.89-1.57-3l-.52-1.53c-.15-.45.04-.94.49-1.08.45-.15.94.04 1.08.49l.52 1.53c.18.82.58 1.59 1.16 2.22.58.63 1.31 1.07 2.12 1.28.81.21 1.66.14 2.43-.19.77-.33 1.45-.88 1.96-1.59s.84-1.54.9-2.42c.06-.88-.15-1.74-.6-2.49s-1.12-1.33-1.92-1.63L7.47 9.88h1.61c.55 0 1-.45 1-1s-.45-1-1-1H5.72c-.26 0-.51-.1-.71-.3s-.3-.45-.3-.71V3.52c0-.55.45-1 1-1s1 .45 1 .45v3.34L7.47 2.47z"/></svg></button>
+            <div class="toolbar-divider"></div>
+            <button class="icon-btn" aria-label="Print"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zM16 19H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM18 3H6v4h12V3z"/></svg></button>
+            <button class="icon-btn" aria-label="Export"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3h-2zM7 9l1.41 1.41L11 7.83V16h2V7.83l2.59 2.58L17 9l-5-5-5 5z"/></svg></button>
+        </header>
+
+        <!-- Thumbnails -->
+        <aside class="thumbnail-strip" role="region" aria-label="Image Series">
+            <div class="thumbnail is-active" tabindex="0" aria-label="Image 1 of 5">
+                <img src="https://via.placeholder.com/150/000000/FFFFFF/?text=CT-1" alt="Thumbnail of CT Image 1">
+                <span class="thumbnail__number">1</span>
+            </div>
+            <div class="thumbnail" tabindex="0" aria-label="Image 2 of 5">
+                <img src="https://via.placeholder.com/150/000000/FFFFFF/?text=CT-2" alt="Thumbnail of CT Image 2">
+                <span class="thumbnail__number">2</span>
+            </div>
+            <div class="thumbnail" tabindex="0" aria-label="Image 3 of 5">
+                <img src="https://via.placeholder.com/150/000000/FFFFFF/?text=CT-3" alt="Thumbnail of CT Image 3">
+                <span class="thumbnail__number">3</span>
+            </div>
+            <div class="thumbnail" tabindex="0" aria-label="Image 4 of 5">
+                <img src="https://via.placeholder.com/150/000000/FFFFFF/?text=CT-4" alt="Thumbnail of CT Image 4">
+                <span class="thumbnail__number">4</span>
+            </div>
+            <div class="thumbnail" tabindex="0" aria-label="Image 5 of 5">
+                <img src="https://via.placeholder.com/150/000000/FFFFFF/?text=CT-5" alt="Thumbnail of CT Image 5">
+                <span class="thumbnail__number">5</span>
+            </div>
+        </aside>
+
+        <!-- Main Viewer -->
+        <main class="viewer-main" role="main" aria-label="DICOM Image Viewer">
+            <div class="viewer-layout viewer-layout--single">
+                <div class="dicom-viewport" aria-label="Main DICOM Viewport">
+                    <img src="https://via.placeholder.com/800x800/000000/808080/?text=DICOM+Image" alt="Axial CT Image of Chest">
+                    <div class="viewport-overlay">
+                        <span>PID: 12345</span><br>
+                        <span>Name: DOE^JANE</span><br>
+                        <span>WW: 400 WL: 40</span><br>
+                        <span>Im: 1/5</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Metadata Panel -->
+        <aside class="metadata-panel" role="region" aria-labelledby="metadata-title">
+            <div class="metadata-panel__section">
+                <h2 id="metadata-title" class="metadata-panel__title">Patient Information</h2>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Patient Name</span>
+                    <span class="metadata-panel__value long-value">DOE^JANE</span>
+                </div>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Patient ID</span>
+                    <span class="metadata-panel__value">123456789</span>
+                </div>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Birth Date</span>
+                    <span class="metadata-panel__value">19800101</span>
+                </div>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Sex</span>
+                    <span class="metadata-panel__value">F</span>
+                </div>
+            </div>
+            <div class="metadata-panel__section">
+                <h2 class="metadata-panel__title">Study Details</h2>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Study Date</span>
+                    <span class="metadata-panel__value">20240315</span>
+                </div>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Accession #</span>
+                    <span class="metadata-panel__value">A987654321</span>
+                </div>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Description</span>
+                    <span class="metadata-panel__value long-value">CT CHEST W/O</span>
+                </div>
+                 <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Study UID</span>
+                    <span class="metadata-panel__value long-value">1.2.840...</span>
+                </div>
+            </div>
+            <div class="metadata-panel__section">
+                <h2 class="metadata-panel__title">Series Details</h2>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Modality</span>
+                    <span class="metadata-panel__value">CT</span>
+                </div>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Series #</span>
+                    <span class="metadata-panel__value">2</span>
+                </div>
+                <div class="metadata-panel__item">
+                    <span class="metadata-panel__key">Body Part</span>
+                    <span class="metadata-panel__value">CHEST</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Screen Variations Section -->
+    <div class="screen-variations" style="position: absolute; top: 110vh; padding: 20px; font-family: sans-serif; width: 100%;">
+        <h2 style="margin-bottom: 20px;">Screen Variations</h2>
+        
+        <div class="variation-group" style="margin-bottom: 40px; border: 1px solid #ccc; padding: 10px;">
+            <h3>Variant Name: "Loading State"</h3>
+            <p style="margin-bottom: 10px;"><normal>Shows the skeleton loader pattern while the initial study data is being fetched and rendered.</normal></p>
+            <div class="dicom-viewer-screen is-loading" style="height: 500px; width: 100%; position: relative;">
+                <header class="viewer-toolbar" role="toolbar" aria-label="Viewer Tools">
+                    <button class="icon-btn" aria-label="Pan"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15.59V15H9.41c-.21 0-.42-.08-.58-.23-.33-.33-.18-.94.24-1.24C9.52 13.2 10 13 10 12.5c0-.4-.2-.6-.5-.83-.43-.28-.56-.9-.23-1.24.16-.16.37-.23.58-.23H11V8.41c0-.55.45-1 1-1s1 .45 1 1V10h1.59c.21 0 .42.08.58.23.33.33.18.94-.24 1.24-.45.33-.74.63-.74 1.03 0 .4.2.6.5.83.43.28.56.9.23 1.24-.16.16-.37-.23-.58-.23H13v2.59c0 .55-.45 1-1 1s-1-.45-1-1z"/></svg></button>
+                    <button class="icon-btn is-active" aria-label="Zoom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM10 9h-1V8h1v-1h1v1h1v1h-1v1h-1V9z"/></svg></button>
+                    <div class="toolbar-divider"></div>
+                </header>
+                <aside class="thumbnail-strip" role="region" aria-label="Image Series">
+                    <div class="thumbnail" tabindex="-1"><span class="thumbnail__number"></span></div>
+                    <div class="thumbnail" tabindex="-1"><span class="thumbnail__number"></span></div>
+                    <div class="thumbnail" tabindex="-1"><span class="thumbnail__number"></span></div>
+                </aside>
+                <main class="viewer-main" role="main" aria-label="DICOM Image Viewer" aria-busy="true">
+                     <div class="viewer-layout viewer-layout--single"><div class="dicom-viewport"></div></div>
+                </main>
+                <aside class="metadata-panel" role="region" aria-labelledby="metadata-title-loading">
+                    <div class="metadata-panel__section">
+                        <h2 id="metadata-title-loading" class="metadata-panel__title">Patient Information</h2>
+                        <div class="metadata-panel__item"><span class="metadata-panel__key">Patient Name</span><span class="metadata-panel__value long-value"></span></div>
+                        <div class="metadata-panel__item"><span class="metadata-panel__key">Patient ID</span><span class="metadata-panel__value"></span></div>
+                    </div>
+                    <div class="metadata-panel__section">
+                        <h2 class="metadata-panel__title">Study Details</h2>
+                        <div class="metadata-panel__item"><span class="metadata-panel__key">Study Date</span><span class="metadata-panel__value"></span></div>
+                        <div class="metadata-panel__item"><span class="metadata-panel__key">Accession #</span><span class="metadata-panel__value long-value"></span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+        
+        <div class="variation-group" style="margin-bottom: 40px; border: 1px solid #ccc; padding: 10px;">
+            <h3>Variant Name: "Side-by-Side Comparison"</h3>
+            <p style="margin-bottom: 10px;"><normal>The main viewing area is split into two viewports to compare different series or studies.</normal></p>
+            <div class="dicom-viewer-screen" style="height: 500px; width: 100%; position: relative;">
+                <header class="viewer-toolbar" role="toolbar" aria-label="Viewer Tools">(Toolbar as above)</header>
+                <aside class="thumbnail-strip" role="region" aria-label="Image Series">(Thumbnails as above)</aside>
+                <main class="viewer-main" role="main" aria-label="DICOM Image Viewer">
+                    <div class="viewer-layout viewer-layout--comparison">
+                        <div class="dicom-viewport" aria-label="Viewport 1">
+                             <img src="https://via.placeholder.com/400x400/000000/808080/?text=Prior+Study" alt="Axial CT Image of Chest">
+                             <div class="viewport-overlay">
+                                <span>PID: 12345</span><br>
+                                <span>2023-01-20</span><br>
+                                <span>Im: 55/120</span>
+                            </div>
+                        </div>
+                        <div class="dicom-viewport" aria-label="Viewport 2">
+                             <img src="https://via.placeholder.com/400x400/000000/808080/?text=Current+Study" alt="Axial CT Image of Chest">
+                             <div class="viewport-overlay">
+                                <span>PID: 12345</span><br>
+                                <span>2024-03-15</span><br>
+                                <span>Im: 1/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <aside class="metadata-panel" role="region" aria-labelledby="metadata-title-compare">(Metadata as above)</aside>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

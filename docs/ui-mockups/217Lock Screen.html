@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lock Screen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+   
+    /* Design System Tokens */
+    :root {
+      /* Typography */
+      --font-primary: 'Roboto', sans-serif;
+      --font-size-h2: 24px;
+      --font-weight-h2: 500;
+      --font-size-body: 16px;
+      --font-weight-body: 400;
+      --font-size-caption: 14px;
+
+      /* Colors */
+      --color-primary-50: #E8EAF6;
+      --color-primary-500: #3F51B5;
+      --color-primary-600: #3949AB;
+      --color-primary-700: #303F9F;
+      --color-neutrals-white: #FFFFFF;
+      --color-neutrals-gray-500: #9E9E9E;
+      --color-neutrals-gray-900: #212121;
+      --color-semantic-error: #F44336;
+
+      /* Spacing */
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      
+      /* Borders */
+      --border-radius: 4px;
+
+      /* Shadows */
+      --shadow-8dp: 0 8px 10px 1px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.20);
+    }
+    
+    html, body {
+      height: 100%;
+      font-family: var(--font-primary);
+      background-color: #f5f5f5;
+    }
+    
+    /* Screen Mockup Styles */
+    .screen-background-content {
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      filter: blur(4px);
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Lock Screen Overlay & Dialog */
+    .lock-screen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(33, 33, 33, 0.4);
+      z-index: 1000;
+      padding: var(--spacing-md);
+    }
+    
+    .lock-screen-dialog {
+      background-color: var(--color-neutrals-white);
+      color: var(--color-neutrals-gray-900);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-8dp);
+      width: 100%;
+      max-width: 400px;
+      padding: var(--spacing-xl);
+      text-align: center;
+      animation: fadeInScale 0.3s ease-out;
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .lock-screen-dialog__icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto var(--spacing-md);
+        color: var(--color-primary-500);
+    }
+
+    .lock-screen-dialog__title {
+      font-size: var(--font-size-h2);
+      font-weight: var(--font-weight-h2);
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .lock-screen-dialog__user {
+      color: var(--color-neutrals-gray-500);
+      font-size: var(--font-size-body);
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .lock-screen-dialog__form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    /* Text Input Component */
+    .form-group {
+      text-align: left;
+    }
+
+    .text-input {
+      width: 100%;
+      font-family: var(--font-primary);
+      font-size: var(--font-size-body);
+      padding: 12px 16px;
+      border: 1px solid rgba(0,0,0,0.23);
+      border-radius: var(--border-radius);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .text-input:hover {
+      border-color: rgba(0,0,0,0.5);
+    }
+
+    .text-input:focus {
+      outline: none;
+      border: 2px solid var(--color-primary-500);
+      padding: 11px 15px; /* Adjust padding to keep size consistent */
+    }
+    
+    /* Error State for Input */
+    .form-group.has-error .text-input {
+      border-color: var(--color-semantic-error);
+    }
+    
+    .form-group.has-error .text-input:focus {
+      border-color: var(--color-semantic-error);
+      box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2);
+    }
+    
+    .error-message {
+      display: none;
+      color: var(--color-semantic-error);
+      font-size: var(--font-size-caption);
+      margin-top: var(--spacing-sm);
+    }
+    
+    .form-group.has-error .error-message {
+      display: block;
+    }
+    
+    /* Button Components */
+    .lock-screen-dialog__actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+    
+    .btn {
+      font-family: var(--font-primary);
+      font-size: 15px;
+      font-weight: 500;
+      border-radius: var(--border-radius);
+      padding: 10px 24px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn:focus-visible {
+        outline: 2px solid var(--color-primary-700);
+        outline-offset: 2px;
+    }
+
+    /* Primary Button */
+    .btn--primary {
+      background-color: var(--color-primary-500);
+      color: var(--color-neutrals-white);
+      box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.20);
+      flex-grow: 1;
+    }
+    
+    .btn--primary:hover {
+      background-color: var(--color-primary-600);
+      box-shadow: 0 3px 3px 0 rgba(0,0,0,0.14), 0 1px 7px 0 rgba(0,0,0,0.12), 0 3px 1px -1px rgba(0,0,0,0.20);
+    }
+    
+    .btn--primary:active {
+      background-color: var(--color-primary-700);
+      transform: scale(0.98);
+      box-shadow: none;
+    }
+    
+    /* Secondary Button (as text link) */
+    .btn--secondary {
+      background-color: transparent;
+      color: var(--color-primary-500);
+      padding: 10px; /* larger click target */
+    }
+
+    .btn--secondary:hover {
+      background-color: var(--color-primary-50);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="screen-background-content"></div>
+
+  <main class="lock-screen-overlay">
+    <div class="lock-screen-dialog" role="dialog" aria-modal="true" aria-labelledby="lock-screen-title">
+      <div class="lock-screen-dialog__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"></path></svg>
+      </div>
+      <h2 id="lock-screen-title" class="lock-screen-dialog__title">Session Locked</h2>
+      <p class="lock-screen-dialog__user">for administrator</p>
+      
+      <form class="lock-screen-dialog__form">
+        <div class="form-group">
+          <label for="password" class="sr-only">Password</label>
+          <input type="password" id="password" class="text-input" placeholder="Password" aria-describedby="password-error-message" autofocus>
+          <div id="password-error-message" class="error-message">Invalid password. Please try again.</div>
+        </div>
+      </form>
+      
+      <div class="lock-screen-dialog__actions">
+        <button type="button" class="btn btn--secondary">Log Out</button>
+        <button type="submit" class="btn btn--primary">Unlock</button>
+      </div>
+    </div>
+  </main>
+  
+  <div class="screen-variations" style="display: none;">
+    <!-- This section is hidden in the live view but provides the HTML for different states. -->
+    
+    <!-- Variant: Default Locked State -->
+    <div class="variation-group">
+      <h3>Variant Name: "Locked (Default)"</h3>
+      <normal>Standard screen appearance prompting for a password.</normal>
+      <div class="lock-screen-overlay">
+        <div class="lock-screen-dialog" role="dialog" aria-modal="true" aria-labelledby="lock-screen-title-default">
+          <div class="lock-screen-dialog__icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"></path></svg>
+          </div>
+          <h2 id="lock-screen-title-default" class="lock-screen-dialog__title">Session Locked</h2>
+          <p class="lock-screen-dialog__user">for administrator</p>
+          <form class="lock-screen-dialog__form">
+            <div class="form-group">
+              <label for="password-default" class="sr-only">Password</label>
+              <input type="password" id="password-default" class="text-input" placeholder="Password" autofocus>
+            </div>
+          </form>
+          <div class="lock-screen-dialog__actions">
+            <button type="button" class="btn btn--secondary">Log Out</button>
+            <button type="submit" class="btn btn--primary">Unlock</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Variant: Error State -->
+    <div class="variation-group">
+      <h3>Variant Name: "Error State"</h3>
+      <normal>Screen appearance after a failed unlock attempt. An error message is displayed and the input is highlighted.</normal>
+      <div class="lock-screen-overlay">
+        <div class="lock-screen-dialog" role="dialog" aria-modal="true" aria-labelledby="lock-screen-title-error">
+          <div class="lock-screen-dialog__icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"></path></svg>
+          </div>
+          <h2 id="lock-screen-title-error" class="lock-screen-dialog__title">Session Locked</h2>
+          <p class="lock-screen-dialog__user">for administrator</p>
+          <form class="lock-screen-dialog__form">
+            <div class="form-group has-error">
+              <label for="password-error" class="sr-only">Password</label>
+              <input type="password" id="password-error" class="text-input" placeholder="Password" aria-describedby="password-error-message-variant" autofocus>
+              <div id="password-error-message-variant" class="error-message">Invalid password. Please try again.</div>
+            </div>
+          </form>
+          <div class="lock-screen-dialog__actions">
+            <button type="button" class="btn btn--secondary">Log Out</button>
+            <button type="submit" class="btn btn--primary">Unlock</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

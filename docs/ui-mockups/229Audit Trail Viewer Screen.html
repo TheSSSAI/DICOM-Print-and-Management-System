@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Trail Viewer Screen</title>
+  <style>
+    /* CSS Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+   
+    /* Design System Foundation (as CSS Custom Properties) */
+    :root {
+      /* Typography */
+      --font-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-monospace: 'Roboto Mono', monospace;
+      --font-size-h2: 24px;
+      --font-weight-h2: 500;
+      --font-size-body: 16px;
+      --font-weight-body: 400;
+      --font-size-caption: 14px;
+      --font-weight-caption: 400;
+
+      /* Color Palette */
+      --color-primary-50: #E8EAF6;
+      --color-primary-500: #3F51B5;
+      --color-primary-600: #3949AB;
+      --color-primary-700: #303F9F;
+      --color-neutrals-white: #FFFFFF;
+      --color-neutrals-gray-50: #FAFAFA;
+      --color-neutrals-gray-100: #F5F5F5;
+      --color-neutrals-gray-500: #9E9E9E;
+      --color-neutrals-gray-900: #212121;
+      --color-semantic-info: #2196F3;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      
+      /* Borders & Shadows */
+      --border-radius: 4px;
+      --shadow-2dp: 0 2px 4px rgba(0,0,0,0.12);
+      --shadow-4dp: 0 4px 8px rgba(0,0,0,0.15);
+      --transition-speed: 0.2s;
+    }
+    
+    body {
+        font-family: var(--font-primary);
+        background-color: var(--color-neutrals-gray-100);
+        color: var(--color-neutrals-gray-900);
+        font-size: var(--font-size-body);
+        line-height: 1.6;
+    }
+    
+    /* Screen Layout */
+    .screen-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        max-width: 1400px;
+        margin: 0 auto;
+        background-color: var(--color-neutrals-gray-50);
+    }
+    
+    .screen-header {
+        padding: var(--space-lg) var(--space-xl);
+        border-bottom: 1px solid #e0e0e0;
+        background-color: var(--color-neutrals-white);
+    }
+    
+    .screen-header h1 {
+        font-size: var(--font-size-h2);
+        font-weight: var(--font-weight-h2);
+    }
+    
+    .screen-content {
+        flex-grow: 1;
+        padding: var(--space-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-lg);
+        overflow: hidden;
+    }
+
+    /* Toolbar Component */
+    .audit-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-md);
+        align-items: center;
+        padding: var(--space-md);
+        background-color: var(--color-neutrals-white);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-2dp);
+    }
+
+    .filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-md);
+        flex-grow: 1;
+    }
+    
+    .form-control {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .form-control label {
+        font-size: var(--font-size-caption);
+        font-weight: 500;
+        color: var(--color-neutrals-gray-500);
+    }
+
+    .form-control input {
+        padding: 10px 12px;
+        font-size: 15px;
+        border: 1px solid rgba(0,0,0,0.23);
+        border-radius: var(--border-radius);
+        transition: border-color var(--transition-speed);
+        min-width: 200px;
+    }
+
+    .form-control input:focus {
+        outline: none;
+        border-color: var(--color-primary-500);
+        box-shadow: 0 0 0 2px var(--color-primary-50);
+    }
+
+    /* Button Component Styles */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        padding: 10px var(--space-md);
+        font-size: 15px;
+        font-weight: 500;
+        border-radius: var(--border-radius);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all var(--transition-speed);
+        white-space: nowrap;
+    }
+
+    .btn:focus-visible {
+        outline: 2px solid var(--color-primary-700);
+        outline-offset: 2px;
+    }
+
+    .btn--primary {
+        background-color: var(--color-primary-500);
+        color: var(--color-neutrals-white);
+    }
+    .btn--primary:hover {
+        background-color: var(--color-primary-600);
+        box-shadow: var(--shadow-2dp);
+    }
+    .btn--primary:active {
+        background-color: var(--color-primary-700);
+        transform: scale(0.98);
+    }
+
+    .btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Data Container & States */
+    .audit-data-container {
+        flex-grow: 1;
+        background-color: var(--color-neutrals-white);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-2dp);
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* DataGrid Component */
+    .datagrid-wrapper {
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+    .audit-datagrid {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .audit-datagrid th, .audit-datagrid td {
+        padding: 12px var(--space-md);
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .audit-datagrid thead {
+        position: sticky;
+        top: 0;
+        background-color: var(--color-neutrals-gray-50);
+        z-index: 10;
+    }
+
+    .audit-datagrid th {
+        font-weight: 500;
+        color: var(--color-neutrals-gray-900);
+        font-size: var(--font-size-caption);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .audit-datagrid tbody tr:hover {
+        background-color: var(--color-primary-50);
+    }
+    
+    .audit-datagrid td {
+        font-size: 15px;
+        color: #424242;
+    }
+    
+    .audit-datagrid .col-timestamp { width: 15%; }
+    .audit-datagrid .col-user { width: 15%; }
+    .audit-datagrid .col-event { width: 20%; }
+    .audit-datagrid .col-details { width: 35%; word-break: break-all; }
+    .audit-datagrid .col-corr-id { width: 15%; font-family: var(--font-monospace); font-size: 13px; }
+
+    /* State-specific visibility */
+    .audit-data-container .skeleton-loader,
+    .audit-data-container .empty-state,
+    .audit-data-container .datagrid-wrapper {
+        display: none;
+    }
+
+    .state-loading .skeleton-loader,
+    .state-loaded .datagrid-wrapper,
+    .state-empty .empty-state {
+        display: flex;
+    }
+
+    /* Loading State (Skeleton) */
+    .skeleton-loader {
+        flex-direction: column;
+        padding: var(--space-md);
+        gap: 1px;
+        flex-grow: 1;
+    }
+    .skeleton-row {
+        height: 49px;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite linear;
+    }
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    /* Empty State */
+    .empty-state {
+        flex-grow: 1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: var(--space-xl);
+        color: var(--color-neutrals-gray-500);
+    }
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: var(--space-md);
+        opacity: 0.7;
+    }
+    .empty-state__title {
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--color-neutrals-gray-900);
+        margin-bottom: var(--space-sm);
+    }
+
+    /* Variations section for demo */
+    .screen-variations {
+        background-color: #263238;
+        color: #cfd8dc;
+        padding: var(--space-xl);
+    }
+    .screen-variations h2 {
+        font-size: 20px;
+        margin-bottom: var(--space-lg);
+        border-bottom: 1px solid #455a64;
+        padding-bottom: var(--space-sm);
+    }
+    .variation-group {
+        margin-bottom: var(--space-xl);
+    }
+    .variation-group h3 {
+        margin-bottom: var(--space-md);
+        font-weight: 500;
+    }
+    .variation-group h3 code {
+        background-color: #37474f;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: var(--font-monospace);
+        font-size: 14px;
+    }
+    .variation-description {
+        margin-bottom: var(--space-md);
+        font-style: italic;
+        color: #90a4ae;
+        max-width: 80ch;
+    }
+
+  </style>
+</head>
+<body>
+  
+  <div class="screen-container" id="main-app-mockup">
+    <header class="screen-header">
+      <h1>Audit Trail</h1>
+    </header>
+    
+    <main class="screen-content">
+      <div class="audit-toolbar">
+        <div class="filter-group">
+            <div class="form-control">
+                <label for="filter-user">Filter by User / Event</label>
+                <input type="text" id="filter-user" placeholder="e.g., j.doe or 'User Created'">
+            </div>
+            <div class="form-control">
+                <label for="filter-start-date">Start Date</label>
+                <input type="date" id="filter-start-date" value="2024-01-01">
+            </div>
+            <div class="form-control">
+                <label for="filter-end-date">End Date</label>
+                <input type="date" id="filter-end-date" value="2024-07-29">
+            </div>
+        </div>
+        <button class="btn btn--primary">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Export to CSV
+        </button>
+      </div>
+
+      <div class="audit-data-container state-loaded">
+          <!-- Loaded State: DataGrid -->
+          <div class="datagrid-wrapper" role="log" aria-live="polite">
+              <table class="audit-datagrid">
+                  <thead>
+                      <tr>
+                          <th scope="col" class="col-timestamp">Timestamp</th>
+                          <th scope="col" class="col-user">User</th>
+                          <th scope="col" class="col-event">Event Type</th>
+                          <th scope="col" class="col-details">Details</th>
+                          <th scope="col" class="col-corr-id">Correlation ID</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                          <td>2024-07-29 14:35:10 UTC</td>
+                          <td>admin</td>
+                          <td>User Password Reset</td>
+                          <td>Admin 'admin' reset password for user 'j.doe'.</td>
+                          <td title="2a8f4b0e-8e8a-4c2f-9b0d-3e5f7a1c6b3d">2a8f4b0e...</td>
+                      </tr>
+                      <tr>
+                          <td>2024-07-29 14:32:05 UTC</td>
+                          <td>j.doe</td>
+                          <td>DICOM Metadata Edit</td>
+                          <td>Tag (0010,0010) PatientName changed from 'John^Doe' to 'John^A^Doe'.</td>
+                          <td title="c1d3e2f4-1b9a-4e8d-8d7e-9f0a1b2c3d4e">c1d3e2f4...</td>
+                      </tr>
+                      <tr>
+                          <td>2024-07-29 14:30:01 UTC</td>
+                          <td>admin</td>
+                          <td>User Role Changed</td>
+                          <td>User 's.smith' role changed from 'Technician' to 'Administrator'.</td>
+                          <td title="b0a9c8d7-6e5f-4a3b-2c1d-0e9f8a7b6c5d">b0a9c8d7...</td>
+                      </tr>
+                      <tr>
+                          <td>2024-07-29 13:55:48 UTC</td>
+                          <td>s.smith</td>
+                          <td>Print Job Submitted</td>
+                          <td>Submitted print job 'PJ-00124' to printer 'HP_LaserJet_4'.</td>
+                          <td title="f3e2d1c0-5b4a-3e2d-1c0b-9a8f7e6d5c4b">f3e2d1c0...</td>
+                      </tr>
+                       <tr>
+                          <td>2024-07-29 13:50:12 UTC</td>
+                          <td>admin</td>
+                          <td>User Created</td>
+                          <td>New user 'new.tech' created with role 'Technician'.</td>
+                          <td title="a9b8c7d6-4e3f-2d1c-0b9a-8f7e6d5c4b3a">a9b8c7d6...</td>
+                      </tr>
+                      <tr>
+                          <td>2024-07-29 11:15:22 UTC</td>
+                          <td>tech01</td>
+                          <td>Failed Login Attempt</td>
+                          <td>Failed login attempt for username 'tech01'.</td>
+                          <td title="d8c7b6a5-3f2e-1d0c-9b8a-7e6d5c4b3a29">d8c7b6a5...</td>
+                      </tr>
+                      <tr>
+                          <td>2024-07-28 18:02:59 UTC</td>
+                          <td>admin</td>
+                          <td>System Setting Changed</td>
+                          <td>Data retention policy changed from '7 years' to '5 years'.</td>
+                          <td title="e7f6d5c4-2e1d-0c9b-8a7e-6d5c4b3a2918">e7f6d5c4...</td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
+
+          <!-- Loading State: Skeleton -->
+          <div class="skeleton-loader" aria-busy="true" aria-label="Loading audit trail data">
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" role="status">
+               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+               </svg>
+              <h4 class="empty-state__title">No Records Found</h4>
+              <p>No audit trail records match your current filter criteria. Try adjusting the date range or search terms.</p>
+          </div>
+      </div>
+
+    </main>
+  </div>
+  
+  <div class="screen-variations">
+    <h2>Screen Variations</h2>
+    
+    <div class="variation-group">
+      <h3>Variant Name: <code>.state-loaded</code> (Default)</h3>
+      <p class="variation-description">Standard screen appearance when data has been successfully fetched and is displayed in the data grid.</p>
+      <!-- The main mockup above already demonstrates this state -->
+    </div>
+    
+    <div class="variation-group">
+      <h3>Variant Name: <code>.state-loading</code></h3>
+      <p class="variation-description">Shown while the application is fetching audit log data. A skeleton loader matching the table layout provides immediate feedback and reduces perceived latency.</p>
+      <div class="audit-data-container state-loading" style="height: 400px;">
+          <div class="skeleton-loader" aria-busy="true" aria-label="Loading audit trail data">
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+          </div>
+      </div>
+    </div>
+
+    <div class="variation-group">
+      <h3>Variant Name: <code>.state-empty</code></h3>
+      <p class="variation-description">Displayed when a data fetch is successful, but no records match the filter criteria. Provides clear, helpful feedback to the user.</p>
+      <div class="audit-data-container state-empty" style="height: 400px;">
+           <div class="empty-state" role="status">
+               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+               </svg>
+              <h4 class="empty-state__title">No Records Found</h4>
+              <p>No audit trail records match your current filter criteria. Try adjusting the date range or search terms.</p>
+          </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

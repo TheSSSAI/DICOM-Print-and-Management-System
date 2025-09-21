@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DICOM Viewer Organism</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* Showcase Styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 32px;
+        }
+
+        .showcase-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .showcase-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .showcase-header h1 {
+            font-size: 28px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .showcase-header p {
+            font-size: 16px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .component-variant {
+            margin-bottom: 48px;
+        }
+
+        .component-variant h2 {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .component-variant__description {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 16px;
+            max-width: 800px;
+        }
+
+        .component-wrapper {
+            height: 700px; /* Give the component a fixed height for demonstration */
+        }
+        
+        /* DICOMViewer CSS */
+
+        /* Design System Tokens */
+        :root {
+            --font-primary: 'Roboto', sans-serif;
+            --font-size-body: 16px;
+            --font-size-caption: 14px;
+            --font-monospace: 'Roboto Mono', monospace;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+
+            --color-primary-50: #E8EAF6;
+            --color-primary-500: #3F51B5;
+            --color-primary-700: #303F9F;
+
+            --color-neutral-white: #FFFFFF;
+            --color-neutral-50: #FAFAFA;
+            --color-neutral-100: #F5F5F5;
+            --color-neutral-500: #9E9E9E;
+            --color-neutral-900: #212121;
+            --color-black: #000000;
+
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+
+            --border-radius-sm: 4px;
+            --transition-speed: 0.2s;
+            --shadow-2dp: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Organism Base */
+        .dicom-viewer {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--color-neutral-100);
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            box-shadow: var(--shadow-2dp);
+        }
+
+        /* Toolbar */
+        .viewer-toolbar {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background-color: var(--color-neutral-white);
+            border-bottom: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+        .viewer-toolbar__tool {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background-color: transparent;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            color: var(--color-neutral-500);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+        }
+        .viewer-toolbar__tool svg { width: 24px; height: 24px; }
+        .viewer-toolbar__tool:hover { background-color: var(--color-primary-50); color: var(--color-primary-700); }
+        .viewer-toolbar__tool:focus-visible { outline: 2px solid var(--color-primary-700); outline-offset: -2px; z-index: 1; }
+        .viewer-toolbar__tool.is-active { background-color: var(--color-primary-50); color: var(--color-primary-500); }
+        .viewer-toolbar__divider { width: 1px; height: 24px; background-color: #e0e0e0; margin: 0 var(--spacing-xs); }
+
+        /* Main Content Area */
+        .viewer-main {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        /* Thumbnail Strip */
+        .thumbnail-strip {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background-color: var(--color-neutral-50);
+            overflow-y: auto;
+            flex-shrink: 0;
+            width: 140px;
+        }
+        .thumbnail-item {
+            position: relative;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-sm);
+            background-color: var(--color-black);
+            cursor: pointer;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+        }
+        .thumbnail-item img { display: block; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); }
+        .thumbnail-item__number { position: absolute; bottom: 4px; right: 6px; color: white; font-size: 12px; font-weight: var(--font-weight-medium); text-shadow: 1px 1px 2px black; }
+        .thumbnail-item:hover { border-color: var(--color-primary-500); }
+        .thumbnail-item.is-selected { border-color: var(--color-primary-500); }
+        .thumbnail-item.is-selected img { filter: brightness(1); }
+        .thumbnail-item:focus-visible { outline: 2px solid var(--color-primary-700); outline-offset: 2px; }
+
+        /* Viewport Container */
+        .viewport-container {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background-color: #bdbdbd;
+        }
+
+        .dicom-viewer--side-by-side .viewport-container {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .viewport {
+            position: relative;
+            background-color: var(--color-black);
+            color: var(--color-neutral-100);
+            font-family: var(--font-monospace);
+            font-size: var(--font-size-caption);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .dicom-viewer--annotating .viewport {
+            cursor: crosshair;
+        }
+
+        /* Viewport Image/Canvas Mock */
+        .viewport__canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .viewport__canvas img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Viewport Overlays (Metadata) */
+        .viewport__overlay {
+            position: absolute;
+            padding: var(--spacing-sm);
+            pointer-events: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            white-space: pre;
+            line-height: 1.4;
+        }
+        .viewport__overlay--tl { top: 0; left: 0; text-align: left; }
+        .viewport__overlay--tr { top: 0; right: 0; text-align: right; }
+        .viewport__overlay--bl { bottom: 0; left: 0; text-align: left; }
+        .viewport__overlay--br { bottom: 0; right: 0; text-align: right; }
+
+        /* Loading State */
+        .viewport__loader {
+            position: absolute;
+            inset: 0;
+            background-color: var(--color-black);
+            z-index: 10;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .dicom-viewer--loading .viewport__loader { display: flex; }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        .skeleton-loader {
+            width: 100%;
+            height: 100%;
+            background-color: #333;
+            position: relative;
+            overflow: hidden;
+        }
+        .skeleton-loader::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+            transform: translateX(-100%);
+            animation: shimmer 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+
+<div class="showcase-container">
+    <header class="showcase-header">
+        <h1>DICOM Viewer</h1>
+        <p>An organism component for displaying and interacting with DICOM images.</p>
+    </header>
+
+    <main>
+        <div class="component-variant">
+            <h2>Default (Single Viewport)</h2>
+            <p class="component-variant__description">
+                The standard interactive view. A toolbar provides tools, a thumbnail strip on the left allows series navigation, and the main viewport displays the selected image with metadata overlays.
+            </p>
+            <div class="component-wrapper">
+                <div class="dicom-viewer">
+                    <!-- TOOLBAR -->
+                    <div class="viewer-toolbar">
+                        <button class="viewer-toolbar__tool" title="Pan"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h4v2h-4v4h-2v-4H7v-2h4v-4z"/></svg></button>
+                        <button class="viewer-toolbar__tool" title="Zoom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5 1.49-1.49-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
+                        <button class="viewer-toolbar__tool" title="Window/Level"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM12 4a8 8 0 000 16 8 8 0 000-16z"/></svg></button>
+                        <div class="viewer-toolbar__divider"></div>
+                        <button class="viewer-toolbar__tool" title="Annotate"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83zM3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+                        <button class="viewer-toolbar__tool" title="Measure"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h18v8zM9 10h2v4H9zM5 10h2v4H5zm8 0h2v4h-2z"/></svg></button>
+                    </div>
+                    <!-- MAIN -->
+                    <div class="viewer-main">
+                        <div class="thumbnail-strip">
+                            <a href="#" class="thumbnail-item"><img src="https://assets.codepen.io/39255/dicom-thumb-1.jpg" alt="Thumbnail 1"><span class="thumbnail-item__number">1</span></a>
+                            <a href="#" class="thumbnail-item is-selected"><img src="https://assets.codepen.io/39255/dicom-thumb-2.jpg" alt="Thumbnail 2"><span class="thumbnail-item__number">2</span></a>
+                            <a href="#" class="thumbnail-item"><img src="https://assets.codepen.io/39255/dicom-thumb-3.jpg" alt="Thumbnail 3"><span class="thumbnail-item__number">3</span></a>
+                            <a href="#" class="thumbnail-item"><img src="https://assets.codepen.io/39255/dicom-thumb-4.jpg" alt="Thumbnail 4"><span class="thumbnail-item__number">4</span></a>
+                        </div>
+                        <div class="viewport-container">
+                            <div class="viewport">
+                                <div class="viewport__canvas">
+                                    <img src="https://assets.codepen.io/39255/dicom-main.jpg" alt="CT scan of a chest">
+                                </div>
+                                <div class="viewport__overlay viewport__overlay--tl">
+                                    DOE, JOHN
+                                    <br>ID: 123456789
+                                </div>
+                                <div class="viewport__overlay viewport__overlay--tr">
+                                    Hospital Name
+                                    <br>CT CHEST
+                                </div>
+                                <div class="viewport__overlay viewport__overlay--bl">
+                                    WW: 400 WL: 40
+                                    <br>Thickness: 5.0mm
+                                </div>
+                                <div class="viewport__overlay viewport__overlay--br">
+                                    Im: 2/4
+                                    <br>Se: 1
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-variant">
+            <h2>Variant: Side-by-Side</h2>
+            <p class="component-variant__description">
+                The `.dicom-viewer--side-by-side` modifier class changes the viewport container to a two-column grid, allowing for the comparison of two different series or images.
+            </p>
+            <div class="component-wrapper">
+                <div class="dicom-viewer dicom-viewer--side-by-side">
+                    <!-- TOOLBAR -->
+                    <div class="viewer-toolbar">
+                        <button class="viewer-toolbar__tool" title="Sync Pan/Zoom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg></button>
+                        <div class="viewer-toolbar__divider"></div>
+                        <button class="viewer-toolbar__tool" title="Pan"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h4v2h-4v4h-2v-4H7v-2h4v-4z"/></svg></button>
+                        <button class="viewer-toolbar__tool" title="Zoom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5 1.49-1.49-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
+                    </div>
+                    <!-- MAIN -->
+                    <div class="viewer-main">
+                        <div class="thumbnail-strip">
+                             <a href="#" class="thumbnail-item is-selected"><img src="https://assets.codepen.io/39255/dicom-thumb-2.jpg" alt="Thumbnail 2"><span class="thumbnail-item__number">2</span></a>
+                             <a href="#" class="thumbnail-item"><img src="https://assets.codepen.io/39255/dicom-thumb-3.jpg" alt="Thumbnail 3"><span class="thumbnail-item__number">3</span></a>
+                        </div>
+                        <div class="viewport-container">
+                             <div class="viewport">
+                                <div class="viewport__canvas"><img src="https://assets.codepen.io/39255/dicom-main.jpg" alt="CT scan of a chest"></div>
+                                <div class="viewport__overlay viewport__overlay--tl">DOE, JOHN<br>PRIOR</div>
+                                <div class="viewport__overlay viewport__overlay--bl">WW: 400 WL: 40</div>
+                            </div>
+                            <div class="viewport">
+                                <div class="viewport__canvas"><img src="https://assets.codepen.io/39255/dicom-main-2.jpg" alt="CT scan of a chest, follow-up"></div>
+                                <div class="viewport__overlay viewport__overlay--tl">DOE, JOHN<br>CURRENT</div>
+                                <div class="viewport__overlay viewport__overlay--bl">WW: 400 WL: 40</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="component-variant">
+            <h2>State: Loading</h2>
+            <p class="component-variant__description">
+                The `.dicom-viewer--loading` class activates a skeleton loader overlay in the viewport. This provides immediate feedback that content is being fetched, improving the user experience.
+            </p>
+            <div class="component-wrapper">
+                 <div class="dicom-viewer dicom-viewer--loading">
+                    <!-- TOOLBAR -->
+                    <div class="viewer-toolbar">
+                        <button class="viewer-toolbar__tool" title="Pan"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h4v2h-4v4h-2v-4H7v-2h4v-4z"/></svg></button>
+                        <button class="viewer-toolbar__tool" title="Zoom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5 1.49-1.49-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
+                    </div>
+                    <!-- MAIN -->
+                    <div class="viewer-main">
+                        <div class="thumbnail-strip"></div>
+                        <div class="viewport-container">
+                            <div class="viewport">
+                               <div class="viewport__loader">
+                                   <div class="skeleton-loader"></div>
+                               </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-variant">
+            <h2>State: Annotating</h2>
+            <p class="component-variant__description">
+                The `.dicom-viewer--annotating` class changes the viewport cursor to a crosshair. The active tool in the toolbar is highlighted with the `.is-active` class.
+            </p>
+            <div class="component-wrapper">
+                <div class="dicom-viewer dicom-viewer--annotating">
+                    <!-- TOOLBAR -->
+                    <div class="viewer-toolbar">
+                        <button class="viewer-toolbar__tool" title="Pan"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-12h2v4h4v2h-4v4h-2v-4H7v-2h4v-4z"/></svg></button>
+                        <button class="viewer-toolbar__tool" title="Zoom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5 1.49-1.49-5-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
+                        <div class="viewer-toolbar__divider"></div>
+                        <button class="viewer-toolbar__tool is-active" title="Annotate"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83zM3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+                    </div>
+                    <!-- MAIN -->
+                    <div class="viewer-main">
+                        <div class="thumbnail-strip">
+                             <a href="#" class="thumbnail-item is-selected"><img src="https://assets.codepen.io/39255/dicom-thumb-2.jpg" alt="Thumbnail 2"><span class="thumbnail-item__number">2</span></a>
+                        </div>
+                        <div class="viewport-container">
+                            <div class="viewport">
+                                <div class="viewport__canvas"><img src="https://assets.codepen.io/39255/dicom-main.jpg" alt="CT scan of a chest"></div>
+                                <div class="viewport__overlay viewport__overlay--tl">DOE, JOHN</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+</body>
+</html>

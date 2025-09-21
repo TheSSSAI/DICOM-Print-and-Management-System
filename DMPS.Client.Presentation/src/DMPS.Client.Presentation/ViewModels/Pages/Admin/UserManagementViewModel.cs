@@ -1,168 +1,122 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DMPS.Client.Application.Services;
+using DMPS.Client.Application.DTO;
+using DMPS.Client.Application.Interfaces;
 using DMPS.Client.Presentation.Services.Interfaces;
 using DMPS.Client.Presentation.ViewModels.Base;
-using DMPS.Shared.Core.Models;
 using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace DMPS.Client.Presentation.ViewModels.Pages.Admin
 {
     public sealed partial class UserManagementViewModel : ViewModelBase
     {
-        private readonly IUserService _userService;
+        private readonly IAdminService _adminService;
         private readonly IDialogService _dialogService;
         private readonly INotificationService _notificationService;
-        private readonly ISessionStateService _sessionStateService;
 
         [ObservableProperty]
-        private ObservableCollection<User> _users = new();
+        private bool _isLoading;
 
-        [ObservableProperty]
-        private User? _selectedUser;
+        public ObservableCollection<UserDto> Users { get; } = new();
 
-        [ObservableProperty]
-        private bool _isBusy;
-        
         public UserManagementViewModel(
-            IUserService userService, 
+            IAdminService adminService,
             IDialogService dialogService,
-            INotificationService notificationService,
-            ISessionStateService sessionStateService)
+            INotificationService notificationService)
         {
-            _userService = userService;
+            _adminService = adminService;
             _dialogService = dialogService;
             _notificationService = notificationService;
-            _sessionStateService = sessionStateService;
         }
 
-        [RelayCommand]
+        [AsyncRelayCommand]
         private async Task LoadUsersAsync()
         {
-            IsBusy = true;
+            IsLoading = true;
             try
             {
-                var result = await _userService.GetAllUsersAsync();
-                if (result.IsSuccess && result.Value is not null)
+                Users.Clear();
+                var users = await _adminService.GetAllUsersAsync();
+                foreach (var user in users)
                 {
-                    // Add IsCurrentUser property for UI logic
-                    var currentUser = _sessionStateService.CurrentUser;
-                    var userVms = result.Value.Select(u => {
-                        u.IsCurrentUser = u.Id == currentUser?.Id;
-                        return u;
-                    });
-                    Users = new ObservableCollection<User>(userVms);
-                }
-                else
-                {
-                    await _dialogService.ShowMessageBoxAsync("Error", result.Error ?? "Failed to load users.");
+                    Users.Add(user);
                 }
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowMessageBoxAsync("Error", $"An unexpected error occurred: {ex.Message}");
+                // log ex
+                await _dialogService.ShowMessageAsync("Error", "Failed to load users.");
             }
             finally
             {
-                IsBusy = false;
-            }
-        }
-        
-        [RelayCommand(CanExecute = nameof(CanModifyUser))]
-        private async Task ResetPasswordAsync()
-        {
-            var confirm = await _dialogService.ShowMessageBoxAsync("Confirm Reset", $"Are you sure you want to reset the password for {SelectedUser!.Username}?", DialogButton.YesNo);
-            if (confirm != DialogResult.Yes) return;
-            
-            IsBusy = true;
-            try
-            {
-                var result = await _userService.ResetPasswordAsync(SelectedUser!.Id);
-                if(result.IsSuccess)
-                {
-                    await _dialogService.ShowMessageBoxAsync("Password Reset", $"The temporary password for {SelectedUser.Username} is:\n\n{result.Value}\n\nPlease provide this to the user securely.");
-                }
-                else
-                {
-                    await _dialogService.ShowMessageBoxAsync("Error", result.Error ?? "Failed to reset password.");
-                }
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-        
-        [RelayCommand(CanExecute = nameof(CanModifyUser))]
-        private async Task ToggleUserStatusAsync()
-        {
-            string action = SelectedUser!.IsActive ? "disable" : "enable";
-            var confirm = await _dialogService.ShowMessageBoxAsync("Confirm Action", $"Are you sure you want to {action} the account for {SelectedUser!.Username}?", DialogButton.YesNo);
-            if (confirm != DialogResult.Yes) return;
-
-            IsBusy = true;
-            try
-            {
-                var result = await _userService.SetUserStatusAsync(SelectedUser!.Id, !SelectedUser.IsActive);
-                if (result.IsSuccess)
-                {
-                    _notificationService.ShowSuccess("Success", $"User {SelectedUser.Username} has been {action}d.");
-                    await LoadUsersAsync(); // Refresh the list
-                }
-                else
-                {
-                    await _dialogService.ShowMessageBoxAsync("Error", result.Error ?? $"Failed to {action} user.");
-                }
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-        
-        [RelayCommand(CanExecute = nameof(CanModifyUser))]
-        private async Task DeleteUserAsync()
-        {
-            var confirm = await _dialogService.ShowMessageBoxAsync("Confirm Deletion", $"This will permanently delete the user {SelectedUser!.Username}. This action cannot be undone. Are you sure?", DialogButton.YesNo);
-            if (confirm != DialogResult.Yes) return;
-            
-            IsBusy = true;
-            try
-            {
-                var result = await _userService.DeleteUserAsync(SelectedUser!.Id);
-                if(result.IsSuccess)
-                {
-                     _notificationService.ShowSuccess("Success", $"User {SelectedUser.Username} has been deleted.");
-                     await LoadUsersAsync();
-                }
-                else
-                {
-                    await _dialogService.ShowMessageBoxAsync("Error", result.Error ?? "Failed to delete user.");
-                }
-            }
-            finally
-            {
-                IsBusy = false;
+                IsLoading = false;
             }
         }
 
-        private bool CanModifyUser()
-        {
-            if (SelectedUser is null || IsBusy) return false;
-            // Prevent self-modification for critical actions
-            return !SelectedUser.IsCurrentUser;
-        }
-
-        // AddUser and EditUser commands would typically navigate to another view/dialog
-        // This is a simplified implementation for brevity.
-        [RelayCommand]
+        [AsyncRelayCommand]
         private async Task AddUserAsync()
         {
-            // This would normally open a dialog to get new user details
-            await _dialogService.ShowMessageBoxAsync("Add User", "This would open a dialog to create a new user.");
+            // In a real app, this would open a dialog to get new user details
+            // For now, we simulate it
+            var newUser = new CreateUserDto { Username = $"newuser{DateTime.Now:mmss}", Role = "Technician" };
+            
+            var result = await _adminService.CreateUserAsync(newUser);
+            if (result.IsSuccess)
+            {
+                await _dialogService.ShowMessageAsync("User Created", $"User '{newUser.Username}' created. Temporary Password: {result.TemporaryPassword}");
+                await LoadUsersAsync();
+            }
+            else
+            {
+                await _dialogService.ShowMessageAsync("Error", result.ErrorMessage ?? "Failed to create user.");
+            }
+        }
+
+        [AsyncRelayCommand(CanExecute = nameof(CanModifyUser))]
+        private async Task ResetPasswordAsync(UserDto user)
+        {
+            var confirmed = await _dialogService.ShowConfirmationAsync("Reset Password", $"Are you sure you want to reset the password for {user.Username}?");
+            if (!confirmed) return;
+
+            var result = await _adminService.ResetUserPasswordAsync(user.UserId);
+            if (result.IsSuccess)
+            {
+                await _dialogService.ShowMessageAsync("Password Reset", $"Password for '{user.Username}' has been reset. Temporary Password: {result.TemporaryPassword}");
+            }
+            else
+            {
+                await _dialogService.ShowMessageAsync("Error", result.ErrorMessage ?? "Failed to reset password.");
+            }
+        }
+
+        [AsyncRelayCommand(CanExecute = nameof(CanModifyUser))]
+        private async Task DeleteUserAsync(UserDto user)
+        {
+            var confirmed = await _dialogService.ShowConfirmationAsync("Delete User", $"Are you sure you want to permanently delete user {user.Username}?");
+            if (!confirmed) return;
+            
+            var result = await _adminService.DeleteUserAsync(user.UserId);
+            if (result.IsSuccess)
+            {
+                _notificationService.Show("Success", $"User {user.Username} deleted.");
+                Users.Remove(user);
+            }
+            else
+            {
+                await _dialogService.ShowMessageAsync("Error", result.ErrorMessage ?? "Failed to delete user.");
+            }
+        }
+
+        private bool CanModifyUser(UserDto? user)
+        {
+            return user != null;
+        }
+
+        public async Task OnNavigatedToAsync()
+        {
+            await LoadUsersAsync();
         }
     }
 }

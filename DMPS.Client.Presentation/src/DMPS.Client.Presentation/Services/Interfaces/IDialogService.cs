@@ -3,46 +3,33 @@ using System.Threading.Tasks;
 namespace DMPS.Client.Presentation.Services.Interfaces
 {
     /// <summary>
-    /// Represents the possible results of a dialog interaction.
-    /// </summary>
-    public enum DialogResult
-    {
-        None,
-        OK,
-        Cancel,
-        Yes,
-        No
-    }
-
-    /// <summary>
-    /// Defines a contract for a service that displays dialogs to the user.
-    /// This allows ViewModels to show dialogs without a direct dependency on UI-specific components,
-    /// which is crucial for testability and adherence to the MVVM pattern.
+    /// Provides an abstraction for showing various types of dialogs from a ViewModel
+    /// without a direct dependency on the View/UI framework.
     /// </summary>
     public interface IDialogService
     {
         /// <summary>
-        /// Shows a modal message box with a title, message, and specified buttons.
+        /// Displays an informational message dialog to the user.
         /// </summary>
-        /// <param name="title">The title of the message box window.</param>
-        /// <param name="message">The message to be displayed to the user.</param>
-        /// <returns>A task that resolves to a <see cref="DialogResult"/> indicating which button the user pressed.</returns>
-        Task<DialogResult> ShowMessageBoxAsync(string title, string message);
+        /// <param name="title">The title of the dialog window.</param>
+        /// <param name="message">The message to display to the user.</param>
+        /// <returns>A task that completes when the dialog is closed.</returns>
+        Task ShowMessageAsync(string title, string message);
 
         /// <summary>
-        /// Shows a modal message box with a title, message, and specified buttons for confirmation.
+        /// Displays an error message dialog to the user.
         /// </summary>
-        /// <param name="title">The title of the confirmation dialog window.</param>
-        /// <param name="message">The confirmation message to be displayed.</param>
-        /// <returns>A task that resolves to true if the user confirmed (Yes/OK), and false otherwise.</returns>
+        /// <param name="title">The title of the dialog window.</param>
+        /// <param name="message">The error message to display.</param>
+        /// <returns>A task that completes when the dialog is closed.</returns>
+        Task ShowErrorAsync(string title, string message);
+
+        /// <summary>
+        /// Displays a confirmation dialog with "Yes" and "No" options.
+        /// </summary>
+        /// <param name="title">The title of the dialog window.</param>
+        /// <param name="message">The confirmation question to ask the user.</param>
+        /// <returns>A task that resolves to <c>true</c> if the user clicks "Yes", and <c>false</c> otherwise.</returns>
         Task<bool> ShowConfirmationAsync(string title, string message);
-
-        /// <summary>
-        /// Shows a custom dialog associated with a specific ViewModel.
-        /// </summary>
-        /// <typeparam name="TViewModel">The type of the ViewModel for the custom dialog.</typeparam>
-        /// <param name="viewModel">The instance of the ViewModel to be used as the DataContext for the dialog view.</param>
-        /// <returns>A task that resolves to an object representing the result of the dialog interaction.</returns>
-        Task<object?> ShowDialogAsync<TViewModel>(TViewModel viewModel) where TViewModel : class;
     }
 }

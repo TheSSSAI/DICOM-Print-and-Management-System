@@ -1,23 +1,26 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DMPS.Client.Application.Services;
+using DMPS.Client.Application.Interfaces;
 using DMPS.Client.Presentation.Services.Interfaces;
 using DMPS.Client.Presentation.ViewModels.Base;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace DMPS.Client.Presentation.ViewModels
 {
     public sealed partial class LockScreenViewModel : ViewModelBase
     {
-        private readonly IAuthenticationService _authenticationService;
-        private readonly ISessionLockService _sessionLockService;
-        private readonly ISessionStateService _sessionStateService;
+        private const int MaxUnlockAttempts = 5;
 
-        private int _failedAttemptCount = 0;
-        private const int MaxFailedAttempts = 5;
+        private readonly IAuthenticationService _authenticationService;
+        private readonly ISessionStateService _sessionStateService;
 
         [ObservableProperty]
         private string? _username;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(UnlockCommand))]
+        private SecureString? _password;
 
         [ObservableProperty]
         private string? _errorMessage;
@@ -25,78 +28,71 @@ namespace DMPS.Client.Presentation.ViewModels
         [ObservableProperty]
         private bool _isBusy;
 
+        private int _failedAttempts;
+
         public LockScreenViewModel(
-            IAuthenticationService authenticationService,
-            ISessionLockService sessionLockService,
+            IAuthenticationService authenticationService, 
             ISessionStateService sessionStateService)
         {
             _authenticationService = authenticationService;
-            _sessionLockService = sessionLockService;
             _sessionStateService = sessionStateService;
-
-            Username = _sessionStateService.CurrentUser?.Username ?? "Unknown User";
+            Username = _sessionStateService.CurrentUser?.Username;
         }
-
-        [RelayCommand(CanExecute = nameof(CanUnlock))]
-        private async Task UnlockAsync(string? password)
+        
+        [AsyncRelayCommand(CanExecute = nameof(CanUnlock))]
+        private async Task UnlockAsync()
         {
-            if (string.IsNullOrEmpty(password))
-            {
-                ErrorMessage = "Password is required.";
-                return;
-            }
-            
             IsBusy = true;
             ErrorMessage = null;
 
             try
             {
-                var unlockResult = await _authenticationService.UnlockSessionAsync(password);
-                if (unlockResult)
+                var result = await _authenticationService.VerifyPasswordAsync(Password!);
+                if (result)
                 {
-                    _sessionLockService.Unlock();
+                    _sessionStateService.UnlockSession();
                 }
                 else
                 {
                     HandleFailedAttempt();
                 }
             }
-            catch (System.Exception)
+            catch
             {
-                // Log exception
-                ErrorMessage = "An error occurred during unlock. Please try again.";
+                HandleFailedAttempt();
+                ErrorMessage = "An error occurred during verification.";
             }
             finally
             {
+                Password?.Clear();
                 IsBusy = false;
             }
-        }
-        
-        private bool CanUnlock(string? password)
-        {
-            return !string.IsNullOrWhiteSpace(password) && !IsBusy;
         }
 
         private void HandleFailedAttempt()
         {
-            _failedAttemptCount++;
-            if (_failedAttemptCount >= MaxFailedAttempts)
+            _failedAttempts++;
+            if (_failedAttempts >= MaxUnlockAttempts)
             {
-                ErrorMessage = $"Too many failed attempts. Logging out.";
-                // Force logout after a brief delay to show message
-                Task.Delay(1500).ContinueWith(_ => LogoutAsync());
+                ErrorMessage = $"Maximum unlock attempts ({MaxUnlockAttempts}) exceeded. Logging out.";
+                // Give user a moment to see the message before logout
+                Task.Delay(2000).ContinueWith(_ => _sessionStateService.Logout());
             }
             else
             {
-                ErrorMessage = $"Invalid password. Please try again. ({MaxFailedAttempts - _failedAttemptCount} attempts remaining)";
+                ErrorMessage = $"Invalid password. Please try again. ({MaxUnlockAttempts - _failedAttempts} attempts remaining)";
             }
         }
 
-        [RelayCommand]
-        private async Task LogoutAsync()
+        private bool CanUnlock()
         {
-            await _authenticationService.LogoutAsync();
-            _sessionLockService.ForceLogout();
+            return Password is not null && Password.Length > 0 && !IsBusy && _failedAttempts < MaxUnlockAttempts;
+        }
+
+        [RelayCommand]
+        private void Logout()
+        {
+            _sessionStateService.Logout();
         }
     }
 }
