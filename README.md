@@ -17,39 +17,39 @@
 
 ## [UI UX Mockups](https://github.com/TheSSSAI/DICOM-Print-and-Management-System/tree/main/docs/ui-mockups)
 
-[{"id":8,"display_name":"DMPS.Client.Application"},{"id":9,"display_name":"DMPS.Client.Presentation"},{"id":3,"display_name":"DMPS.CrossCutting.Logging"},{"id":4,"display_name":"DMPS.CrossCutting.Security"},{"id":2,"display_name":"DMPS.Data.Access"},{"id":5,"display_name":"DMPS.Infrastructure.Communication"},{"id":6,"display_name":"DMPS.Infrastructure.Dicom"},{"id":7,"display_name":"DMPS.Infrastructure.IO"},{"id":10,"display_name":"DMPS.Service.Worker"},{"id":1,"display_name":"DMPS.Shared.Core"}]
 
 ---
 
-#REPOSITORY DOCUMENTS
- [## Repository : DMPS.Client.Application](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Client.Application/docs)
+# REPOSITORY DOCUMENTS
+
+[ ## Repository : DMPS.Client.Application](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Client.Application/tree/main/docs)
 
 
-,[## Repository : DMPS.Client.Presentation](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Client.Presentation/docs)
+,[ ## Repository : DMPS.Client.Presentation](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Client.Presentation/tree/main/docs)
 
 
-,[## Repository : DMPS.CrossCutting.Logging](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.CrossCutting.Logging/docs)
+,[ ## Repository : DMPS.CrossCutting.Logging](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.CrossCutting.Logging/tree/main/docs)
 
 
-,[## Repository : DMPS.CrossCutting.Security](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.CrossCutting.Security/docs)
+,[ ## Repository : DMPS.CrossCutting.Security](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.CrossCutting.Security/tree/main/docs)
 
 
-,[## Repository : DMPS.Data.Access](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Data.Access/docs)
+,[ ## Repository : DMPS.Data.Access](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Data.Access/tree/main/docs)
 
 
-,[## Repository : DMPS.Infrastructure.Communication](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Infrastructure.Communication/docs)
+,[ ## Repository : DMPS.Infrastructure.Communication](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Infrastructure.Communication/tree/main/docs)
 
 
-,[## Repository : DMPS.Infrastructure.Dicom](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Infrastructure.Dicom/docs)
+,[ ## Repository : DMPS.Infrastructure.Dicom](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Infrastructure.Dicom/tree/main/docs)
 
 
-,[## Repository : DMPS.Infrastructure.IO](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Infrastructure.IO/docs)
+,[ ## Repository : DMPS.Infrastructure.IO](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Infrastructure.IO/tree/main/docs)
 
 
-,[## Repository : DMPS.Service.Worker](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Service.Worker/docs)
+,[ ## Repository : DMPS.Service.Worker](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Service.Worker/tree/main/docs)
 
 
-,[## Repository : DMPS.Shared.Core](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Shared.Core/docs)
+,[ ## Repository : DMPS.Shared.Core](https://github.com/TheSSSAI/DICOM-Print-and-Management-SystemDMPS.Shared.Core/tree/main/docs)
 
 
 
