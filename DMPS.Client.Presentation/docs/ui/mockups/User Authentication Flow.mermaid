@@ -1,0 +1,42 @@
+flowchart TD
+    subgraph User Interaction in WPF Client
+        A[Start: User sees Login Screen] --> B[User enters Username & Password];
+        B --> C{Click 'Login'};
+        C --> D{Client Validation: Fields populated?};
+        D -- No --> E[Show client-side error: 'Fields are required'];
+        E --> B;
+        J[Display 'Account Disabled' error] --> B;
+        P[Display 'Invalid username or password' error] --> B;
+    end
+
+    subgraph Backend Authentication Service
+        D -- Yes --> F[Backend: Authenticate(credentials)];
+        F --> G{User exists?};
+        G -- No --> H[Generic Auth Failure];
+        G -- Yes --> I{Account is Active?};
+        I -- No --> J;
+        I -- Yes --> K{Password hash matches? (BCrypt verify)};
+        K -- No --> H;
+        H --> P;
+    end
+
+    subgraph Session & UI Loading
+        K -- Yes --> L{Force Password Change flag set?};
+        L -- No --> M[Success: Create Session & store Role];
+        M --> N[Load Main Application UI based on Role];
+        N --> Z([End: User is Authenticated]);
+        L -- Yes --> O[Success: Redirect to 'Create New Password' UI];
+        O --> Z;
+    end
+
+    %% Styling
+    classDef process fill:#e3f2fd,stroke:#2196f3,color:#000;
+    classDef decision fill:#fff9c4,stroke:#fbc02d,color:#000;
+    classDef success fill:#e8f5e9,stroke:#4caf50,color:#000;
+    classDef error fill:#ffebee,stroke:#d32f2f,color:#000;
+    classDef terminal fill:#616161,stroke:#424242,color:#fff;
+
+    class A,B,C,F,M,N,O process;
+    class D,G,I,K,L decision;
+    class Z terminal;
+    class E,J,P error;

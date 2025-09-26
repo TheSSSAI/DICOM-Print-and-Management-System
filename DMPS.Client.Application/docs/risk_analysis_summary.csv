@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"10","0","5","15.2","[""Complex Technical Implementation (GPU/DirectX)"",""External Dependency and Deployment Fragility (PACS, PG/MQ)"",""HIPAA Compliance and Security Implementation""]","[""Initiate a technical spike for the GPU rendering pipeline (RISK-001)."",""Develop and distribute a standalone prerequisite validation tool (RISK-002)."",""Secure access to a test instance of the target PACS vendor (RISK-003).""]"

@@ -1,0 +1,7 @@
+"sprint_number","story_ids","total_points","sprint_goal","dependencies_resolved"
+"1","[""US-000"",""US-010""]","16","Establish the core solution architecture and implement the secure, encrypted database persistence layer.","true"
+"2","[""US-001"",""US-002""]","13","Implement the complete user login and role-based access control (RBAC) systems.","true"
+"3","[""US-003"",""US-004"",""US-013""]","19","Implement critical security features: session inactivity lock/unlock and the complete audit trail system.","true"
+"4","[""US-008""]","13","Deliver the core DICOM ingestion pipeline, enabling the system to function as a C-STORE SCP and reliably store incoming studies.","true"
+"5","[""US-011""]","21","Deliver the high-performance DICOM viewer with core image manipulation tools (WW/WL, Zoom, Pan).","true"
+"6","[""US-005"",""US-006"",""US-007""]","18","Complete the user management lifecycle features, including creating, editing, deleting, and resetting user passwords with a forced change workflow.","true"

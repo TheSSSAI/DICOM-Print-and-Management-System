@@ -1,0 +1,5 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"User Authentication & RBAC","Critical","High","Low","[""Unit"",""Integration"",""End-to-End"",""Security""]","95","90","100","95","4","80","60","0.98","High","Low","Excellent","Good"
+"DICOM Services (C-STORE, C-FIND)","Critical","Critical","Medium","[""Unit"",""Integration"",""Performance"",""Compatibility""]","80","95","85","90","20","150","120","0.95","High","Medium","Good","Good"
+"Asynchronous Processing (RabbitMQ)","High","High","Low","[""Unit"",""Integration"",""Chaos""]","90","100","70","95","5","70","50","0.96","High","Medium","Excellent","Good"
+"Data Persistence & Encryption","Critical","High","Low","[""Unit"",""Integration"",""Security""]","95","95","","100","","60","40","0.99","High","Low","Excellent","Good"

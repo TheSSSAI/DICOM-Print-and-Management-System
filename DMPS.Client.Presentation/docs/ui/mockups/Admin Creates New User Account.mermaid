@@ -1,0 +1,43 @@
+sequenceDiagram
+    participant PL as "Presentation Layer (ViewModel)"
+    participant AppSvc as "Application Service"
+    participant Hasher as "Password Hasher Utility"
+    participant DAL as "Data Access Layer"
+    participant DB as "PostgreSQL Database"
+
+    activate AppSvc
+    PL->>AppSvc: 1. CreateUserAsync(username, role)
+    
+    AppSvc->>DAL: 2. CheckUsernameExistsAsync(username)
+    activate DAL
+    DAL->>DB: 3. SELECT 1 FROM "Users" WHERE "Username" = @username LIMIT 1
+    DB-->>DAL: 4. No rows returned
+    DAL-->>AppSvc: 5. return: false (username is unique)
+    deactivate DAL
+
+    note right of AppSvc: Generates a secure temporary password in memory
+
+    AppSvc->>Hasher: 6. HashPassword(temporaryPassword)
+    activate Hasher
+    Hasher-->>AppSvc: 7. return: hashedPassword
+    deactivate Hasher
+
+    AppSvc->>DAL: 8. CreateUserWithAuditAsync(userEntity, auditLogEntity)
+    activate DAL
+    DAL->>DB: 9. BEGIN TRANSACTION
+    activate DB
+    DB-->>DAL: 10. OK
+    DAL->>DB: 11. INSERT INTO "Users" (..., isTemporaryPassword=TRUE)
+    DB-->>DAL: 12. 1 row affected
+    DAL->>DB: 13. INSERT INTO "AuditLog" (EventType='User Created', ...)
+    DB-->>DAL: 14. 1 row affected
+    DAL->>DB: 15. COMMIT TRANSACTION
+    DB-->>DAL: 16. OK
+    deactivate DB
+    DAL-->>AppSvc: 17. return: createdUser
+    deactivate DAL
+
+    AppSvc-->>PL: 18. return: { isSuccess: true, temporaryPassword: "..." }
+    deactivate AppSvc
+
+    note over PL, DB: The ViewModel receives the temporary password for display to the Admin.

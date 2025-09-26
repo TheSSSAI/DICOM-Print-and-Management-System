@@ -1,0 +1,4 @@
+"sprint_number","story_ids","total_points","sprint_goal","dependencies_resolved"
+"1","[""US-000"",""US-001""]","13","Establish the core application shell, DI framework, and secure user login functionality.","true"
+"2","[""US-002"",""US-300""]","13","Implement role-based access control (RBAC) and the end-to-end asynchronous printing workflow.","true"
+"3","[""US-100""]","13","Implement the critical DICOM C-STORE SCP functionality to enable receiving and persisting studies from modalities.","true"

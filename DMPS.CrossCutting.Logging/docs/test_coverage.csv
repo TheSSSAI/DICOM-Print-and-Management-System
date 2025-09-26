@@ -1,0 +1,5 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"User Authentication & Authorization","Critical","High","Medium","[""Unit"",""Integration"",""End-to-End"",""Security""]","95","100","90","95","8","80","60","0.98","High","Medium","Excellent","Good"
+"IPC (RabbitMQ & Named Pipes)","Critical","Medium","Low","[""Unit"",""Integration"",""Reliability""]","90","100","","100","","50","35","0.95","High","Low","Excellent","Excellent"
+"Data Persistence (EF Core & pgcrypto)","Critical","High","Low","[""Unit"",""Integration"",""Security"",""Performance""]","85","95","","100","","60","40","0.97","High","Low","Excellent","Good"
+"DICOM Services (fo-dicom)","High","High","Medium","[""Unit"",""Integration"",""System"",""Performance""]","80","90","70","85","24","120","150","0.9","High","Medium","Good","Medium"

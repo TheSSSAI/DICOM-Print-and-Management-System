@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"8","0","5","14.25","[""HIPAA Compliance Complexity"",""External Dependency Management"",""System Performance & Reliability""]","[""Engage a third-party HIPAA consultant for architectural review."",""Prioritize development and resourcing for foundational architecture and security epics."",""Develop a standalone 'Prerequisite Checker' tool to mitigate customer deployment issues.""]"

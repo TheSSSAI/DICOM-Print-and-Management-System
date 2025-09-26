@@ -1,0 +1,31 @@
+erDiagram
+
+    User {
+        Guid userId PK
+        VARCHAR username UK
+        VARCHAR passwordHash
+        TEXT firstName
+        TEXT lastName
+        Guid roleId FK
+        BOOLEAN isActive
+        BOOLEAN isTemporaryPassword
+        DateTime passwordLastChangedAt
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Role {
+        Guid roleId PK
+        VARCHAR roleName UK
+        TEXT description
+    }
+
+    PasswordHistory {
+        Guid passwordHistoryId PK
+        Guid userId FK
+        VARCHAR passwordHash
+        DateTime createdAt
+    }
+
+    Role ||--o{ User : has
+    User ||--o{ PasswordHistory : stores

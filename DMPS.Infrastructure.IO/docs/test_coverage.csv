@@ -1,0 +1,5 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"User Authentication & RBAC","Critical","Medium","Low","[""Unit"",""Integration"",""E2E"",""Security""]","95","90","100","95","8","60","45","0.98","High","Low","Excellent","Good"
+"DICOM Viewer (DirectX)","Critical","High","High","[""Unit"",""Component"",""Performance"",""Visual Regression"",""Manual""]","70","80","60","70","40","80","70","0.9","Medium","High","Good","Medium"
+"Asynchronous Processing (Windows Service)","High","High","Medium","[""Unit"",""Integration"",""Chaos"",""Performance""]","90","95","85","95","10","75","50","0.95","High","Medium","Excellent","Good"
+"Data Migration Utility","High","High","Low","[""Unit"",""Integration"",""Data Validation""]","85","90","100","90","15","50","30","0.92","High","Low","Good","Good"

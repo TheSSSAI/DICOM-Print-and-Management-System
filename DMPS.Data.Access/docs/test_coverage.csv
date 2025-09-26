@@ -1,0 +1,5 @@
+"component_name","business_criticality","technical_complexity","change_frequency","test_types_required","unit_test_coverage","integration_test_coverage","e2e_test_coverage","automation_percentage","manual_test_effort","automated_test_effort","total_test_cases","risk_mitigation_score","quality_confidence","maintenance_overhead","tool_compatibility","team_skill_alignment"
+"Authentication & Authorization Module","Critical","High","Low","[""Unit"",""Integration"",""E2E"",""Security""]","95","100","90","95","8","80","45","0.98","High","Low","Excellent","Good"
+"DICOM Viewer Rendering Engine","Critical","Critical","Medium","[""Unit"",""Performance"",""Manual Exploratory""]","70","","60","60","40","60","30","0.9","Medium","High","Good","Excellent"
+"DICOM C-STORE Ingestion Pipeline","Critical","High","Low","[""Integration"",""Performance"",""Reliability""]","90","100","100","100","2","60","20","0.99","High","Medium","Excellent","Good"
+"Print & PDF Export Module","High","Medium","Medium","[""Unit"",""Integration"",""E2E"",""Manual Visual""]","85","90","50","70","30","45","50","0.92","High","Medium","Good","Good"

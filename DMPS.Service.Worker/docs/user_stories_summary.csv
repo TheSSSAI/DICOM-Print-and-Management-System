@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"12","88","11","1","0","[""User Authentication & Authorization"",""Core Architecture & System Setup"",""Data Persistence & Management"",""System Administration & Auditing"",""DICOM Functionality""]","6","[""US-001 (Login) is a dependency for most other stories."",""US-010 (Core Framework) and US-013 (DB Schema) are foundational technical stories.""]"

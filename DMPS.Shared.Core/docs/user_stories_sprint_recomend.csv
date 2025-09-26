@@ -1,0 +1,5 @@
+"sprint_number","story_ids","total_points","sprint_goal","dependencies_resolved"
+"1","[""US-010"",""US-001""]","16","Establish the core application architecture, IPC, and implement the fundamental user login and role-based access system.","true"
+"2","[""US-006"",""US-031"",""US-011"",""US-009""]","16","Build out the core administrative user management features, including creation, audit logging, password policies and resets.","true"
+"3","[""US-012""]","13","Implement the critical DICOM C-STORE SCP functionality, including the full asynchronous ingestion pipeline for receiving studies.","true"
+"4","[""US-014""]","21","Develop the high-performance DICOM viewer, delivering the core image rendering and manipulation tools.","true"

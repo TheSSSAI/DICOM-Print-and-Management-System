@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"16","128","9","6","0","[""Core Architecture & Solution Setup"",""User Authentication & Authorization"",""Database and Persistence"",""DICOM Services & Processing"",""DICOM Viewer"",""Printing, PDF, and Email"",""System Administration"",""Deployment & External Integration""]","9","[""US-000 (Architecture) is a prerequisite for most stories."",""US-001 (Login) is a prerequisite for all role-based stories.""]"

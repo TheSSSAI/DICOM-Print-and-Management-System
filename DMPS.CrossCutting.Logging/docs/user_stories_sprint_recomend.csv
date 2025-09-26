@@ -1,0 +1,4 @@
+"sprint_number","story_ids","total_points","sprint_goal","dependencies_resolved"
+"1","[""US-001"",""US-002""]","10","Establish a secure user login and apply role-based permissions to the application, forming the foundation of the security model.","true"
+"2","[""US-003"",""US-004""]","13","Implement a complete, HIPAA-compliant automatic session lock and unlock workflow to protect PHI on unattended workstations.","true"
+"3","[""US-006""]","5","Enable administrators to securely create new user accounts, which is the first step in building out user lifecycle management.","true"

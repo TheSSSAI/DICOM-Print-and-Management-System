@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"7","60","6","1","0","[""Core Architecture & System Foundation"",""User Authentication & Authorization"",""DICOM Network Services & Data Management"",""DICOM Viewer & Image Manipulation"",""Printing, PDF, and Email"",""Administration and Monitoring""]","4","[""US-000 (Foundational Shell) is a prerequisite for most stories.""]"

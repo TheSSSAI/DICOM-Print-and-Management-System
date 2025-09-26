@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"15","127","12","3","0","[""User & Access Management"",""DICOM Connectivity"",""Clinical Workflow"",""Printing & Export"",""System Administration"",""Deployment & Licensing""]","8","[""US-001 (User Login) is a prerequisite for most other stories."",""US-012 (DICOM Viewer) is the core clinical feature."",""US-021 (Data Migration) is a blocker for production go-live.""]"

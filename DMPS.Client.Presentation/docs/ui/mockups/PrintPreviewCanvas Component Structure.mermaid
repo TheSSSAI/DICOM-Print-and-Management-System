@@ -1,0 +1,44 @@
+graph TD
+    subgraph Organism: PrintPreviewCanvas
+        A[PrintPreviewCanvas<br/><span class='small'>Root Container<br/>aria-busy='true' on render</span>] --> B{State: Is Rendering?}
+    end
+
+    subgraph Loading State
+        C[SkeletonLoader<br/><span class='small'>Shimmer animation overlay</span>]
+    end
+    
+    subgraph Rendered State
+        D[PrintPreviewPage<br/><span class='small'>Scales with paper aspect ratio</span>]
+        subgraph Page Overlays
+            E[PageHeader] --> E1[Logo Image]
+            E --> E2[Header Text<br/><span class='small'>e.g., PatientID, StudyDate</span>]
+            G[PageFooter] --> G1[Footer Text<br/><span class='small'>e.g., Page Number</span>]
+        end
+        subgraph Page Content
+            F[PageContent] --> H[PageGrid<br/><span class='small'>e.g., 2x2, 1+3 layout</span>]
+            H --> I["ImagePlaceholder 1"]
+            H --> J["ImagePlaceholder n..."]
+            
+            subgraph Placeholder Contents
+                I --> K[Rendered DICOM Image]
+                I --> L[De-Id Mask<br/><span class='small'>Optional blackout shape</span>]
+            end
+        end
+    end
+
+    B -- Yes --> C
+    B -- No --> D
+    
+    D --> E
+    D --> F
+    D --> G
+
+    %% Styling
+    classDef organism fill:#e3f2fd,stroke:#2196f3,stroke-width:2px,color:#000
+    classDef element fill:#f1f8e9,stroke:#689f38,stroke-width:1px,color:#000
+    classDef state fill:#fffde7,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef small font-size:10px,font-style:italic,fill-opacity:0
+    
+    class A organism
+    class B state
+    class C,D,E,F,G,H,I,J,K,L element

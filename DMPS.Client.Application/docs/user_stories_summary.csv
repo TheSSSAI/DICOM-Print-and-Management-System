@@ -1,0 +1,2 @@
+"total_stories","total_story_points","must_have_stories","should_have_stories","could_have_stories","epics_identified","estimated_sprints","key_dependencies"
+"10","74","9","1","0","[""Security & Access Control"",""System Foundation & Deployment"",""Clinical Workflow & DICOM Management""]","4","[""User authentication is foundational for all other features."",""DICOM ingestion pipeline must be complete before viewing is fully functional.""]"
